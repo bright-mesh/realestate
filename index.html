@@ -1,0 +1,2707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#0f172a">
+    <title>Bright Mesh Rentals</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Cpath d='M30 70V30l20-15 20 15v40H30z' fill='%23facc15'/%3E%3Crect x='42' y='45' width='16' height='25' fill='%230f172a'/%3E%3Ccircle cx='50' cy='35' r='5' fill='%230f172a'/%3E%3C/svg%3E">
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        html { -webkit-text-size-adjust: 100%; }
+        body { background: #f1f5f9; color: #0f172a; min-height: 100vh; overflow-x: hidden; }
+
+        .splash { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s ease; padding: 1rem; }
+        .splash.hidden { opacity: 0; pointer-events: none; }
+        .splash-logo { width: 70px; height: 70px; background: #facc15; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 2.5rem; color: #0f172a; box-shadow: 0 10px 30px rgba(250,204,21,0.5); margin-bottom: 1.5rem; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .splash-title { color: white; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center; }
+        .splash-title span { color: #facc15; }
+        .splash-sub { color: #94a3b8; font-size: 0.85rem; margin-bottom: 2rem; text-align: center; }
+        .splash-spinner { width: 40px; height: 40px; border: 3px solid rgba(250,204,21,0.2); border-top-color: #facc15; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .landing { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%); color: white; position: relative; overflow-x: hidden; }
+        .landing::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 20% 30%, rgba(250,204,21,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(59,130,246,0.15) 0%, transparent 50%); pointer-events: none; }
+        .landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; position: relative; z-index: 10; gap: 1rem; }
+        .landing-logo { display: flex; align-items: center; gap: 0.6rem; font-size: 1.2rem; font-weight: 700; }
+        .landing-logo .logo-icon { width: 40px; height: 40px; background: #facc15; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: #0f172a; box-shadow: 0 4px 12px rgba(250,204,21,0.4); flex-shrink: 0; }
+        .landing-logo span { color: #facc15; }
+        .nav-links { display: flex; gap: 1.75rem; align-items: center; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: color 0.2s; }
+        .nav-links a:hover { color: #facc15; }
+        .btn-login-nav { background: #facc15; color: #0f172a; padding: 0.55rem 1.25rem; border-radius: 2rem; font-weight: 700; border: none; cursor: pointer; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(250,204,21,0.3); transition: all 0.2s; white-space: nowrap; }
+        .btn-login-nav:hover { background: #fbbf24; transform: translateY(-1px); }
+
+        .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; padding: 2.5rem 4rem 5rem 4rem; align-items: center; position: relative; z-index: 5; max-width: 1400px; margin: 0 auto; }
+        .hero-content h1 { font-size: 3.2rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 1.25rem; }
+        .hero-content h1 .highlight { background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-content p { font-size: 1.05rem; color: #cbd5e1; line-height: 1.7; margin-bottom: 2rem; max-width: 560px; }
+        .hero-actions { display: flex; gap: 0.85rem; flex-wrap: wrap; }
+        .btn-hero-primary { background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%); color: #0f172a; padding: 0.95rem 2rem; border-radius: 2rem; font-weight: 700; border: none; cursor: pointer; font-size: 0.95rem; box-shadow: 0 10px 30px rgba(250,204,21,0.4); transition: all 0.25s; }
+        .btn-hero-primary:hover { transform: translateY(-3px); }
+        .btn-hero-outline { background: rgba(255,255,255,0.08); color: white; padding: 0.95rem 2rem; border-radius: 2rem; font-weight: 600; border: 1.5px solid rgba(255,255,255,0.2); cursor: pointer; font-size: 0.95rem; transition: all 0.25s; backdrop-filter: blur(10px); }
+        .btn-hero-outline:hover { background: rgba(255,255,255,0.15); }
+
+        .hero-visual { background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 2rem; padding: 1.75rem; backdrop-filter: blur(20px); box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+        .hero-visual-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .hero-visual-header .dots { display: flex; gap: 0.4rem; }
+        .hero-visual-header .dots span { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+        .hero-visual-header .dots span:first-child { background: #ef4444; }
+        .hero-visual-header .dots span:nth-child(2) { background: #f59e0b; }
+        .hero-visual-header .dots span:nth-child(3) { background: #16a34a; }
+        .stat-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+        .stat-preview-card { background: rgba(255,255,255,0.06); border-radius: 1rem; padding: 0.9rem 1.1rem; border: 1px solid rgba(255,255,255,0.08); }
+        .stat-preview-card .lbl { font-size: 0.68rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em; }
+        .stat-preview-card .val { font-size: 1.15rem; font-weight: 800; margin-top: 0.25rem; }
+        .stat-preview-card .val.gold { color: #facc15; }
+        .stat-preview-card .val.green { color: #4ade80; }
+        .stat-preview-card .val.blue { color: #60a5fa; }
+        .mini-chart { display: flex; align-items: flex-end; gap: 0.5rem; height: 70px; padding: 0 0.4rem; }
+        .mini-chart .bar { flex: 1; background: linear-gradient(180deg, #facc15 0%, #f59e0b 100%); border-radius: 0.5rem 0.5rem 0 0; opacity: 0.8; }
+
+        .features-section { background: #0f172a; padding: 4rem 4rem; position: relative; z-index: 5; }
+        .features-container { max-width: 1400px; margin: 0 auto; }
+        .section-title { text-align: center; margin-bottom: 3rem; }
+        .section-title h2 { font-size: 2.2rem; font-weight: 800; color: white; letter-spacing: -0.02em; margin-bottom: 0.85rem; }
+        .section-title p { color: #94a3b8; font-size: 1rem; max-width: 600px; margin: 0 auto; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; }
+        .feature-card { background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 1.5rem; padding: 1.75rem; transition: all 0.3s; }
+        .feature-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(250,204,21,0.3); transform: translateY(-5px); }
+        .feature-icon { width: 52px; height: 52px; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.15rem; }
+        .feature-icon.blue { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); }
+        .feature-icon.gold { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
+        .feature-icon.green { background: linear-gradient(135deg, #065f46 0%, #16a34a 100%); }
+        .feature-icon.red { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); }
+        .feature-card h3 { color: white; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.65rem; }
+        .feature-card p { color: #94a3b8; font-size: 0.9rem; line-height: 1.6; }
+
+        .pricing-section { background: #0a0f1e; padding: 4rem 4rem; position: relative; z-index: 5; border-top: 1px solid rgba(255,255,255,0.05); }
+        .pricing-container { max-width: 800px; margin: 0 auto; }
+        .pricing-card { background: linear-gradient(135deg, rgba(250,204,21,0.12) 0%, rgba(245,158,11,0.08) 100%); border: 2px solid rgba(250,204,21,0.4); border-radius: 2rem; padding: 2.5rem; text-align: center; position: relative; overflow: hidden; }
+        .pricing-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(250,204,21,0.15) 0%, transparent 60%); pointer-events: none; }
+        .pricing-badge { display: inline-block; background: #facc15; color: #0f172a; padding: 0.4rem 1.2rem; border-radius: 2rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem; position: relative; z-index: 1; }
+        .pricing-card h2 { font-size: 2.5rem; font-weight: 800; color: white; margin-bottom: 0.5rem; position: relative; z-index: 1; }
+        .pricing-card h2 .price { color: #facc15; }
+        .pricing-card .price-sub { color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.75rem; position: relative; z-index: 1; }
+        .pricing-features { list-style: none; text-align: left; max-width: 400px; margin: 0 auto 1.75rem auto; position: relative; z-index: 1; }
+        .pricing-features li { color: #e2e8f0; padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; }
+        .pricing-features li:last-child { border-bottom: none; }
+        .pricing-features li .check { color: #facc15; font-weight: 800; font-size: 1.05rem; flex-shrink: 0; }
+        .pricing-cta { background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%); color: #0f172a; padding: 0.95rem 2.5rem; border-radius: 2rem; font-weight: 700; border: none; cursor: pointer; font-size: 0.95rem; box-shadow: 0 10px 30px rgba(250,204,21,0.4); transition: all 0.25s; position: relative; z-index: 1; }
+        .pricing-cta:hover { transform: translateY(-3px); }
+
+        .landing-footer { background: #0a0f1e; padding: 1.75rem 2rem; text-align: center; color: #64748b; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        .login-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem; overflow-y: auto; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 2rem; padding: 2rem; width: 100%; max-width: 440px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); position: relative; animation: slideUp 0.3s ease; margin: auto; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .login-close { position: absolute; top: 1rem; right: 1rem; background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1rem; color: #64748b; display: flex; align-items: center; justify-content: center; }
+        .login-close:hover { background: #e2e8f0; color: #0f172a; }
+        .login-logo { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem; font-weight: 700; font-size: 1.15rem; }
+        .login-logo .logo-icon { width: 36px; height: 36px; background: #facc15; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.3rem; color: #0f172a; }
+        .login-box h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.4rem; color: #0f172a; }
+        .login-box .subtitle { color: #64748b; font-size: 0.88rem; margin-bottom: 1.75rem; }
+        .login-form .form-group { margin-bottom: 1rem; }
+        .login-form label { display: block; font-size: 0.78rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem; }
+        .login-form input { width: 100%; padding: 0.85rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 1rem; font-size: 1rem; background: #f8fafc; transition: 0.15s; font-family: inherit; }
+        .login-form input:focus { outline: none; border-color: #facc15; background: white; box-shadow: 0 0 0 3px rgba(250,204,21,0.2); }
+        .login-error { background: #fee2e2; color: #b91c1c; padding: 0.75rem 1rem; border-radius: 1rem; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+        .login-error.show { display: block; }
+        .btn-login-submit { width: 100%; padding: 1rem; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; border: none; border-radius: 1rem; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 0.5rem; }
+        .btn-login-submit:hover { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+        .btn-login-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .app-container { max-width: 1440px; width: 100%; margin: 0 auto; padding: 1.25rem; display: none; }
+        .app-container.active { display: block; }
+
+        .app-header { display: flex; align-items: center; justify-content: space-between; background: #0f172a; color: white; padding: 0.9rem 1.5rem; border-radius: 1.75rem; margin-bottom: 1.25rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); flex-wrap: wrap; gap: 0.75rem; }
+        .logo-area { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+        .logo-icon { width: 40px; height: 40px; background: #facc15; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: #0f172a; box-shadow: 0 4px 8px rgba(250,204,21,0.4); flex-shrink: 0; }
+        .app-header h1 { font-weight: 600; font-size: 1.4rem; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .app-header h1 span { color: #facc15; font-weight: 700; }
+
+        .user-area { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .user-badge { display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.08); padding: 0.45rem 0.9rem; border-radius: 2rem; font-size: 0.8rem; max-width: 100%; }
+        .user-badge .role { color: #facc15; font-weight: 700; text-transform: uppercase; font-size: 0.65rem; }
+        .user-badge .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+
+        .btn-logout { background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.5rem 0.9rem; border-radius: 2rem; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: 0.15s; white-space: nowrap; }
+        .btn-logout:hover { background: rgba(220,38,38,0.8); }
+        .btn-password { background: rgba(250,204,21,0.2); color: #facc15; border: none; padding: 0.5rem 0.9rem; border-radius: 2rem; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: 0.15s; white-space: nowrap; }
+        .btn-password:hover { background: rgba(250,204,21,0.3); }
+
+        .main-nav { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; background: white; padding: 0.45rem; border-radius: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+        .main-nav::-webkit-scrollbar { display: none; }
+        .nav-tab { padding: 0.65rem 1.15rem; border-radius: 2rem; border: none; background: transparent; font-weight: 600; font-size: 0.85rem; color: #64748b; cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0; }
+        .nav-tab:hover { background: #f8fafc; color: #0f172a; }
+        .nav-tab.active { background: #0f172a; color: white; }
+
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+        .dash-card { padding: 1.25rem 1.5rem; border-radius: 1.25rem; box-shadow: 0 6px 18px rgba(0,0,0,0.08); transition: all 0.25s ease; color: white; position: relative; overflow: hidden; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; }
+        .dash-card::after { content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.08); pointer-events: none; }
+        .dash-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,0.15); }
+        .dash-card .label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9; margin-bottom: 0.4rem; z-index: 1; }
+        .dash-card .value { font-size: 1.5rem; font-weight: 800; line-height: 1.15; z-index: 1; word-break: break-word; }
+        .dash-card .sub { font-size: 0.75rem; opacity: 0.85; margin-top: 0.35rem; z-index: 1; }
+        .dash-card.income { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); }
+        .dash-card.profit { background: linear-gradient(135deg, #065f46 0%, #16a34a 100%); }
+        .dash-card.outstanding { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); }
+        .dash-card.rent { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); }
+        .dash-card.expenses { background: linear-gradient(135deg, #78350f 0%, #d97706 100%); }
+
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+        .chart-card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 1.25rem; }
+        .chart-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; color: #0f172a; }
+        .chart-container { position: relative; height: 220px; display: flex; justify-content: center; align-items: center; }
+
+        .alert-section { margin-bottom: 1.25rem; }
+        .alert-card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 1.25rem; border-left: 5px solid #dc2626; overflow-x: auto; }
+        .alert-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.85rem; color: #b91c1c; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .alert-card h3 .count { background: #fee2e2; color: #b91c1c; padding: 0.15rem 0.55rem; border-radius: 100px; font-size: 0.72rem; }
+        .alert-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 640px; }
+        .alert-table th { text-align: left; padding: 0.55rem 0.5rem; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.03em; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .alert-table td { padding: 0.65rem 0.5rem; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+        .days-overdue { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 100px; font-weight: 700; font-size: 0.72rem; background: #fee2e2; color: #b91c1c; }
+        .empty-alert { color: #16a34a; font-weight: 600; padding: 0.85rem 0; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.85rem; }
+        .section-header h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+        .section-header .header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .btn { padding: 0.6rem 1.1rem; border-radius: 2rem; border: none; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; box-shadow: 0 2px 6px rgba(0,0,0,0.08); white-space: nowrap; }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; }
+        .btn-outline { background: white; border: 1.5px solid #e2e8f0; color: #0f172a; }
+        .btn-success { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .btn-danger { background: #fee2e2; color: #b91c1c; }
+        .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.72rem; }
+
+        .table-card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 1.25rem; overflow-x: auto; margin-bottom: 1.25rem; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 780px; }
+        th { text-align: left; padding: 0.7rem 0.5rem; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.03em; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        td { padding: 0.7rem 0.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+
+        .badge { display: inline-block; padding: 0.2rem 0.65rem; border-radius: 100px; font-weight: 600; font-size: 0.7rem; white-space: nowrap; }
+        .badge.paid { background: #dcfce7; color: #166534; }
+        .badge.pending { background: #fee2e2; color: #b91c1c; }
+        .badge.partial { background: #fef9c3; color: #854d0e; }
+        .badge.cat-plumbing { background: #dbeafe; color: #1e40af; }
+        .badge.cat-electric { background: #fef3c7; color: #92400e; }
+        .badge.cat-general { background: #e0e7ff; color: #3730a3; }
+        .badge.electric { background: #fef3c7; color: #92400e; }
+        .badge.water { background: #dbeafe; color: #1e40af; }
+        .badge.role { background: #fef3c7; color: #92400e; }
+        .badge.role.admin { background: #fee2e2; color: #991b1b; }
+        .badge.role.manager { background: #dbeafe; color: #1e40af; }
+        .badge.role.user { background: #dcfce7; color: #166534; }
+        .badge.role.accountant { background: #e0e7ff; color: #3730a3; }
+        .badge.role.cashier { background: #fce7f3; color: #9d174d; }
+
+        .action-btns { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 1rem; overflow-y: auto; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; border-radius: 1.5rem; padding: 1.75rem; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); margin: auto; }
+        .modal h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 1rem; font-size: 1rem; font-family: inherit; background: #f8fafc; transition: 0.15s; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #facc15; background: white; box-shadow: 0 0 0 3px rgba(250,204,21,0.15); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.25rem; flex-wrap: wrap; }
+
+        .detail-panel { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 1.25rem; margin-top: 1.25rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+        .detail-header h2 { font-size: 1.15rem; font-weight: 700; }
+        .detail-header h2 small { display: block; font-size: 0.8rem; font-weight: 400; color: #64748b; margin-top: 0.2rem; }
+        .section-tabs { display: flex; gap: 0.2rem; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.2rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .section-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: transparent; border: none; padding: 0.55rem 1.1rem; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 2rem 2rem 0 0; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
+        .tab-btn.active { background: #f1f5f9; color: #0f172a; border-bottom: 2px solid #0f172a; }
+        .tab-content { display: block; }
+        .tab-content.hidden { display: none; }
+        .meter-info { font-size: 0.7rem; color: #475569; background: #f8fafc; padding: 0.2rem 0.5rem; border-radius: 0.5rem; display: inline-block; }
+
+        .notification { position: fixed; top: 1rem; right: 1rem; left: 1rem; background: #0f172a; color: white; padding: 0.9rem 1.25rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 2000; opacity: 0; transform: translateY(-10px); transition: all 0.3s; font-size: 0.88rem; font-weight: 500; max-width: 380px; margin-left: auto; }
+        .notification.show { opacity: 1; transform: translateY(0); }
+        .notification.success { background: #16a34a; }
+        .notification.warning { background: #d97706; }
+        .notification.error { background: #dc2626; }
+
+        .calc-preview { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1.5px solid #bae6fd; border-radius: 1rem; padding: 0.9rem 1.1rem; margin-top: 1rem; font-size: 0.82rem; }
+        .calc-row { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px dashed #bae6fd; gap: 0.5rem; }
+        .calc-row:last-child { border-bottom: none; font-weight: 700; font-size: 0.95rem; color: #0f172a; padding-top: 0.5rem; }
+
+        .filter-bar { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 0.9rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+        .filter-bar label { font-size: 0.78rem; font-weight: 600; color: #475569; }
+        .filter-bar select { padding: 0.5rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 1rem; font-size: 0.85rem; background: #f8fafc; min-width: 180px; cursor: pointer; flex: 1; max-width: 100%; }
+        .filter-bar select:focus { outline: none; border-color: #facc15; }
+        .filter-bar .rate-note { font-size: 0.72rem; color: #94a3b8; margin-left: auto; }
+
+        .utility-summary, .expense-summary, .tenant-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+
+        .util-card, .expense-total-card, .tenant-total-card, .tenant-amount-card { border-radius: 1.15rem; padding: 1.15rem 1.4rem; color: white; box-shadow: 0 6px 18px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        .util-card::after, .expense-total-card::after, .tenant-total-card::after, .tenant-amount-card::after { content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.08); pointer-events: none; }
+        .util-card .util-label, .expense-total-card .exp-label, .tenant-total-card .exp-label, .tenant-amount-card .exp-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; opacity: 0.9; }
+        .util-card .util-value, .expense-total-card .exp-value, .tenant-total-card .exp-value, .tenant-amount-card .exp-value { font-size: 1.4rem; font-weight: 800; margin-top: 0.35rem; position: relative; z-index: 1; word-break: break-word; }
+        .expense-total-card .exp-sub, .tenant-total-card .exp-sub, .tenant-amount-card .exp-sub { font-size: 0.75rem; opacity: 0.85; margin-top: 0.2rem; position: relative; z-index: 1; }
+
+        .util-card.electric-received { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
+        .util-card.water-received { background: linear-gradient(135deg, #1d4ed8 0%, #38bdf8 100%); }
+        .expense-total-card { background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%); }
+        .tenant-total-card { background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%); }
+        .tenant-amount-card { background: linear-gradient(135deg, #065f46 0%, #16a34a 100%); }
+
+        .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+        .admin-stat-card { border-radius: 1.15rem; padding: 1.25rem 1.5rem; color: white; box-shadow: 0 6px 18px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        .admin-stat-card::after { content: ''; position: absolute; right: -20px; bottom: -20px; width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1); }
+        .admin-stat-card .admin-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; opacity: 0.9; }
+        .admin-stat-card .admin-value { font-size: 1.8rem; font-weight: 800; margin-top: 0.35rem; position: relative; z-index: 1; }
+        .admin-stat-card .admin-sub { font-size: 0.75rem; opacity: 0.85; margin-top: 0.2rem; position: relative; z-index: 1; }
+        .admin-stat-card.locations { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        .admin-stat-card.rentals { background: linear-gradient(135deg, #065f46 0%, #16a34a 100%); }
+        .admin-stat-card.users { background: linear-gradient(135deg, #78350f 0%, #d97706 100%); }
+        .admin-stat-card.managers { background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%); }
+
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+        .admin-card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 1.5rem; }
+        .admin-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.1rem; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }
+        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid #f1f5f9; gap: 0.6rem; flex-wrap: wrap; }
+        .admin-list-item:last-child { border-bottom: none; }
+        .admin-list-item .info { flex: 1; min-width: 0; }
+        .admin-list-item .info .primary { font-weight: 700; font-size: 0.88rem; color: #0f172a; word-break: break-word; }
+        .admin-list-item .info .secondary { font-size: 0.75rem; color: #64748b; margin-top: 0.15rem; }
+        .admin-list-item .actions { display: flex; gap: 0.3rem; flex-shrink: 0; flex-wrap: wrap; }
+
+        .location-income { display: flex; justify-content: space-between; padding: 0.8rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; gap: 0.6rem; flex-wrap: wrap; }
+        .location-income:last-child { border-bottom: none; }
+        .location-income .loc-name { font-weight: 600; }
+        .location-income .loc-amount { font-weight: 700; color: #16a34a; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .app-header, .main-nav, .btn, .modal-overlay, .notification, .section-header .btn, .filter-bar { display: none !important; }
+            .page-section { display: block !important; }
+            .page-section:not(.active) { display: none !important; }
+            .detail-panel { border: none; box-shadow: none; }
+            table { min-width: auto; }
+        }
+
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; gap: 2.5rem; padding: 2rem 2.5rem 3.5rem 2.5rem; }
+            .hero-content h1 { font-size: 2.5rem; }
+            .hero-visual { max-width: 560px; margin: 0 auto; }
+            .features-section, .pricing-section { padding: 3.5rem 2.5rem; }
+            .section-title h2 { font-size: 1.9rem; }
+            .admin-grid { grid-template-columns: 1fr; }
+            .app-header h1 { font-size: 1.25rem; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 0; }
+            .landing-nav { padding: 1rem 1.25rem; gap: 0.5rem; flex-wrap: wrap; }
+            .landing-logo { font-size: 1rem; }
+            .landing-logo .logo-icon { width: 34px; height: 34px; font-size: 1.3rem; border-radius: 10px; }
+            .nav-links { gap: 1rem; }
+            .nav-links a { display: none; }
+            .nav-links a:first-child { display: inline; font-size: 0.82rem; }
+            .btn-login-nav { padding: 0.5rem 1rem; font-size: 0.8rem; }
+            .hero { padding: 1.5rem 1.25rem 3rem 1.25rem; gap: 2rem; }
+            .hero-content h1 { font-size: 2rem; }
+            .hero-content p { font-size: 0.95rem; margin-bottom: 1.5rem; }
+            .btn-hero-primary, .btn-hero-outline { padding: 0.85rem 1.6rem; font-size: 0.9rem; flex: 1; min-width: 140px; }
+            .hero-visual { padding: 1.25rem; }
+            .features-section, .pricing-section { padding: 2.5rem 1.25rem; }
+            .section-title h2 { font-size: 1.6rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .pricing-card { padding: 1.75rem; }
+            .pricing-card h2 { font-size: 2rem; }
+            .pricing-cta { padding: 0.85rem 2rem; font-size: 0.9rem; width: 100%; }
+            .login-box { padding: 1.75rem; border-radius: 1.75rem; }
+            .app-container { padding: 0.75rem; }
+            .app-header { padding: 0.85rem 1rem; border-radius: 1.5rem; gap: 0.5rem; }
+            .app-header h1 { font-size: 1.05rem; }
+            .app-header .logo-icon { width: 34px; height: 34px; font-size: 1.3rem; border-radius: 10px; }
+            .logo-area { flex: 1; min-width: 0; }
+            .user-area { gap: 0.4rem; width: 100%; justify-content: space-between; }
+            .user-badge { padding: 0.4rem 0.75rem; font-size: 0.72rem; }
+            .user-badge .name { max-width: 120px; }
+            .btn-password, .btn-logout { padding: 0.4rem 0.75rem; font-size: 0.7rem; }
+            .main-nav { padding: 0.4rem; border-radius: 1.5rem; gap: 0.3rem; margin-bottom: 1rem; }
+            .nav-tab { padding: 0.55rem 0.95rem; font-size: 0.78rem; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+            .dash-card { padding: 1rem 1.15rem; min-height: 105px; border-radius: 1.1rem; }
+            .dash-card .value { font-size: 1.15rem; }
+            .charts-row { grid-template-columns: 1fr; gap: 0.85rem; }
+            .chart-container { height: 190px; }
+            .section-header h2 { font-size: 1.15rem; }
+            .section-header .header-actions { width: 100%; }
+            .section-header .btn { flex: 1; min-width: 0; font-size: 0.75rem; padding: 0.55rem 0.7rem; }
+            .table-card { padding: 0.85rem; border-radius: 1.1rem; }
+            table { font-size: 0.78rem; min-width: 720px; }
+            th, td { padding: 0.55rem 0.4rem; }
+            .detail-panel { padding: 1rem; border-radius: 1.1rem; }
+            .detail-header h2 { font-size: 1rem; }
+            .detail-header .btn { flex: 1; min-width: 0; }
+            .detail-header > div:last-child { width: 100%; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+            .modal { padding: 1.5rem; border-radius: 1.25rem; }
+            .form-row { grid-template-columns: 1fr; gap: 0.85rem; }
+            .modal-actions { flex-direction: column-reverse; gap: 0.5rem; }
+            .modal-actions .btn { width: 100%; }
+            .utility-summary, .expense-summary, .tenant-summary { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+            .util-card, .expense-total-card, .tenant-total-card, .tenant-amount-card { padding: 1rem 1.15rem; border-radius: 1.1rem; }
+            .util-card .util-value, .expense-total-card .exp-value, .tenant-total-card .exp-value, .tenant-amount-card .exp-value { font-size: 1.15rem; }
+            .filter-bar { padding: 0.85rem 1rem; border-radius: 1.1rem; gap: 0.6rem; }
+            .filter-bar .rate-note { display: none; }
+            .filter-bar select { min-width: 0; flex: 1 1 100%; }
+            .admin-stats { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+            .admin-stat-card { padding: 1rem 1.15rem; border-radius: 1.1rem; }
+            .admin-stat-card .admin-value { font-size: 1.5rem; }
+            .admin-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .admin-card { padding: 1.15rem; border-radius: 1.1rem; }
+            .admin-list-item .actions .btn { padding: 0.35rem 0.7rem; font-size: 0.68rem; }
+            .notification { top: 0.75rem; right: 0.75rem; left: 0.75rem; font-size: 0.82rem; padding: 0.8rem 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 { font-size: 1.75rem; }
+            .section-title h2 { font-size: 1.35rem; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .utility-summary, .expense-summary, .tenant-summary { grid-template-columns: 1fr; }
+            .admin-stats { grid-template-columns: 1fr; }
+            .app-header h1 { font-size: 0.95rem; }
+            .user-badge { font-size: 0.68rem; padding: 0.35rem 0.6rem; }
+            .user-badge .name { max-width: 100px; }
+            .nav-tab { padding: 0.5rem 0.8rem; font-size: 0.72rem; }
+            .btn { padding: 0.5rem 0.9rem; font-size: 0.75rem; }
+            .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.68rem; }
+            .detail-header > div:last-child { flex-direction: column; }
+            .detail-header .btn { width: 100%; }
+            .modal { padding: 1.25rem; }
+            .login-box { padding: 1.5rem; }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            .hero { padding: 1rem 1.5rem 2rem 1.5rem; }
+            .hero-content h1 { font-size: 1.75rem; }
+            .hero-visual { padding: 1rem; }
+            .login-box { max-height: 95vh; overflow-y: auto; }
+            .modal { max-height: 95vh; }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .btn:hover, .nav-tab:hover, .feature-card:hover, .dash-card:hover { transform: none; }
+            .btn:active { transform: scale(0.98); }
+            .btn, .nav-tab, .tab-btn { min-height: 40px; }
+            .btn-sm { min-height: 32px; }
+            input, select, textarea { font-size: 16px; }
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="splash" id="splash">
+    <div class="splash-logo">B</div>
+    <div class="splash-title">Bright <span>Mesh</span> Rentals</div>
+    <div class="splash-sub">Loading your workspace...</div>
+    <div class="splash-spinner"></div>
+</div>
+
+<div id="landingPage" class="landing hidden">
+    <nav class="landing-nav">
+        <div class="landing-logo">
+            <div class="logo-icon">B</div>
+            <div>Bright <span>Mesh</span> Rentals</div>
+        </div>
+        <div class="nav-links">
+            <a onclick="scrollToFeatures()">Features</a>
+            <a onclick="scrollToPricing()">Pricing</a>
+            <a onclick="scrollToFeatures()">About</a>
+            <button class="btn-login-nav" onclick="openLogin()">Sign In</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Manage Your <span class="highlight">Rentals</span> Effortlessly</h1>
+            <p>The complete property management platform for landlords, managers, and tenants. Track rent, utilities, expenses, and generate professional statements — all in one place.</p>
+            <div class="hero-actions">
+                <button class="btn-hero-primary" onclick="openLogin()">Get Started →</button>
+                <button class="btn-hero-outline" onclick="scrollToFeatures()">Learn More</button>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-visual-header">
+                <div class="dots"><span></span><span></span><span></span></div>
+                <div style="font-size:0.75rem; color:#94a3b8;">Dashboard Preview</div>
+            </div>
+            <div class="stat-preview">
+                <div class="stat-preview-card"><div class="lbl">Total Income</div><div class="val gold">UGX 12.4M</div></div>
+                <div class="stat-preview-card"><div class="lbl">Profit</div><div class="val green">UGX 8.1M</div></div>
+                <div class="stat-preview-card"><div class="lbl">Rent Received</div><div class="val blue">UGX 9.2M</div></div>
+                <div class="stat-preview-card"><div class="lbl">Outstanding</div><div class="val" style="color:#f87171;">UGX 1.8M</div></div>
+            </div>
+            <div class="mini-chart">
+                <div class="bar" style="height:40%"></div>
+                <div class="bar" style="height:65%"></div>
+                <div class="bar" style="height:50%"></div>
+                <div class="bar" style="height:85%"></div>
+                <div class="bar" style="height:70%"></div>
+                <div class="bar" style="height:95%"></div>
+                <div class="bar" style="height:60%"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="featuresSection">
+        <div class="features-container">
+            <div class="section-title">
+                <h2>Everything You Need</h2>
+                <p>Powerful tools to streamline your rental business, from tenant management to detailed financial reporting.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card"><div class="feature-icon blue">🏠</div><h3>Tenant Management</h3><p>Register tenants, track their details, manage multiple apartments, and view complete rental history in one place.</p></div>
+                <div class="feature-card"><div class="feature-icon gold">⚡</div><h3>Utility Tracking</h3><p>Automatically calculate electricity and water bills from meter readings with accurate rates and tax breakdowns.</p></div>
+                <div class="feature-card"><div class="feature-icon green">💰</div><h3>Financial Reports</h3><p>Track income, expenses, profit, and outstanding balances. Generate professional PDF statements instantly.</p></div>
+                <div class="feature-card"><div class="feature-icon red">📊</div><h3>Smart Dashboard</h3><p>Get real-time insights with beautiful charts. Monitor overdue tenants and collection rates at a glance.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing-section" id="pricingSection">
+        <div class="pricing-container">
+            <div class="section-title">
+                <h2>Simple, Transparent Pricing</h2>
+                <p>No hidden fees. No subscriptions. Bright Mesh Rentals is completely free for everyone.</p>
+            </div>
+            <div class="pricing-card">
+                <div class="pricing-badge">100% Free Forever</div>
+                <h2><span class="price">UGX 0</span> / month</h2>
+                <div class="price-sub">Unlimited access for landlords, managers, and tenants</div>
+                <ul class="pricing-features">
+                    <li><span class="check">✓</span> Unlimited tenants and apartments</li>
+                    <li><span class="check">✓</span> Automatic rent invoicing</li>
+                    <li><span class="check">✓</span> Electricity & water billing calculator</li>
+                    <li><span class="check">✓</span> Expense tracking by category</li>
+                    <li><span class="check">✓</span> Real-time dashboard & financial charts</li>
+                    <li><span class="check">✓</span> Print statements & PDF reports</li>
+                    <li><span class="check">✓</span> Multi-location & multi-user support</li>
+                    <li><span class="check">✓</span> No credit card required</li>
+                </ul>
+                <button class="pricing-cta" onclick="openLogin()">Get Started Free →</button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="landing-footer">© 2025 Bright Mesh Rentals · Built for smart property management</footer>
+</div>
+
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <button class="login-close" onclick="closeLogin()">✕</button>
+        <div class="login-logo">
+            <div class="logo-icon">B</div>
+            <div>Bright <span style="color:#0f172a;">Mesh</span></div>
+        </div>
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Sign in to access your dashboard</p>
+        <div class="login-error" id="loginError"></div>
+        <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group"><label>Username</label><input type="text" id="loginUsername" required placeholder="Enter your username" autocomplete="username"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required placeholder="Enter your password" autocomplete="current-password"></div>
+            <button type="submit" class="btn-login-submit" id="loginBtn">Sign In</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal">
+        <h3 id="passwordModalTitle">Reset Password</h3>
+        <form id="passwordForm" onsubmit="savePasswordReset(event)">
+            <input type="hidden" id="passwordTargetUserId">
+            <div class="form-group"><label>User</label><input type="text" id="passwordTargetUser" readonly style="background:#f1f5f9;"></div>
+            <div class="form-group"><label>New Password *</label><input type="password" id="newPassword" required minlength="4" placeholder="Enter new password"></div>
+            <div class="form-group"><label>Confirm New Password *</label><input type="password" id="confirmPassword" required minlength="4" placeholder="Re-enter new password"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('passwordModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editUserModal">
+    <div class="modal">
+        <h3>Edit User</h3>
+        <form id="editUserForm" onsubmit="saveUserEdit(event)">
+            <input type="hidden" id="editUserId">
+            <div class="form-group"><label>Full Name *</label><input type="text" id="editUserFullName" required></div>
+            <div class="form-group"><label>Username *</label><input type="text" id="editUserUsername" required></div>
+            <div class="form-row">
+                <div class="form-group"><label>Role *</label><select id="editUserRole" required><option value="user">User</option><option value="accountant">Accountant</option><option value="cashier">Cashier</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+                <div class="form-group"><label>Location</label><select id="editUserLocation"><option value="">All Locations</option></select></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editUserModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="app-container" id="appContainer">
+    <header class="app-header">
+        <div class="logo-area">
+            <div class="logo-icon">B</div>
+            <h1>Bright <span>Mesh</span> Rentals</h1>
+        </div>
+        <div class="user-area">
+            <div class="user-badge">
+                <span class="role" id="userRoleBadge">USER</span>
+                <span class="name" id="userNameBadge">—</span>
+            </div>
+            <button class="btn-password" onclick="openOwnPasswordModal()" title="Change Password">🔒 Change Password</button>
+            <button class="btn-logout" onclick="handleLogout()">Logout</button>
+        </div>
+    </header>
+
+    <nav class="main-nav" id="mainNav">
+        <button class="nav-tab active" data-page="dashboard">📊 Dashboard</button>
+        <button class="nav-tab" data-page="tenants">🏠 Tenants</button>
+        <button class="nav-tab" data-page="utility">⚡ Utility</button>
+        <button class="nav-tab" data-page="expenses">💰 Expenses</button>
+        <button class="nav-tab admin-only hidden" data-page="admin">🛡️ Admin</button>
+    </nav>
+
+    <section id="page-dashboard" class="page-section active">
+        <div class="dashboard-grid" id="dashboardCards"></div>
+        <div class="alert-section" id="overdueSection"></div>
+        <div class="charts-row">
+            <div class="chart-card"><h3>Revenue Distribution</h3><div class="chart-container"><canvas id="revenueChart"></canvas></div></div>
+            <div class="chart-card"><h3>Outstanding Balances</h3><div class="chart-container"><canvas id="balanceChart"></canvas></div></div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-card"><h3>Monthly Profit Trend</h3><div class="chart-container"><canvas id="profitChart"></canvas></div></div>
+            <div class="chart-card"><h3>Rent Collection Status</h3><div class="chart-container"><canvas id="collectionChart"></canvas></div></div>
+        </div>
+    </section>
+
+    <section id="page-tenants" class="page-section">
+        <div class="section-header">
+            <h2>Tenants</h2>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openAddTenantModal()">＋ Add Tenant</button>
+                <button class="btn btn-success" onclick="openAddPaymentModal()">💵 Add Payment</button>
+            </div>
+        </div>
+        <div class="tenant-summary" id="tenantSummary"></div>
+        <div class="table-card">
+            <table>
+                <thead><tr><th>Tenant</th><th>Apt</th><th>Mobile</th><th>Monthly Rent</th><th>Billing Date</th><th>Rent Balance</th><th>Electric</th><th>Water</th><th>Total Due</th><th>Actions</th></tr></thead>
+                <tbody id="tenantsTableBody"></tbody>
+            </table>
+        </div>
+        <div id="tenantDetailPanel"></div>
+    </section>
+
+    <section id="page-utility" class="page-section">
+        <div class="section-header">
+            <h2>Utility Management</h2>
+            <div class="header-actions">
+                <button class="btn btn-warning" onclick="openUtilityModal('electric')">⚡ Add Electric Reading</button>
+                <button class="btn btn-primary" onclick="openUtilityModal('water')">💧 Add Water Reading</button>
+                <button class="btn btn-outline" onclick="openBaseChargesModal()">⚙️ Base Charges</button>
+            </div>
+        </div>
+        <div class="filter-bar">
+            <label>Filter by Tenant:</label>
+            <select id="utilityFilterTenant" onchange="renderUtilityPage()"><option value="all">All Tenants</option></select>
+            <span class="rate-note">⚡ UGX 1,100/unit · 💧 UGX 4,433/unit + 75% sewer + 1,500 service + 18% VAT</span>
+        </div>
+        <div class="utility-summary" id="utilitySummary"></div>
+        <div class="table-card">
+            <table>
+                <thead><tr><th>Tenant</th><th>Apt</th><th>Utility</th><th>Date</th><th>Prev</th><th>Current</th><th>Usage</th><th>Rate</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="utilityTableBody"></tbody>
+            </table>
+        </div>
+        <div id="utilityDetailPanel"></div>
+    </section>
+
+    <section id="page-expenses" class="page-section">
+        <div class="section-header">
+            <h2>Expenses</h2>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openAddExpenseModal()">＋ Add Expense</button>
+                <button class="btn btn-success" onclick="printExpensesContextual()">🖨️ Print PDF</button>
+            </div>
+        </div>
+        <div class="filter-bar">
+            <label>Filter by Tenant:</label>
+            <select id="expenseFilterTenant" onchange="onExpenseFilterChange()"><option value="all">All Tenants</option></select>
+        </div>
+        <div class="expense-summary" id="expenseSummary"></div>
+        <div class="table-card">
+            <table>
+                <thead><tr><th>Date</th><th>Apartment</th><th>Tenant</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
+                <tbody id="expensesTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="page-admin" class="page-section">
+        <div class="section-header">
+            <h2 id="adminPanelTitle">Admin Panel</h2>
+            <div class="header-actions">
+                <button class="btn btn-primary admin-add-location" onclick="openAddLocationModal()">＋ Add Location</button>
+                <button class="btn btn-success" onclick="openAddUserModal()">＋ Add User</button>
+            </div>
+        </div>
+        <div class="admin-stats" id="adminStats"></div>
+        <div class="admin-grid">
+            <div class="admin-card" id="adminLocationsCard">
+                <h3>📍 Locations & Income</h3>
+                <div id="adminLocationsList"></div>
+            </div>
+            <div class="admin-card">
+                <h3>👥 Users & Managers</h3>
+                <div id="adminUsersList"></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div class="modal-overlay" id="tenantModal">
+    <div class="modal">
+        <h3 id="tenantModalTitle">Add Tenant</h3>
+        <form id="tenantForm" onsubmit="saveTenant(event)">
+            <input type="hidden" id="tenantEditId">
+            <div class="form-row">
+                <div class="form-group"><label>Full Name *</label><input type="text" id="tenantName" required></div>
+                <div class="form-group"><label>Apartment No. *</label><input type="number" id="tenantApt" required min="1"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Mobile Number *</label><input type="text" id="tenantMobile" required></div>
+                <div class="form-group"><label>Monthly Rent (UGX) *</label><input type="number" id="tenantRent" required min="0"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Billing Date (day) *</label><input type="number" id="tenantBillingDate" required min="1" max="28" value="1"></div>
+                <div class="form-group"><label>Electric Rate (per unit)</label><input type="number" id="tenantElectricRate" value="1100" min="0"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('tenantModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Tenant</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+        <h3>Add Payment</h3>
+        <form id="paymentForm" onsubmit="savePayment(event)">
+            <div class="form-group"><label>Tenant *</label><select id="paymentTenant" required onchange="onPaymentTenantChange()"><option value="">Select tenant</option></select></div>
+            <div class="form-group"><label>Payment Type *</label><select id="paymentType" required onchange="loadPendingInvoices()"><option value="rent">Rent</option><option value="electric">Electricity (Yaka)</option><option value="water">Water (NWSC)</option></select></div>
+            <div class="form-group"><label>Pending Invoice *</label><select id="paymentInvoice" required><option value="">Select invoice</option></select></div>
+            <div class="form-row">
+                <div class="form-group"><label>Amount (UGX) *</label><input type="number" id="paymentAmount" required min="1"></div>
+                <div class="form-group"><label>Payment Date *</label><input type="date" id="paymentDate" required></div>
+            </div>
+            <div class="form-group"><label>Reference / Notes</label><input type="text" id="paymentNotes"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('paymentModal')">Cancel</button>
+                <button type="submit" class="btn btn-success">Record Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="utilityModal">
+    <div class="modal">
+        <h3 id="utilityModalTitle">Electricity Meter Reading</h3>
+        <form id="utilityForm" onsubmit="saveUtilityReading(event)">
+            <input type="hidden" id="utilityType" value="electric">
+            <div class="form-group"><label>Tenant *</label><select id="utilityTenant" required onchange="onUtilityTenantChange()"><option value="">Select tenant</option></select></div>
+            <div class="form-row">
+                <div class="form-group"><label>Previous Reading</label><input type="number" id="utilityPrev" step="0.01" readonly style="background:#f1f5f9;"></div>
+                <div class="form-group"><label>Current Reading *</label><input type="number" id="utilityCurr" step="0.01" required oninput="updateUtilityPreview()"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Reading Date *</label><input type="date" id="utilityDate" required></div>
+                <div class="form-group"><label>Usage (units)</label><input type="number" id="utilityUsage" step="0.01" readonly style="background:#f1f5f9;"></div>
+            </div>
+            <div class="calc-preview" id="utilityPreview">
+                <div class="calc-row"><span>Usage</span><span id="prevUsage">0</span></div>
+                <div class="calc-row" id="prevRateRow"><span>Rate per unit</span><span id="prevRate">1,100</span></div>
+                <div class="calc-row" id="prevSubtotalRow"><span>Subtotal</span><span id="prevSubtotal">0</span></div>
+                <div class="calc-row" id="prevSewerRow" style="display:none;"><span>Sewerage (75%)</span><span id="prevSewer">0</span></div>
+                <div class="calc-row" id="prevServiceRow" style="display:none;"><span>Service charge</span><span id="prevService">1,500</span></div>
+                <div class="calc-row" id="prevVatRow" style="display:none;"><span>VAT (18%)</span><span id="prevVat">0</span></div>
+                <div class="calc-row"><span>Total Amount</span><span id="prevTotal">0</span></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('utilityModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Reading</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="baseChargesModal">
+    <div class="modal">
+        <h3>⚙️ Base Charges</h3>
+        <form id="baseChargesForm" onsubmit="saveBaseCharges(event)">
+            <div class="form-group"><label>Electric Rate (UGX per unit)</label><input type="number" id="baseElectricRate" value="1100" min="0"></div>
+            <div class="form-group"><label>Water Rate (UGX per unit)</label><input type="number" id="baseWaterRate" value="4433" min="0"></div>
+            <div class="form-group"><label>Sewerage Charge (%)</label><input type="number" id="baseSewerage" value="75" min="0" max="100"></div>
+            <div class="form-group"><label>Service Charge (UGX)</label><input type="number" id="baseService" value="1500" min="0"></div>
+            <div class="form-group"><label>VAT (%)</label><input type="number" id="baseVat" value="18" min="0" max="100"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('baseChargesModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Charges</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="expenseModal">
+    <div class="modal">
+        <h3>Add Expense</h3>
+        <form id="expenseForm" onsubmit="saveExpense(event)">
+            <div class="form-group"><label>Apartment / Tenant *</label><select id="expenseTenant" required><option value="">Select apartment</option></select></div>
+            <div class="form-group"><label>Category *</label><select id="expenseCategory" required><option value="Plumbing">Plumbing</option><option value="Electric">Electric</option><option value="General Maintenance">General Maintenance</option></select></div>
+            <div class="form-group"><label>Description *</label><input type="text" id="expenseDesc" required></div>
+            <div class="form-row">
+                <div class="form-group"><label>Amount (UGX) *</label><input type="number" id="expenseAmount" required min="0"></div>
+                <div class="form-group"><label>Date *</label><input type="date" id="expenseDate" required></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('expenseModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Expense</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editRentModal">
+    <div class="modal">
+        <h3>Edit Rent Transaction</h3>
+        <form id="editRentForm" onsubmit="saveRentEdit(event)">
+            <input type="hidden" id="editRentTenantId"><input type="hidden" id="editRentIndex">
+            <div class="form-group"><label>Date</label><input type="date" id="editRentDate" required></div>
+            <div class="form-group"><label>Description</label><input type="text" id="editRentDesc" required></div>
+            <div class="form-row">
+                <div class="form-group"><label>Debit (Invoice)</label><input type="number" id="editRentDebit" min="0" value="0"></div>
+                <div class="form-group"><label>Credit (Payment)</label><input type="number" id="editRentCredit" min="0" value="0"></div>
+            </div>
+            <div class="form-group"><label>Invoice No.</label><input type="text" id="editRentInvoice"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editRentModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="printModal">
+    <div class="modal">
+        <h3>Print Statement</h3>
+        <div class="form-group"><label>Select Tenant</label><select id="printTenant"><option value="">Select tenant</option></select></div>
+        <div class="form-group"><label>Statement Type</label><select id="printType"><option value="rental">Rental Statement</option><option value="utility">Utility Statement</option><option value="expenses">Expense Report</option></select></div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline" onclick="closeModal('printModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="doPrintStatement()">🖨️ Print / Save PDF</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="locationModal">
+    <div class="modal">
+        <h3>Add Location</h3>
+        <form id="locationForm" onsubmit="saveLocation(event)">
+            <div class="form-group"><label>Area Name *</label><input type="text" id="locationArea" required></div>
+            <div class="form-group"><label>City *</label><input type="text" id="locationCity" required></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('locationModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Location</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="userModal">
+    <div class="modal">
+        <h3>Add User</h3>
+        <form id="userForm" onsubmit="saveUser(event)">
+            <div class="form-group"><label>Full Name *</label><input type="text" id="userFullName" required></div>
+            <div class="form-group"><label>Username *</label><input type="text" id="userUsername" required></div>
+            <div class="form-group"><label>Password *</label><input type="password" id="userPassword" required minlength="4"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Role *</label><select id="userRole" required><option value="user">User</option><option value="accountant">Accountant</option><option value="cashier">Cashier</option><option value="manager">Manager</option></select></div>
+                <div class="form-group"><label>Location *</label><select id="userLocation" required><option value="">Select location</option></select></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('userModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<script>
+// ============================================================
+// FIREBASE
+// ============================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyDzq6dUWhZ9aNkOp8k0R9_hsx6_ycQSgJ8",
+    authDomain: "bright-mesh-rentals.firebaseapp.com",
+    projectId: "bright-mesh-rentals",
+    storageBucket: "bright-mesh-rentals.firebasestorage.app",
+    messagingSenderId: "751734414723",
+    appId: "1:751734414723:web:fabb120a42c5b193032ab6",
+    measurementId: "G-VTDR2EPCN4"
+};
+
+let db = null;
+let firebaseReady = false;
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseReady = true;
+} catch (err) { console.error('Firebase init failed:', err); }
+
+async function firestoreLoadLocations() {
+    if (!firebaseReady) return;
+    try {
+        const snap = await db.collection('locations').get();
+        if (!snap.empty) LOCATIONS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        else for (const loc of DEFAULT_LOCATIONS) await db.collection('locations').doc(loc.id).set(loc);
+    } catch (err) { console.warn('Locations load failed:', err.message); }
+}
+async function firestoreLoadUsers() {
+    if (!firebaseReady) return;
+    try {
+        const snap = await db.collection('users').get();
+        if (!snap.empty) USERS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        else for (const u of DEFAULT_USERS) await db.collection('users').doc(u.id).set(u);
+    } catch (err) { console.warn('Users load failed:', err.message); }
+}
+async function firestoreLoadTenants() {
+    if (!firebaseReady) return;
+    try {
+        const snap = await db.collection('tenants').get();
+        if (!snap.empty) {
+            const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            remote.forEach(r => {
+                const idx = TENANTS.findIndex(t => t.id === r.id);
+                if (idx > -1) TENANTS[idx] = r;
+                else TENANTS.push(r);
+            });
+        } else {
+            for (const t of TENANTS) await db.collection('tenants').doc(t.id).set(t);
+        }
+    } catch (err) { console.warn('Tenants load failed:', err.message); }
+}
+async function firestoreSaveUser(user) {
+    if (!firebaseReady) return;
+    try { await db.collection('users').doc(user.id).set(user, { merge: true }); } catch (err) { console.warn('User save failed:', err.message); }
+}
+async function firestoreSaveLocation(loc) {
+    if (!firebaseReady) return;
+    try { await db.collection('locations').doc(loc.id).set(loc); } catch (err) { console.warn('Location save failed:', err.message); }
+}
+async function firestoreSaveTenant(tenant) {
+    if (!firebaseReady) return;
+    try { await db.collection('tenants').doc(tenant.id).set(tenant, { merge: true }); } catch (err) { console.warn('Tenant save failed:', err.message); }
+}
+async function firestoreDeleteTenant(id) {
+    if (!firebaseReady) return;
+    try { await db.collection('tenants').doc(id).delete(); } catch (err) { console.warn('Tenant delete failed:', err.message); }
+}
+
+// ============================================================
+// STATE
+// ============================================================
+const today = new Date();
+const todayStr = today.toISOString().split('T')[0];
+
+let currentUser = null;
+const BASE_CHARGES = { electricRate: 1100, waterRate: 4433, seweragePercent: 75, serviceCharge: 1500, vatPercent: 18 };
+const DEFAULT_LOCATIONS = [{ id: 'loc1', area: 'Malukhu', city: 'Mbale' }];
+const DEFAULT_USERS = [
+    { id: 'u1', username: 'admin', password: 'admin', fullName: 'System Admin', role: 'admin', locationId: null, locationName: 'All Locations' },
+    { id: 'u2', username: 'ahmed', password: 'wamo123@', fullName: 'Ahmed', role: 'manager', locationId: 'loc1', locationName: 'Malukhu, Mbale' }
+];
+let LOCATIONS = [...DEFAULT_LOCATIONS];
+let USERS = [...DEFAULT_USERS];
+
+function can(action) {
+    if (!currentUser) return false;
+    const role = currentUser.role;
+    const perms = {
+        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','mark_utility_paid'],
+        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','mark_utility_paid'],
+        accountant: ['view_dashboard','view_tenants','edit_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','print','mark_utility_paid'],
+        cashier: ['view_dashboard','view_tenants','add_payments','view_expenses','print','mark_utility_paid'],
+        user: ['view_dashboard','view_tenants','view_expenses','print']
+    };
+    return (perms[role] || []).includes(action);
+}
+
+// ============================================================
+// TENANTS DATA — pre-populated with payment rows after each reading
+// for readings that were paid. This mirrors the Excel sheet's structure.
+// ============================================================
+const TENANTS = [
+    {
+        id: 'ivan', name: 'Ivan', apt: 1, mobile: '+256 772 100 001',
+        monthlyRent: 150000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        rent: [
+            { date: '2025-07-16', desc: 'Rent for Jul,Aug,Sept 2025', debit: 450000, credit: 0, invoiceNo: 'INV-001' },
+            { date: '2025-07-27', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 450000, invoiceNo: 'INV-001' },
+            { date: '2025-10-01', desc: 'Rent for Oct 2025', debit: 150000, credit: 0, invoiceNo: 'INV-002' },
+            { date: '2025-10-25', desc: 'Payment – Oct 2025', debit: 0, credit: 150000, invoiceNo: 'INV-002' },
+            { date: '2025-11-01', desc: 'Rent for Nov 2025', debit: 150000, credit: 0, invoiceNo: 'INV-003' },
+            { date: '2025-11-28', desc: 'Payment – Nov 2025', debit: 0, credit: 150000, invoiceNo: 'INV-003' },
+            { date: '2025-12-01', desc: 'Rent for Dec 2025', debit: 150000, credit: 0, invoiceNo: 'INV-004' },
+            { date: '2025-12-08', desc: 'Payment – Dec 2025', debit: 0, credit: 150000, invoiceNo: 'INV-004' },
+            { date: '2026-01-01', desc: 'Rent for Jan 2026', debit: 150000, credit: 0, invoiceNo: 'INV-005' },
+            { date: '2026-01-16', desc: 'Payment – Jan 2026', debit: 0, credit: 150000, invoiceNo: 'INV-005' },
+            { date: '2026-02-01', desc: 'Rent for Feb 2026', debit: 150000, credit: 0, invoiceNo: 'INV-006' },
+            { date: '2026-02-20', desc: 'Payment – Feb 2026', debit: 0, credit: 150000, invoiceNo: 'INV-006' },
+            { date: '2026-03-01', desc: 'Rent for Mar 2026', debit: 150000, credit: 0, invoiceNo: 'INV-007' },
+            { date: '2026-03-21', desc: 'Payment – Mar 2026', debit: 0, credit: 150000, invoiceNo: 'INV-007' },
+            { date: '2026-04-01', desc: 'Rent for Apr 2026', debit: 150000, credit: 0, invoiceNo: 'INV-008' },
+            { date: '2026-06-21', desc: 'Payment – Apr 2026', debit: 0, credit: 150000, invoiceNo: 'INV-008' },
+            { date: '2026-05-16', desc: 'Rent for May 2026', debit: 150000, credit: 0, invoiceNo: 'INV-009' },
+            { date: '2026-05-30', desc: 'Payment – May 2026', debit: 0, credit: 150000, invoiceNo: 'INV-009' },
+            { date: '2026-06-01', desc: 'Rent for June 2026', debit: 150000, credit: 0, invoiceNo: 'INV-010' },
+            { date: '2026-06-15', desc: 'Payment – June 2026', debit: 0, credit: 150000, invoiceNo: 'INV-010' },
+            { date: '2026-07-01', desc: 'Rent for July 2026', debit: 150000, credit: 0, invoiceNo: 'INV-011' },
+            { date: '2026-07-17', desc: 'Payment – July 2026', debit: 0, credit: 150000, invoiceNo: 'INV-011' },
+            { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 150000, credit: 0, invoiceNo: 'INV-012' },
+            { date: '2026-08-08', desc: 'Payment – Aug 2026', debit: 0, credit: 150000, invoiceNo: 'INV-012' },
+            { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 150000, credit: 0, invoiceNo: 'INV-013' },
+            { date: '2026-09-18', desc: 'Payment – Sept 2026', debit: 0, credit: 150000, invoiceNo: 'INV-013' },
+            { date: '2026-10-01', desc: 'Rent for Oct 2026', debit: 170000, credit: 0, invoiceNo: 'INV-014' },
+        ],
+        // Electric — each reading has a matching payment row right after it,
+        // exactly as it appears in the Excel sheet.
+        electric: [
+            { date: '2025-10-31', desc: 'Oct 2025', meter: 7.7, rate: 1100, debit: 8470, credit: 0, reading: 7.7 },
+            { date: '2025-11-30', desc: 'Nov 2025', meter: 7.4, rate: 1100, debit: 8140, credit: 0, reading: 15.1 },
+            { date: '2025-12-08', desc: 'Payment – Oct 2025', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-01-01', desc: 'Dec 2025', meter: 7.1, rate: 1100, debit: 7810, credit: 0, reading: 22.2 },
+            { date: '2026-01-16', desc: 'Payment – Dec 2025', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-02-01', desc: 'Jan 2026', meter: 7.7, rate: 1100, debit: 8470, credit: 0, reading: 29.9 },
+            { date: '2026-03-01', desc: 'Feb 2026', meter: 7.4, rate: 1100, debit: 8140, credit: 0, reading: 37.3 },
+            { date: '2026-03-21', desc: 'Payment – Feb 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null },
+            { date: '2026-04-01', desc: 'Mar 2026', meter: 8.6, rate: 1100, debit: 9460, credit: 0, reading: 45.9 },
+            { date: '2026-05-01', desc: 'Apr 2026', meter: 8.0, rate: 1100, debit: 8800, credit: 0, reading: 53.9 },
+            { date: '2026-06-30', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-06-01', desc: 'May 2026', meter: 7.6, rate: 1100, debit: 8360, credit: 0, reading: 61.5 },
+            { date: '2026-06-15', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-07-01', desc: 'June 2026', meter: 7.0, rate: 1100, debit: 7700, credit: 0, reading: 68.5 },
+            { date: '2026-07-17', desc: 'Payment – June 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-08-01', desc: 'July 2026', meter: 8.1, rate: 1100, debit: 8910, credit: 0, reading: 76.6 },
+            { date: '2026-08-08', desc: 'Payment – July 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-09-01', desc: 'Aug 2026', meter: 8.4, rate: 1100, debit: 9240, credit: 0, reading: 85.0 },
+        ],
+        water: [],
+        expenses: [
+            { desc: 'Repair – kitchen tap', amount: 45000, date: '2026-02-10', category: 'Plumbing' },
+            { desc: 'Cleaning service', amount: 30000, date: '2026-04-05', category: 'General Maintenance' },
+        ]
+    },
+    {
+        id: 'bob', name: 'Bob', apt: 2, mobile: '+256 772 100 002',
+        monthlyRent: 200000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        rent: [
+            { date: '2025-07-01', desc: 'Rent for Jul,Aug,Sept 2025', debit: 600000, credit: 0, invoiceNo: 'INV-101' },
+            { date: '2025-07-01', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 500000, invoiceNo: 'INV-101' },
+            { date: '2025-08-01', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 100000, invoiceNo: 'INV-101' },
+            { date: '2025-10-01', desc: 'Rent for Oct 2025', debit: 200000, credit: 0, invoiceNo: 'INV-102' },
+            { date: '2025-10-25', desc: 'Payment – Oct 2025', debit: 0, credit: 200000, invoiceNo: 'INV-102' },
+            { date: '2025-11-01', desc: 'Rent for Nov 2025', debit: 200000, credit: 0, invoiceNo: 'INV-103' },
+            { date: '2025-11-20', desc: 'Payment – Nov 2025', debit: 0, credit: 200000, invoiceNo: 'INV-103' },
+            { date: '2025-12-01', desc: 'Rent for Dec 2025', debit: 200000, credit: 0, invoiceNo: 'INV-104' },
+            { date: '2025-12-17', desc: 'Payment – Dec 2025', debit: 0, credit: 200000, invoiceNo: 'INV-104' },
+            { date: '2026-01-01', desc: 'Rent for Jan 2026', debit: 200000, credit: 0, invoiceNo: 'INV-105' },
+            { date: '2026-01-20', desc: 'Payment – Jan 2026', debit: 0, credit: 200000, invoiceNo: 'INV-105' },
+            { date: '2026-02-01', desc: 'Rent for Feb 2026', debit: 200000, credit: 0, invoiceNo: 'INV-106' },
+            { date: '2026-02-26', desc: 'Payment – Feb 2026', debit: 0, credit: 200000, invoiceNo: 'INV-106' },
+            { date: '2026-03-01', desc: 'Rent for Mar 2026', debit: 200000, credit: 0, invoiceNo: 'INV-107' },
+            { date: '2026-03-27', desc: 'Payment – Mar 2026', debit: 0, credit: 200000, invoiceNo: 'INV-107' },
+            { date: '2026-04-01', desc: 'Rent for Apr 2026', debit: 200000, credit: 0, invoiceNo: 'INV-108' },
+            { date: '2026-04-19', desc: 'Payment – Apr 2026', debit: 0, credit: 200000, invoiceNo: 'INV-108' },
+            { date: '2026-05-01', desc: 'Rent for May 2026', debit: 200000, credit: 0, invoiceNo: 'INV-109' },
+            { date: '2026-05-20', desc: 'Payment – May 2026', debit: 0, credit: 200000, invoiceNo: 'INV-109' },
+            { date: '2026-06-01', desc: 'Rent for June 2026', debit: 200000, credit: 0, invoiceNo: 'INV-110' },
+            { date: '2026-06-24', desc: 'Payment – June 2026', debit: 0, credit: 200000, invoiceNo: 'INV-110' },
+            { date: '2026-07-01', desc: 'Rent for July 2026', debit: 200000, credit: 0, invoiceNo: 'INV-111' },
+            { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 200000, credit: 0, invoiceNo: 'INV-112' },
+            { date: '2026-08-15', desc: 'Payment – July 2026', debit: 0, credit: 200000, invoiceNo: 'INV-111' },
+            { date: '2026-08-15', desc: 'Payment – Aug 2026', debit: 0, credit: 200000, invoiceNo: 'INV-112' },
+            { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 200000, credit: 0, invoiceNo: 'INV-113' },
+            { date: '2026-09-18', desc: 'Payment – Sept 2026', debit: 0, credit: 200000, invoiceNo: 'INV-113' },
+            { date: '2026-10-01', desc: 'Rent for Oct 2026', debit: 220000, credit: 0, invoiceNo: 'INV-114' },
+        ],
+        electric: [
+            { date: '2025-10-31', desc: 'Oct 2025', meter: 8.2, rate: 1100, debit: 9020, credit: 0, reading: 8.2 },
+            { date: '2025-11-20', desc: 'Payment – Oct 2025', meter: null, rate: null, debit: 0, credit: 9020, reading: null },
+            { date: '2025-11-30', desc: 'Nov 2025', meter: 7.8, rate: 1100, debit: 8580, credit: 0, reading: 16.0 },
+            { date: '2026-01-01', desc: 'Dec 2025', meter: 11.8, rate: 1100, debit: 12980, credit: 0, reading: 27.8 },
+            { date: '2026-01-20', desc: 'Payment – Jan 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null },
+            { date: '2026-02-01', desc: 'Jan 2026', meter: 10.1, rate: 1100, debit: 11110, credit: 0, reading: 37.9 },
+            { date: '2026-03-01', desc: 'Feb 2026', meter: 10.5, rate: 1100, debit: 11550, credit: 0, reading: 48.4 },
+            { date: '2026-03-27', desc: 'Payment – Feb 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null },
+            { date: '2026-04-01', desc: 'Mar 2026', meter: 8.9, rate: 1100, debit: 9790, credit: 0, reading: 57.3 },
+            { date: '2026-04-19', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null },
+            { date: '2026-05-01', desc: 'Apr 2026', meter: 8.5, rate: 1100, debit: 9350, credit: 0, reading: 65.8 },
+            { date: '2026-06-01', desc: 'May 2026', meter: 7.7, rate: 1100, debit: 8470, credit: 0, reading: 73.5 },
+            { date: '2026-06-24', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-07-01', desc: 'June 2026', meter: 8.3, rate: 1100, debit: 9130, credit: 0, reading: 81.8 },
+            { date: '2026-08-01', desc: 'July 2026', meter: 8.1, rate: 1100, debit: 8910, credit: 0, reading: 89.9 },
+            { date: '2026-09-01', desc: 'Aug 2026', meter: 10.2, rate: 1100, debit: 11220, credit: 0, reading: 100.1 },
+            { date: '2026-09-18', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 30000, reading: null },
+        ],
+        water: [],
+        expenses: [ { desc: 'Plumbing repair', amount: 80000, date: '2026-03-15', category: 'Plumbing' } ]
+    },
+    {
+        id: 'peter', name: 'Peter', apt: 3, mobile: '+256 772 100 003',
+        monthlyRent: 300000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        rent: [
+            { date: '2025-07-01', desc: 'Rent for Jul 2025', debit: 350000, credit: 0, invoiceNo: 'INV-201' },
+            { date: '2025-07-01', desc: 'Payment – Jul 2025', debit: 0, credit: 350000, invoiceNo: 'INV-201' },
+            { date: '2025-08-01', desc: 'Rent for Aug,Sept 2025', debit: 600000, credit: 0, invoiceNo: 'INV-202' },
+            { date: '2025-08-01', desc: 'Payment – Aug,Sept 2025', debit: 0, credit: 600000, invoiceNo: 'INV-202' },
+            { date: '2025-10-01', desc: 'Rent for Oct,Nov 2025', debit: 600000, credit: 0, invoiceNo: 'INV-203' },
+            { date: '2025-10-01', desc: 'Payment – Oct,Nov 2025', debit: 0, credit: 600000, invoiceNo: 'INV-203' },
+            { date: '2025-12-01', desc: 'Rent for Dec 2025', debit: 300000, credit: 0, invoiceNo: 'INV-204' },
+            { date: '2025-12-03', desc: 'Payment – Dec 2025', debit: 0, credit: 300000, invoiceNo: 'INV-204' },
+            { date: '2026-01-01', desc: 'Rent for Jan 2026', debit: 300000, credit: 0, invoiceNo: 'INV-205' },
+            { date: '2026-01-01', desc: 'Payment – Jan 2026', debit: 0, credit: 300000, invoiceNo: 'INV-205' },
+            { date: '2026-02-01', desc: 'Rent for Feb 2026', debit: 300000, credit: 0, invoiceNo: 'INV-206' },
+            { date: '2026-02-01', desc: 'Payment – Feb 2026', debit: 0, credit: 300000, invoiceNo: 'INV-206' },
+            { date: '2026-03-01', desc: 'Rent for Mar 2026', debit: 300000, credit: 0, invoiceNo: 'INV-207' },
+            { date: '2026-03-01', desc: 'Payment – Mar 2026', debit: 0, credit: 300000, invoiceNo: 'INV-207' },
+            { date: '2026-04-01', desc: 'Rent for Apr 2026', debit: 300000, credit: 0, invoiceNo: 'INV-208' },
+            { date: '2026-04-01', desc: 'Payment – Apr 2026', debit: 0, credit: 300000, invoiceNo: 'INV-208' },
+            { date: '2026-05-01', desc: 'Rent for May 2026', debit: 300000, credit: 0, invoiceNo: 'INV-209' },
+            { date: '2026-05-02', desc: 'Payment – May 2026', debit: 0, credit: 300000, invoiceNo: 'INV-209' },
+            { date: '2026-06-01', desc: 'Rent for June 2026', debit: 300000, credit: 0, invoiceNo: 'INV-210' },
+            { date: '2026-06-01', desc: 'Payment – June 2026', debit: 0, credit: 300000, invoiceNo: 'INV-210' },
+            { date: '2026-07-01', desc: 'Rent for July 2026', debit: 300000, credit: 0, invoiceNo: 'INV-211' },
+            { date: '2026-07-03', desc: 'Payment – July 2026', debit: 0, credit: 300000, invoiceNo: 'INV-211' },
+            { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 300000, credit: 0, invoiceNo: 'INV-212' },
+            { date: '2026-08-01', desc: 'Payment – Aug 2026', debit: 0, credit: 300000, invoiceNo: 'INV-212' },
+            { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 300000, credit: 0, invoiceNo: 'INV-213' },
+            { date: '2026-09-01', desc: 'Payment – Sept 2026', debit: 0, credit: 300000, invoiceNo: 'INV-213' },
+            { date: '2026-10-01', desc: 'Rent for Oct 2026', debit: 380000, credit: 0, invoiceNo: 'INV-214' },
+        ],
+        electric: [
+            { date: '2025-10-31', desc: 'Oct 2025', meter: 41.6, rate: 1100, debit: 45760, credit: 0, reading: 41.6 },
+            { date: '2025-11-03', desc: 'Payment – Oct 2025', meter: null, rate: null, debit: 0, credit: 45760, reading: null },
+            { date: '2025-11-30', desc: 'Nov 2025', meter: 39.3, rate: 1100, debit: 43230, credit: 0, reading: 80.9 },
+            { date: '2025-12-10', desc: 'Payment – Nov 2025', meter: null, rate: null, debit: 0, credit: 50000, reading: null },
+            { date: '2026-01-01', desc: 'Dec 2025', meter: 34, rate: 1100, debit: 37400, credit: 0, reading: 114.9 },
+            { date: '2026-01-02', desc: 'Payment – Dec 2025', meter: null, rate: null, debit: 0, credit: 30000, reading: null },
+            { date: '2026-02-01', desc: 'Jan 2026', meter: 45.7, rate: 1100, debit: 50270, credit: 0, reading: 160.6 },
+            { date: '2026-03-01', desc: 'Payment – Jan 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null },
+            { date: '2026-03-01', desc: 'Feb 2026', meter: 52.4, rate: 1100, debit: 57640, credit: 0, reading: 213 },
+            { date: '2026-03-01', desc: 'Payment – Feb 2026', meter: null, rate: null, debit: 0, credit: 60000, reading: null },
+            { date: '2026-04-01', desc: 'Mar 2026', meter: 58, rate: 1100, debit: 63800, credit: 0, reading: 271 },
+            { date: '2026-04-01', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null },
+            { date: '2026-04-07', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null },
+            { date: '2026-05-01', desc: 'Apr 2026', meter: 68.4, rate: 1100, debit: 75240, credit: 0, reading: 339.4 },
+            { date: '2026-05-02', desc: 'Payment – Apr 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-05-02', desc: 'Payment – Apr 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null },
+            { date: '2026-06-01', desc: 'May 2026', meter: 59.6, rate: 1100, debit: 65560, credit: 0, reading: 399 },
+            { date: '2026-06-11', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 70000, reading: null },
+            { date: '2026-07-01', desc: 'June 2026', meter: 64.2, rate: 1100, debit: 70620, credit: 0, reading: 463.2 },
+            { date: '2026-07-03', desc: 'Payment – June 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null },
+            { date: '2026-08-01', desc: 'July 2026', meter: 84.3, rate: 1100, debit: 92730, credit: 0, reading: 547.5 },
+            { date: '2026-08-01', desc: 'Payment – July 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null },
+            { date: '2026-08-26', desc: 'Payment – July 2026', meter: null, rate: null, debit: 0, credit: 100000, reading: null },
+            { date: '2026-09-01', desc: 'Aug 2026', meter: 94, rate: 1100, debit: 103400, credit: 0, reading: 641.5 },
+            { date: '2026-09-17', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 60000, reading: null },
+        ],
+        water: [],
+        expenses: [
+            { desc: 'Painting – living room', amount: 120000, date: '2026-01-20', category: 'General Maintenance' },
+            { desc: 'Window replacement', amount: 95000, date: '2026-05-12', category: 'General Maintenance' },
+        ]
+    },
+    {
+        id: 'vitus', name: 'Vitus', apt: 4, mobile: '+256 772 100 004',
+        monthlyRent: 250000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        rent: [
+            { date: '2026-04-10', desc: 'Rent for Apr,May 2026', debit: 500000, credit: 0, invoiceNo: 'INV-301' },
+            { date: '2026-04-10', desc: 'Payment – Apr,May 2026', debit: 0, credit: 500000, invoiceNo: 'INV-301' },
+            { date: '2026-05-10', desc: 'Rent for June 2026', debit: 250000, credit: 0, invoiceNo: 'INV-302' },
+            { date: '2026-05-20', desc: 'Payment – June 2026', debit: 0, credit: 250000, invoiceNo: 'INV-302' },
+            { date: '2026-05-20', desc: 'Rent for July 2026', debit: 250000, credit: 0, invoiceNo: 'INV-303' },
+            { date: '2026-05-20', desc: 'Payment – July 2026', debit: 0, credit: 50000, invoiceNo: 'INV-303' },
+            { date: '2026-07-04', desc: 'Payment – July 2026', debit: 0, credit: 200000, invoiceNo: 'INV-303' },
+            { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 250000, credit: 0, invoiceNo: 'INV-304' },
+            { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 250000, credit: 0, invoiceNo: 'INV-305' },
+            { date: '2026-09-01', desc: 'Payment – Aug 2026', debit: 0, credit: 250000, invoiceNo: 'INV-304' },
+            { date: '2026-09-01', desc: 'Rent for Oct 2026', debit: 270000, credit: 0, invoiceNo: 'INV-306' },
+        ],
+        electric: [
+            { date: '2026-04-11', desc: 'First meter reading', meter: null, rate: null, debit: 0, credit: 0, reading: 114.3 },
+            { date: '2026-05-01', desc: 'Apr 2026', meter: 6.1, rate: 1100, debit: 6710, credit: 0, reading: 120.4 },
+            { date: '2026-06-01', desc: 'May 2026', meter: 8.9, rate: 1100, debit: 9790, credit: 0, reading: 129.3 },
+            { date: '2026-06-22', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null },
+            { date: '2026-07-01', desc: 'June 2026', meter: 8.2, rate: 1100, debit: 9020, credit: 0, reading: 137.5 },
+            { date: '2026-08-01', desc: 'July 2026', meter: 9.2, rate: 1100, debit: 10120, credit: 0, reading: 146.7 },
+            { date: '2026-09-01', desc: 'Aug 2026', meter: 10.4, rate: 1100, debit: 11440, credit: 0, reading: 157.1 },
+            { date: '2026-09-01', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null },
+        ],
+        water: [],
+        expenses: [ { desc: 'Roof repair', amount: 150000, date: '2026-07-01', category: 'General Maintenance' } ]
+    },
+    {
+        id: 'jackson', name: 'Jackson', apt: 5, mobile: '+256 772 100 005',
+        monthlyRent: 300000, billingDate: 10, electricRate: 1100, locationId: 'loc1',
+        rent: [
+            { date: '2026-08-10', desc: 'Rent for Aug,Sept,Oct 2026', debit: 900000, credit: 0, invoiceNo: 'INV-401' },
+            { date: '2026-08-10', desc: 'Payment – Aug,Sept,Oct 2026', debit: 0, credit: 900000, invoiceNo: 'INV-401' },
+        ],
+        electric: [
+            { date: '2026-08-10', desc: 'First meter reading', meter: null, rate: null, debit: 0, credit: 0, reading: 12.4 },
+            { date: '2026-09-01', desc: 'Aug 2026', meter: 8.2, rate: 1100, debit: 9020, credit: 0, reading: 20.6 },
+            { date: '2026-09-01', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null },
+            { date: '2026-10-01', desc: 'Sept 2026', meter: 18.4, rate: 1100, debit: 20240, credit: 0, reading: 39.0 },
+        ],
+        water: [
+            { date: '2026-08-10', desc: 'First meter reading', meter: null, rate: null, debit: 0, credit: 0, reading: 1 },
+            { date: '2026-10-01', desc: 'Meter-2 @4433+75%+1500+18%', meter: 2, rate: 4433, debit: 20076, credit: 0, reading: 3 },
+        ],
+        expenses: [],
+    }
+];
+
+// ============================================================
+// HELPERS
+// ============================================================
+function formatUGX(amount) { return 'UGX ' + Number(amount || 0).toLocaleString('en-UG'); }
+
+function ordinal(n) {
+    const num = parseInt(n);
+    if (isNaN(num)) return n;
+    const j = num % 10, k = num % 100;
+    if (j === 1 && k !== 11) return num + 'st';
+    if (j === 2 && k !== 12) return num + 'nd';
+    if (j === 3 && k !== 13) return num + 'rd';
+    return num + 'th';
+}
+
+// Balance = running sum of debit - credit. Same formula as Excel.
+function utilityBalance(arr) { return (arr || []).reduce((s, r) => s + (r.debit || 0) - (r.credit || 0), 0); }
+function rentBalance(t) { return utilityBalance(t.rent); }
+function electricBalance(t) { return utilityBalance(t.electric); }
+function waterBalance(t) { return utilityBalance(t.water); }
+function totalBalance(t) { return rentBalance(t) + electricBalance(t) + waterBalance(t); }
+function totalExpenses(t) { return (t.expenses || []).reduce((s, e) => s + e.amount, 0); }
+
+// Total received — sum of credits
+function totalRentReceived(list) { return (list || TENANTS).reduce((s, t) => s + t.rent.reduce((a, r) => a + (r.credit || 0), 0), 0); }
+function totalElectricReceived(list) { return (list || TENANTS).reduce((s, t) => s + t.electric.reduce((a, r) => a + (r.credit || 0), 0), 0); }
+function totalWaterReceived(list) { return (list || TENANTS).reduce((s, t) => s + (t.water || []).reduce((a, r) => a + (r.credit || 0), 0), 0); }
+function totalExpensesReceived(list) { return (list || TENANTS).reduce((s, t) => s + totalExpenses(t), 0); }
+
+// A reading is "Paid" if the balance AFTER that reading row (cumulative) is <= 0.
+// This matches Excel's logic: pay-offs settle earlier readings.
+function isReadingPaid(arr, readingIndex) {
+    const reading = arr[readingIndex];
+    if (!reading || !reading.meter) return false;
+    let balAfter = arr.slice(0, readingIndex + 1).reduce((s, r) => s + (r.debit || 0) - (r.credit || 0), 0);
+    return balAfter <= 0;
+}
+
+function getVisibleTenants() {
+    if (!currentUser) return [];
+    if (currentUser.role === 'admin') return TENANTS;
+    return TENANTS.filter(t => t.locationId === currentUser.locationId);
+}
+
+function getNextInvoiceNo(t) {
+    const nums = t.rent.filter(r => r.invoiceNo).map(r => { const m = r.invoiceNo.match(/\d+/); return m ? parseInt(m[0]) : 0; });
+    const max = nums.length ? Math.max(...nums) : 0;
+    return 'INV-' + String(max + 1).padStart(3, '0');
+}
+
+function showNotification(msg, type = 'success') {
+    const n = document.getElementById('notification');
+    n.textContent = msg;
+    n.className = 'notification ' + type + ' show';
+    setTimeout(() => n.classList.remove('show'), 3000);
+}
+
+function closeModal(id) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    overlay.style.display = 'none';
+    setTimeout(() => { overlay.style.display = ''; }, 50);
+}
+
+function openModal(id) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+}
+
+function getLastMeterReading(t, type) {
+    const arr = type === 'electric' ? t.electric : t.water;
+    const readings = arr.filter(r => r.reading !== null && r.reading !== undefined).map(r => r.reading);
+    return readings.length ? readings[readings.length - 1] : 0;
+}
+
+function resetLoginButton() {
+    const btn = document.getElementById('loginBtn');
+    if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+}
+
+// ============================================================
+// LANDING
+// ============================================================
+function scrollToFeatures() { document.getElementById('featuresSection').scrollIntoView({ behavior: 'smooth' }); }
+function scrollToPricing() { document.getElementById('pricingSection').scrollIntoView({ behavior: 'smooth' }); }
+
+function openLogin() {
+    document.getElementById('loginForm').reset();
+    document.getElementById('loginError').classList.remove('show');
+    resetLoginButton();
+    document.getElementById('loginOverlay').classList.add('active');
+    setTimeout(() => document.getElementById('loginUsername').focus(), 100);
+}
+
+function closeLogin() {
+    document.getElementById('loginOverlay').classList.remove('active');
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').classList.remove('show');
+    resetLoginButton();
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+async function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    errorEl.classList.remove('show');
+    btn.textContent = 'Signing in...';
+    btn.disabled = true;
+
+    const safetyTimeout = setTimeout(() => {
+        if (btn.disabled) {
+            resetLoginButton();
+            errorEl.textContent = 'Login timed out. Please try again.';
+            errorEl.classList.add('show');
+        }
+    }, 8000);
+
+    try {
+        let userRecord = null;
+        if (firebaseReady) {
+            try {
+                const snap = await db.collection('users').where('username', '==', username).limit(1).get();
+                if (!snap.empty) {
+                    const doc = snap.docs[0];
+                    userRecord = { id: doc.id, ...doc.data() };
+                    const localIdx = USERS.findIndex(u => u.id === userRecord.id);
+                    if (localIdx > -1) USERS[localIdx] = userRecord;
+                    else USERS.push(userRecord);
+                }
+            } catch (err) { console.warn('Firestore lookup failed:', err.message); }
+        }
+        if (!userRecord) userRecord = USERS.find(u => u.username.toLowerCase() === username);
+
+        clearTimeout(safetyTimeout);
+
+        if (!userRecord) {
+            errorEl.textContent = 'Username not found. Please check your credentials.';
+            errorEl.classList.add('show');
+            resetLoginButton();
+            return;
+        }
+        if (userRecord.password !== password) {
+            errorEl.textContent = 'Incorrect password. Please try again.';
+            errorEl.classList.add('show');
+            resetLoginButton();
+            return;
+        }
+
+        currentUser = userRecord;
+        sessionStorage.setItem('bmr_currentUser', JSON.stringify(userRecord));
+        closeLogin();
+        enterApp();
+    } catch (err) {
+        clearTimeout(safetyTimeout);
+        console.error(err);
+        errorEl.textContent = 'Login failed. Please try again.';
+        errorEl.classList.add('show');
+        resetLoginButton();
+    }
+}
+
+function handleLogout() {
+    currentUser = null;
+    sessionStorage.removeItem('bmr_currentUser');
+    document.getElementById('appContainer').classList.remove('active');
+    document.getElementById('landingPage').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    resetLoginButton();
+    document.getElementById('loginForm').reset();
+    document.getElementById('loginError').classList.remove('show');
+    showNotification('Logged out successfully', 'success');
+}
+
+function enterApp() {
+    if (!currentUser) return;
+    document.getElementById('landingPage').classList.add('hidden');
+    document.getElementById('appContainer').classList.add('active');
+    document.getElementById('userNameBadge').textContent = currentUser.fullName || currentUser.username;
+    document.getElementById('userRoleBadge').textContent = currentUser.role.toUpperCase();
+
+    if (currentUser.role !== 'admin' && currentUser.locationName) {
+        document.getElementById('userNameBadge').textContent = `${currentUser.fullName} · ${currentUser.locationName}`;
+    }
+
+    applyPermissions();
+    refreshFilterOptions();
+    renderDashboard();
+    if (can('view_admin')) renderAdminPage();
+}
+
+function applyPermissions() {
+    const role = currentUser.role;
+    const adminTab = document.querySelector('.nav-tab.admin-only');
+    if (can('view_admin')) adminTab.classList.remove('hidden');
+    else adminTab.classList.add('hidden');
+
+    document.querySelectorAll('#page-tenants .section-header .btn-primary').forEach(b => { b.style.display = can('add_tenants') ? '' : 'none'; });
+    document.querySelectorAll('#page-tenants .section-header .btn-success').forEach(b => { b.style.display = can('add_payments') ? '' : 'none'; });
+    document.querySelectorAll('#page-utility .section-header .btn-warning').forEach(b => { b.style.display = can('add_utility') ? '' : 'none'; });
+    document.querySelectorAll('#page-utility .section-header .btn-primary').forEach(b => { b.style.display = can('add_utility') ? '' : 'none'; });
+    document.querySelectorAll('#page-utility .section-header .btn-outline').forEach(b => { b.style.display = can('add_utility') ? '' : 'none'; });
+    document.querySelectorAll('#page-expenses .section-header .btn-primary').forEach(b => { b.style.display = can('add_expenses') ? '' : 'none'; });
+    document.querySelectorAll('.admin-add-location').forEach(b => { b.style.display = (role === 'admin') ? '' : 'none'; });
+}
+
+// ============================================================
+// INITIAL LOAD
+// ============================================================
+(async function init() {
+    const splash = document.getElementById('splash');
+    const saved = sessionStorage.getItem('bmr_currentUser');
+    if (saved) {
+        try { currentUser = JSON.parse(saved); } catch (e) { sessionStorage.removeItem('bmr_currentUser'); }
+    }
+
+    const loadTimeout = new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+        await Promise.race([
+            Promise.all([firestoreLoadLocations(), firestoreLoadUsers(), firestoreLoadTenants()]),
+            loadTimeout
+        ]);
+    } catch (err) { console.warn('Data load incomplete:', err); }
+
+    generateAutoInvoices();
+
+    splash.classList.add('hidden');
+    setTimeout(() => { splash.style.display = 'none'; }, 400);
+
+    if (currentUser) enterApp();
+    else { document.getElementById('landingPage').classList.remove('hidden'); resetLoginButton(); }
+})();
+
+// ============================================================
+// NAV
+// ============================================================
+document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + tab.dataset.page).classList.add('active');
+        if (tab.dataset.page === 'dashboard') renderDashboard();
+        if (tab.dataset.page === 'tenants') renderTenantsPage();
+        if (tab.dataset.page === 'utility') renderUtilityPage();
+        if (tab.dataset.page === 'expenses') renderExpensesPage();
+        if (tab.dataset.page === 'admin') renderAdminPage();
+    });
+});
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+let charts = {};
+
+function renderDashboard() {
+    const tenants = getVisibleTenants();
+    const totalRentPaid = totalRentReceived(tenants);
+    const totalElectricPaid = totalElectricReceived(tenants);
+    const totalWaterPaid = totalWaterReceived(tenants);
+    const totalExp = totalExpensesReceived(tenants);
+    const totalIncome = totalRentPaid + totalElectricPaid + totalWaterPaid;
+    const profit = totalIncome - totalExp;
+    const outstanding = tenants.reduce((s, t) => s + Math.max(0, totalBalance(t)), 0);
+
+    document.getElementById('dashboardCards').innerHTML = `
+        <div class="dash-card income"><div class="label">Total Income</div><div class="value">${formatUGX(totalIncome)}</div><div class="sub">All received payments</div></div>
+        <div class="dash-card profit"><div class="label">Profit</div><div class="value">${formatUGX(profit)}</div><div class="sub">Income – Expenses</div></div>
+        <div class="dash-card rent"><div class="label">💰 Rent Received</div><div class="value">${formatUGX(totalRentPaid)}</div><div class="sub">Total rent payments</div></div>
+        <div class="dash-card outstanding"><div class="label">Outstanding</div><div class="value">${formatUGX(outstanding)}</div><div class="sub">Pending balances</div></div>
+        <div class="dash-card expenses"><div class="label">Total Expenses</div><div class="value">${formatUGX(totalExp)}</div><div class="sub">${tenants.reduce((s, t) => s + t.expenses.length, 0)} items</div></div>
+    `;
+
+    const overdue = getOverdueTenants(tenants);
+    const overdueSection = document.getElementById('overdueSection');
+    if (overdue.length === 0) {
+        overdueSection.innerHTML = `<div class="alert-card" style="border-left-color:#16a34a;"><h3 style="color:#166534;">✅ No overdue tenants</h3><div class="empty-alert">All tenants are within their 15-day grace period.</div></div>`;
+    } else {
+        overdueSection.innerHTML = `
+            <div class="alert-card">
+                <h3>⚠️ Overdue Tenants <span class="count">${overdue.length}</span></h3>
+                <p style="font-size:0.82rem; color:#64748b; margin-bottom:0.85rem;">Tenants more than 15 days past billing date and still owe rent.</p>
+                <table class="alert-table">
+                    <thead><tr><th>Tenant</th><th>Apt</th><th>Mobile</th><th>Invoice</th><th>Date</th><th>Days</th><th>Due</th></tr></thead>
+                    <tbody>${overdue.map(o => `<tr><td><strong>${o.name}</strong></td><td>${o.apt}</td><td>${o.mobile}</td><td>${o.invoiceNo}</td><td>${o.invoiceDate}</td><td><span class="days-overdue">${o.daysOverdue}d</span></td><td><strong>${formatUGX(o.amountDue)}</strong></td></tr>`).join('')}</tbody>
+                </table>
+            </div>`;
+    }
+
+    const revCtx = document.getElementById('revenueChart').getContext('2d');
+    if (charts.revenue) charts.revenue.destroy();
+    charts.revenue = new Chart(revCtx, {
+        type: 'pie',
+        data: { labels: ['Rent', 'Electricity', 'Water'], datasets: [{ data: [totalRentPaid, totalElectricPaid, totalWaterPaid], backgroundColor: ['#0f172a', '#facc15', '#38bdf8'], borderWidth: 2, borderColor: '#fff' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+
+    const rentOutstanding = tenants.reduce((s, t) => s + Math.max(0, rentBalance(t)), 0);
+    const elecOutstanding = tenants.reduce((s, t) => s + Math.max(0, electricBalance(t)), 0);
+    const waterOutstanding = tenants.reduce((s, t) => s + Math.max(0, waterBalance(t)), 0);
+    const balCtx = document.getElementById('balanceChart').getContext('2d');
+    if (charts.balance) charts.balance.destroy();
+    charts.balance = new Chart(balCtx, {
+        type: 'doughnut',
+        data: { labels: ['Rent Due', 'Electric Due', 'Water Due'], datasets: [{ data: [rentOutstanding, elecOutstanding, waterOutstanding], backgroundColor: ['#dc2626', '#f97316', '#eab308'], borderWidth: 2, borderColor: '#fff' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+
+    const months = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+    const monthMap = { 'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12','Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06' };
+    const monthlyProfit = months.map(m => {
+        const mm = monthMap[m];
+        let income = 0, expense = 0;
+        tenants.forEach(t => {
+            t.rent.forEach(r => { if (r.date.includes('-'+mm+'-')) income += (r.credit || 0); });
+            t.electric.forEach(r => { if (r.date.includes('-'+mm+'-')) income += (r.credit || 0); });
+            (t.water||[]).forEach(r => { if (r.date.includes('-'+mm+'-')) income += (r.credit || 0); });
+            t.expenses.forEach(e => { if (e.date.includes('-'+mm+'-')) expense += e.amount; });
+        });
+        return income - expense;
+    });
+
+    const profitCtx = document.getElementById('profitChart').getContext('2d');
+    if (charts.profit) charts.profit.destroy();
+    charts.profit = new Chart(profitCtx, {
+        type: 'bar',
+        data: { labels: months, datasets: [{ label: 'Profit (UGX)', data: monthlyProfit, backgroundColor: monthlyProfit.map(v => v >= 0 ? '#16a34a' : '#dc2626'), borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000)+'k', font: { size: 10 } } }, x: { ticks: { font: { size: 10 } } } } }
+    });
+
+    const totalRentInvoiced = tenants.reduce((s, t) => s + t.rent.reduce((a, r) => a + (r.debit || 0), 0), 0);
+    const pendingRent = Math.max(0, totalRentInvoiced - totalRentPaid);
+    const collCtx = document.getElementById('collectionChart').getContext('2d');
+    if (charts.collection) charts.collection.destroy();
+    charts.collection = new Chart(collCtx, {
+        type: 'pie',
+        data: { labels: ['Collected', 'Pending'], datasets: [{ data: [totalRentPaid, pendingRent], backgroundColor: ['#16a34a', '#dc2626'], borderWidth: 2, borderColor: '#fff' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+}
+
+function getOverdueTenants(tenants) {
+    const now = new Date();
+    const overdue = [];
+    (tenants || getVisibleTenants()).forEach(t => {
+        if (rentBalance(t) <= 0) return;
+        const invoices = t.rent.filter(r => r.debit > 0);
+        if (invoices.length === 0) return;
+        const latest = invoices.reduce((a, b) => a.date > b.date ? a : b);
+        const invoiceDate = new Date(latest.date);
+        const diffDays = Math.floor((now - invoiceDate) / (1000 * 60 * 60 * 24));
+        if (diffDays > 15) {
+            overdue.push({ id: t.id, name: t.name, apt: t.apt, mobile: t.mobile, invoiceDate: latest.date, invoiceNo: latest.invoiceNo || '—', amountDue: rentBalance(t), daysOverdue: diffDays });
+        }
+    });
+    overdue.sort((a, b) => b.daysOverdue - a.daysOverdue);
+    return overdue;
+}
+
+// ============================================================
+// TENANTS
+// ============================================================
+function renderTenantsPage() {
+    const tenants = getVisibleTenants();
+    const totalMonthly = tenants.reduce((s, t) => s + (t.monthlyRent || 0), 0);
+    document.getElementById('tenantSummary').innerHTML = `
+        <div class="tenant-total-card">
+            <div class="exp-label">🏠 Total Rentals</div>
+            <div class="exp-value">${tenants.length}</div>
+            <div class="exp-sub">Active tenant${tenants.length === 1 ? '' : 's'} in this view</div>
+        </div>
+        <div class="tenant-amount-card">
+            <div class="exp-label">💰 Total Rent Amount</div>
+            <div class="exp-value">${formatUGX(totalMonthly)}</div>
+            <div class="exp-sub">Combined monthly rent</div>
+        </div>
+    `;
+
+    const tbody = document.getElementById('tenantsTableBody');
+    tbody.innerHTML = tenants.map(t => {
+        const rentBal = rentBalance(t);
+        const elecBal = electricBalance(t);
+        const waterBal = waterBalance(t);
+        const totalDue = rentBal + elecBal + waterBal;
+        const statusClass = totalDue <= 0 ? 'paid' : (totalDue < t.monthlyRent ? 'partial' : 'pending');
+        const editDelete = (can('edit_tenants') || can('delete_tenants')) ? `
+            ${can('edit_tenants') ? `<button class="btn btn-warning btn-sm" onclick="editTenant('${t.id}')">Edit</button>` : ''}
+            ${can('delete_tenants') ? `<button class="btn btn-danger btn-sm" onclick="deleteTenant('${t.id}')">Delete</button>` : ''}
+        ` : '';
+        return `
+            <tr>
+                <td><strong>${t.name}</strong></td>
+                <td>${t.apt}</td>
+                <td>${t.mobile}</td>
+                <td>${formatUGX(t.monthlyRent)}</td>
+                <td>${ordinal(t.billingDate)}</td>
+                <td>${formatUGX(rentBal)}</td>
+                <td>${formatUGX(elecBal)}</td>
+                <td>${formatUGX(waterBal)}</td>
+                <td><span class="badge ${statusClass}">${formatUGX(totalDue)}</span></td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn btn-outline btn-sm" onclick="viewTenant('${t.id}')">View</button>
+                        ${editDelete}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    document.getElementById('tenantDetailPanel').innerHTML = '';
+}
+
+function viewTenant(id) {
+    const t = TENANTS.find(x => x.id === id);
+    if (!t) return;
+    const panel = document.getElementById('tenantDetailPanel');
+    const rentBal = rentBalance(t);
+    const elecBal = electricBalance(t);
+    const waterBal = waterBalance(t);
+    const totalDue = rentBal + elecBal + waterBal;
+    const canEditRent = can('edit_tenants');
+
+    panel.innerHTML = `
+        <div class="detail-panel">
+            <div class="detail-header">
+                <h2>${t.name} <small>Apt ${t.apt} · ${t.mobile} · Rent ${formatUGX(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}</small></h2>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    ${can('add_payments') ? `<button class="btn btn-success btn-sm" onclick="openPaymentForTenant('${t.id}')">💵 Add Payment</button>` : ''}
+                    <button class="btn btn-outline btn-sm" onclick="openPrintModal('${t.id}')">🖨️ Print</button>
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('tenantDetailPanel').innerHTML='';">Close</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:1.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+                <span>Rent: <strong>${formatUGX(rentBal)}</strong></span>
+                <span>Electric: <strong>${formatUGX(elecBal)}</strong></span>
+                <span>Water: <strong>${formatUGX(waterBal)}</strong></span>
+                <span>Total Due: <strong style="color:${totalDue>0?'#dc2626':'#16a34a'}">${formatUGX(totalDue)}</strong></span>
+            </div>
+            <div class="section-tabs">
+                <button class="tab-btn active" data-tab="rent">Rent</button>
+                <button class="tab-btn" data-tab="electric">Electricity</button>
+                <button class="tab-btn" data-tab="water">Water</button>
+            </div>
+            <div id="tab-rent" class="tab-content">
+                <table>
+                    <thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Status</th>${canEditRent ? '<th>Actions</th>' : ''}</tr></thead>
+                    <tbody>${t.rent.map((r, idx) => {
+                        const run = t.rent.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0);
+                        return `<tr>
+                            <td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td>
+                            <td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td>
+                            <td>${formatUGX(run)}</td>
+                            <td><span class="badge ${run<=0?'paid':'pending'}">${run<=0?'Cleared':'Pending'}</span></td>
+                            ${canEditRent ? `<td><div class="action-btns">
+                                <button class="btn btn-warning btn-sm" onclick="openEditRentModal('${t.id}', ${idx})">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRentTransaction('${t.id}', ${idx})">Del</button>
+                            </div></td>` : ''}
+                        </tr>`;
+                    }).join('')}</tbody>
+                </table>
+            </div>
+            <div id="tab-electric" class="tab-content hidden">
+                <table>
+                    <thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+                    <tbody>${t.electric.map((r, idx) => {
+                        const run = t.electric.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0);
+                        const mi = r.meter ? `${r.meter} @ ${r.rate}` : (r.credit?'Payment':'—');
+                        return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td><span class="meter-info">${mi}</span></td>
+                            <td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;
+                    }).join('')}</tbody>
+                </table>
+            </div>
+            <div id="tab-water" class="tab-content hidden">
+                ${t.water.length ? `<table>
+                    <thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+                    <tbody>${t.water.map((r, idx) => {
+                        const run = t.water.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0);
+                        const mi = r.meter ? `${r.meter} units` : (r.credit?'Payment':'—');
+                        return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td><span class="meter-info">${mi}</span></td>
+                            <td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;
+                    }).join('')}</tbody>
+                </table>` : '<p style="color:#64748b; padding:1rem 0;">No water records.</p>'}
+            </div>
+        </div>
+    `;
+
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            panel.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            panel.querySelector('#tab-' + btn.dataset.tab).classList.remove('hidden');
+        });
+    });
+}
+
+function openEditRentModal(tenantId, idx) {
+    if (!can('edit_tenants')) { showNotification('Permission denied', 'warning'); return; }
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+    const r = t.rent[idx];
+    if (!r) return;
+    document.getElementById('editRentTenantId').value = tenantId;
+    document.getElementById('editRentIndex').value = idx;
+    document.getElementById('editRentDate').value = r.date;
+    document.getElementById('editRentDesc').value = r.desc;
+    document.getElementById('editRentDebit').value = r.debit || 0;
+    document.getElementById('editRentCredit').value = r.credit || 0;
+    document.getElementById('editRentInvoice').value = r.invoiceNo || '';
+    openModal('editRentModal');
+}
+
+async function saveRentEdit(e) {
+    e.preventDefault();
+    if (!can('edit_tenants')) { showNotification('Permission denied', 'warning'); return; }
+    const tenantId = document.getElementById('editRentTenantId').value;
+    const idx = parseInt(document.getElementById('editRentIndex').value);
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t || !t.rent[idx]) return;
+    t.rent[idx] = {
+        date: document.getElementById('editRentDate').value,
+        desc: document.getElementById('editRentDesc').value.trim(),
+        debit: parseFloat(document.getElementById('editRentDebit').value) || 0,
+        credit: parseFloat(document.getElementById('editRentCredit').value) || 0,
+        invoiceNo: document.getElementById('editRentInvoice').value.trim() || null
+    };
+    showNotification('Rent transaction updated');
+    closeModal('editRentModal');
+    viewTenant(tenantId);
+    renderTenantsPage();
+    renderDashboard();
+    await firestoreSaveTenant(t);
+}
+
+async function deleteRentTransaction(tenantId, idx) {
+    if (!can('edit_tenants')) { showNotification('Permission denied', 'warning'); return; }
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+    const r = t.rent[idx];
+    if (!r) return;
+    if (!confirm(`Delete this transaction?\n\n${r.date} – ${r.desc}`)) return;
+    t.rent.splice(idx, 1);
+    showNotification('Transaction deleted', 'warning');
+    viewTenant(tenantId);
+    renderTenantsPage();
+    renderDashboard();
+    await firestoreSaveTenant(t);
+}
+
+function editTenant(id) {
+    if (!can('edit_tenants')) { showNotification('Permission denied', 'warning'); return; }
+    const t = TENANTS.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('tenantModalTitle').textContent = 'Edit Tenant';
+    document.getElementById('tenantEditId').value = t.id;
+    document.getElementById('tenantName').value = t.name;
+    document.getElementById('tenantApt').value = t.apt;
+    document.getElementById('tenantMobile').value = t.mobile;
+    document.getElementById('tenantRent').value = t.monthlyRent;
+    document.getElementById('tenantBillingDate').value = t.billingDate;
+    document.getElementById('tenantElectricRate').value = t.electricRate;
+    openModal('tenantModal');
+}
+
+async function deleteTenant(id) {
+    if (!can('delete_tenants')) { showNotification('Permission denied', 'warning'); return; }
+    if (!confirm('Delete this tenant and all associated data?')) return;
+    const idx = TENANTS.findIndex(x => x.id === id);
+    if (idx > -1) {
+        const removed = TENANTS.splice(idx, 1)[0];
+        showNotification('Tenant deleted', 'warning');
+        renderTenantsPage();
+        renderDashboard();
+        await firestoreDeleteTenant(removed.id);
+    }
+}
+
+function openAddTenantModal() {
+    if (!can('add_tenants')) { showNotification('Permission denied', 'warning'); return; }
+    document.getElementById('tenantModalTitle').textContent = 'Add Tenant';
+    document.getElementById('tenantForm').reset();
+    document.getElementById('tenantEditId').value = '';
+    document.getElementById('tenantBillingDate').value = 1;
+    document.getElementById('tenantElectricRate').value = 1100;
+    openModal('tenantModal');
+}
+
+async function saveTenant(e) {
+    e.preventDefault();
+    if (!can('add_tenants') && !can('edit_tenants')) { showNotification('Permission denied', 'warning'); return; }
+    const editId = document.getElementById('tenantEditId').value;
+    const name = document.getElementById('tenantName').value.trim();
+    const apt = parseInt(document.getElementById('tenantApt').value);
+    const mobile = document.getElementById('tenantMobile').value.trim();
+    const monthlyRent = parseFloat(document.getElementById('tenantRent').value);
+    const billingDate = parseInt(document.getElementById('tenantBillingDate').value);
+    const electricRate = parseFloat(document.getElementById('tenantElectricRate').value) || 1100;
+
+    let tenantToSave = null;
+    if (editId) {
+        const t = TENANTS.find(x => x.id === editId);
+        if (t) { t.name = name; t.apt = apt; t.mobile = mobile; t.monthlyRent = monthlyRent; t.billingDate = billingDate; t.electricRate = electricRate; tenantToSave = t; showNotification('Tenant updated'); }
+    } else {
+        tenantToSave = { id: 't_' + Date.now(), name, apt, mobile, monthlyRent, billingDate, electricRate, locationId: currentUser?.locationId || 'loc1', rent: [], electric: [], water: [], expenses: [] };
+        TENANTS.push(tenantToSave);
+        showNotification('Tenant added');
+    }
+    closeModal('tenantModal');
+    renderTenantsPage();
+    renderDashboard();
+    refreshFilterOptions();
+    if (tenantToSave) await firestoreSaveTenant(tenantToSave);
+}
+
+function refreshFilterOptions() {
+    const tenants = getVisibleTenants();
+    const opts = '<option value="all">All Tenants</option>' + tenants.map(t => `<option value="${t.id}">Apt ${t.apt} – ${t.name}</option>`).join('');
+    const uf = document.getElementById('utilityFilterTenant');
+    const ef = document.getElementById('expenseFilterTenant');
+    if (!uf || !ef) return;
+    const ufVal = uf.value;
+    const efVal = ef.value;
+    uf.innerHTML = opts;
+    ef.innerHTML = opts;
+    if ([...uf.options].some(o => o.value === ufVal)) uf.value = ufVal;
+    if ([...ef.options].some(o => o.value === efVal)) ef.value = efVal;
+}
+
+// ============================================================
+// PAYMENTS
+// ============================================================
+function openAddPaymentModal() {
+    if (!can('add_payments')) { showNotification('Permission denied', 'warning'); return; }
+    const tenants = getVisibleTenants();
+    const sel = document.getElementById('paymentTenant');
+    sel.innerHTML = '<option value="">Select tenant</option>' + tenants.map(t => `<option value="${t.id}">${t.name} (Apt ${t.apt})</option>`).join('');
+    document.getElementById('paymentForm').reset();
+    document.getElementById('paymentDate').value = todayStr;
+    document.getElementById('paymentInvoice').innerHTML = '<option value="">Select invoice</option>';
+    openModal('paymentModal');
+}
+
+function openPaymentForTenant(id) {
+    if (!can('add_payments')) { showNotification('Permission denied', 'warning'); return; }
+    openAddPaymentModal();
+    document.getElementById('paymentTenant').value = id;
+    onPaymentTenantChange();
+}
+
+function onPaymentTenantChange() {
+    loadPendingInvoices();
+    const tenantId = document.getElementById('paymentTenant').value;
+    const type = document.getElementById('paymentType').value;
+    if (!tenantId) return;
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+    if (type === 'rent') document.getElementById('paymentAmount').value = t.monthlyRent;
+}
+
+function loadPendingInvoices() {
+    const tenantId = document.getElementById('paymentTenant').value;
+    const type = document.getElementById('paymentType').value;
+    const sel = document.getElementById('paymentInvoice');
+    sel.innerHTML = '<option value="">Select invoice</option>';
+    if (!tenantId) return;
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+
+    if (type === 'rent') {
+        const groups = {};
+        t.rent.forEach(r => { const key = r.invoiceNo || 'No Invoice'; if (!groups[key]) groups[key] = { debit: 0, credit: 0, desc: r.desc }; groups[key].debit += (r.debit || 0); groups[key].credit += (r.credit || 0); });
+        Object.entries(groups).forEach(([inv, g]) => {
+            const bal = g.debit - g.credit;
+            if (bal > 0) sel.innerHTML += `<option value="${inv}">${inv} – ${g.desc} – Due ${formatUGX(bal)}</option>`;
+        });
+    } else if (type === 'electric') {
+        t.electric.forEach((r, idx) => {
+            if (r.debit > 0 && r.meter) {
+                const run = t.electric.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0);
+                if (run > 0) sel.innerHTML += `<option value="elec_${idx}">${r.date} – Meter ${r.meter} – ${formatUGX(r.debit)}</option>`;
+            }
+        });
+    } else if (type === 'water') {
+        t.water.forEach((r, idx) => {
+            if (r.debit > 0) {
+                const run = t.water.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0);
+                if (run > 0) sel.innerHTML += `<option value="water_${idx}">${r.date} – ${r.desc} – ${formatUGX(r.debit)}</option>`;
+            }
+        });
+    }
+}
+
+async function savePayment(e) {
+    e.preventDefault();
+    if (!can('add_payments')) { showNotification('Permission denied', 'warning'); return; }
+    const tenantId = document.getElementById('paymentTenant').value;
+    const type = document.getElementById('paymentType').value;
+    const invoice = document.getElementById('paymentInvoice').value;
+    const amount = parseFloat(document.getElementById('paymentAmount').value);
+    const date = document.getElementById('paymentDate').value;
+    const notes = document.getElementById('paymentNotes').value.trim();
+
+    if (!tenantId || !invoice || !amount) { showNotification('Please fill all required fields', 'warning'); return; }
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+
+    if (type === 'rent') t.rent.push({ date, desc: notes || `Payment – ${invoice}`, debit: 0, credit: amount, invoiceNo: invoice });
+    else if (type === 'electric') t.electric.push({ date, desc: notes || `Payment – ${invoice}`, meter: null, rate: null, debit: 0, credit: amount, reading: null });
+    else if (type === 'water') t.water.push({ date, desc: notes || `Payment – ${invoice}`, meter: null, rate: null, debit: 0, credit: amount, reading: null });
+
+    // Sort by date so balance calculates correctly
+    t.electric.sort((a, b) => a.date.localeCompare(b.date));
+    t.water.sort((a, b) => a.date.localeCompare(b.date));
+
+    showNotification(`Payment of ${formatUGX(amount)} recorded`);
+    closeModal('paymentModal');
+    renderTenantsPage();
+    renderDashboard();
+    await firestoreSaveTenant(t);
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function renderUtilityPage() {
+    const filterTenant = document.getElementById('utilityFilterTenant').value;
+    const allVisible = getVisibleTenants();
+    const selectedTenants = filterTenant === 'all' ? allVisible : allVisible.filter(t => t.id === filterTenant);
+
+    document.getElementById('utilitySummary').innerHTML = `
+        <div class="util-card electric-received"><div class="util-label">⚡ Total Electricity Received</div><div class="util-value">${formatUGX(totalElectricReceived(selectedTenants))}</div></div>
+        <div class="util-card water-received"><div class="util-label">💧 Total Water Received</div><div class="util-value">${formatUGX(totalWaterReceived(selectedTenants))}</div></div>
+    `;
+
+    const tbody = document.getElementById('utilityTableBody');
+    const rows = [];
+    selectedTenants.forEach(t => {
+        t.electric.forEach((r, idx) => {
+            if (r.meter) {
+                const prevReading = idx > 0 ? (t.electric[idx-1].reading || 0) : 0;
+                const paid = isReadingPaid(t.electric, idx);
+                rows.push({ tenant: t.name, tenantId: t.id, apt: t.apt, type: 'Electric', date: r.date, prev: prevReading.toFixed(1), curr: r.reading, usage: r.meter, rate: r.rate || BASE_CHARGES.electricRate, amount: r.debit, status: paid ? 'Paid' : 'Pending', index: idx, hasCredit: paid });
+            }
+        });
+        t.water.forEach((r, idx) => {
+            if (r.meter) {
+                const prevReading = idx > 0 ? (t.water[idx-1].reading || 0) : 0;
+                const paid = isReadingPaid(t.water, idx);
+                rows.push({ tenant: t.name, tenantId: t.id, apt: t.apt, type: 'Water', date: r.date, prev: prevReading.toFixed(1), curr: r.reading, usage: r.meter, rate: r.rate || BASE_CHARGES.waterRate, amount: r.debit, status: paid ? 'Paid' : 'Pending', index: idx, hasCredit: paid });
+            }
+        });
+    });
+    rows.sort((a, b) => b.date.localeCompare(a.date));
+
+    if (rows.length === 0) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:2rem;">No utility readings found.</td></tr>'; return; }
+
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td><strong>${r.tenant}</strong></td>
+            <td>${r.apt}</td>
+            <td><span class="badge ${r.type === 'Electric' ? 'electric' : 'water'}">${r.type}</span></td>
+            <td>${r.date}</td>
+            <td>${r.prev}</td>
+            <td>${r.curr}</td>
+            <td>${r.usage}</td>
+            <td>${formatUGX(r.rate)}</td>
+            <td>${formatUGX(r.amount)}</td>
+            <td><span class="badge ${r.status === 'Paid' ? 'paid' : 'pending'}">${r.status}</span></td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn btn-outline btn-sm" onclick="viewUtilityDetail('${r.tenantId}', '${r.type}', '${r.date}')">View</button>
+                    ${can('mark_utility_paid') ? `<button class="btn ${r.hasCredit ? 'btn-warning' : 'btn-success'} btn-sm" onclick="toggleUtilityPaid('${r.tenantId}', '${r.type}', ${r.index})">${r.hasCredit ? 'Mark Pending' : 'Mark Paid'}</button>` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    document.getElementById('utilityDetailPanel').innerHTML = '';
+}
+
+// Toggle: 
+// - If currently Paid → remove the payment row right after this reading.
+// - If currently Pending → insert a payment row right after this reading.
+// After the change, the array is re-sorted by date so the balance computes correctly.
+async function toggleUtilityPaid(tenantId, type, index) {
+    if (!can('mark_utility_paid')) { showNotification('Permission denied', 'warning'); return; }
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+    const arr = type === 'Electric' ? t.electric : t.water;
+    const reading = arr[index];
+    if (!reading || !reading.meter) return;
+
+    const paid = isReadingPaid(arr, index);
+
+    if (paid) {
+        // Remove the first credit-only row immediately after this reading (before next meter reading)
+        let nextMeterIdx = arr.length;
+        for (let i = index + 1; i < arr.length; i++) {
+            if (arr[i].meter) { nextMeterIdx = i; break; }
+        }
+        let removed = false;
+        for (let i = index + 1; i < nextMeterIdx; i++) {
+            if (arr[i].credit > 0 && !arr[i].meter) {
+                arr.splice(i, 1);
+                removed = true;
+                break;
+            }
+        }
+        if (removed) showNotification('Marked as Pending', 'warning');
+        else showNotification('No matching payment found', 'warning');
+    } else {
+        // Insert a payment row right after this reading
+        arr.splice(index + 1, 0, {
+            date: reading.date,
+            desc: `Payment – ${reading.desc || 'Utility'}`,
+            meter: null, rate: null, debit: 0, credit: reading.debit, reading: null
+        });
+        showNotification('Marked as Paid', 'success');
+    }
+
+    // Sort by date so balance math is correct
+    arr.sort((a, b) => a.date.localeCompare(b.date));
+
+    renderUtilityPage();
+    renderDashboard();
+    renderTenantsPage();
+    await firestoreSaveTenant(t);
+}
+
+function viewUtilityDetail(tenantId, type, date) {
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+    const panel = document.getElementById('utilityDetailPanel');
+    const arr = type === 'Electric' ? t.electric : t.water;
+    const reading = arr.find(r => r.date === date && r.meter);
+    if (!reading) { panel.innerHTML = '<p style="color:#64748b; padding:1rem 0;">Reading not found.</p>'; return; }
+
+    const elecBal = electricBalance(t);
+    const waterBal = waterBalance(t);
+
+    panel.innerHTML = `
+        <div class="detail-panel">
+            <div class="detail-header">
+                <h2>${t.name} <small>Apt ${t.apt} · ${t.mobile}</small></h2>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('utilityDetailPanel').innerHTML='';">Close</button>
+            </div>
+            <div class="utility-summary">
+                <div class="util-card electric-received"><div class="util-label">⚡ Electricity Balance</div><div class="util-value">${formatUGX(elecBal)}</div></div>
+                <div class="util-card water-received"><div class="util-label">💧 Water Balance</div><div class="util-value">${formatUGX(waterBal)}</div></div>
+                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Total Utility Due</div><div class="util-value">${formatUGX(elecBal + waterBal)}</div></div>
+            </div>
+            <h3 style="font-size:0.95rem; margin-bottom:1rem;">📋 Reading Details</h3>
+            <table>
+                <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                <tbody>
+                    <tr><td>Utility Type</td><td><span class="badge ${type === 'Electric' ? 'electric' : 'water'}">${type}</span></td></tr>
+                    <tr><td>Date</td><td>${reading.date}</td></tr>
+                    <tr><td>Previous Reading</td><td>${(reading.reading - reading.meter).toFixed(2)}</td></tr>
+                    <tr><td>Current Reading</td><td>${reading.reading}</td></tr>
+                    <tr><td>Usage</td><td><strong>${reading.meter} units</strong></td></tr>
+                    <tr><td>Rate</td><td>${formatUGX(reading.rate)}</td></tr>
+                    <tr><td><strong>Total Amount</strong></td><td><strong>${formatUGX(reading.debit)}</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function openUtilityModal(type) {
+    if (!can('add_utility')) { showNotification('Permission denied', 'warning'); return; }
+    document.getElementById('utilityType').value = type;
+    document.getElementById('utilityModalTitle').textContent = type === 'electric' ? '⚡ Electricity Meter Reading' : '💧 Water Meter Reading';
+    const tenants = getVisibleTenants();
+    const sel = document.getElementById('utilityTenant');
+    sel.innerHTML = '<option value="">Select tenant</option>' + tenants.map(t => `<option value="${t.id}">${t.name} (Apt ${t.apt})</option>`).join('');
+    document.getElementById('utilityForm').reset();
+    document.getElementById('utilityType').value = type;
+    document.getElementById('utilityDate').value = todayStr;
+    document.getElementById('prevSewerRow').style.display = type === 'water' ? 'flex' : 'none';
+    document.getElementById('prevServiceRow').style.display = type === 'water' ? 'flex' : 'none';
+    document.getElementById('prevVatRow').style.display = type === 'water' ? 'flex' : 'none';
+    openModal('utilityModal');
+}
+
+function onUtilityTenantChange() {
+    const tenantId = document.getElementById('utilityTenant').value;
+    const type = document.getElementById('utilityType').value;
+    if (!tenantId) return;
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+    document.getElementById('utilityPrev').value = getLastMeterReading(t, type);
+    updateUtilityPreview();
+}
+
+function updateUtilityPreview() {
+    const type = document.getElementById('utilityType').value;
+    const prev = parseFloat(document.getElementById('utilityPrev').value) || 0;
+    const curr = parseFloat(document.getElementById('utilityCurr').value) || 0;
+    const usage = Math.max(0, curr - prev);
+    document.getElementById('utilityUsage').value = usage.toFixed(2);
+
+    if (type === 'electric') {
+        const rate = BASE_CHARGES.electricRate;
+        document.getElementById('prevUsage').textContent = usage.toFixed(2) + ' units';
+        document.getElementById('prevRate').textContent = formatUGX(rate);
+        document.getElementById('prevSubtotal').textContent = formatUGX(usage * rate);
+        document.getElementById('prevTotal').textContent = formatUGX(usage * rate);
+    } else {
+        const rate = BASE_CHARGES.waterRate;
+        const subtotal = usage * rate;
+        const sewer = subtotal * BASE_CHARGES.seweragePercent / 100;
+        const service = BASE_CHARGES.serviceCharge;
+        const vat = (subtotal + sewer + service) * BASE_CHARGES.vatPercent / 100;
+        const total = subtotal + sewer + service + vat;
+        document.getElementById('prevUsage').textContent = usage.toFixed(2) + ' units';
+        document.getElementById('prevRate').textContent = formatUGX(rate);
+        document.getElementById('prevSubtotal').textContent = formatUGX(subtotal);
+        document.getElementById('prevSewer').textContent = formatUGX(sewer);
+        document.getElementById('prevService').textContent = formatUGX(service);
+        document.getElementById('prevVat').textContent = formatUGX(vat);
+        document.getElementById('prevTotal').textContent = formatUGX(total);
+    }
+}
+
+async function saveUtilityReading(e) {
+    e.preventDefault();
+    if (!can('add_utility')) { showNotification('Permission denied', 'warning'); return; }
+    const type = document.getElementById('utilityType').value;
+    const tenantId = document.getElementById('utilityTenant').value;
+    const prev = parseFloat(document.getElementById('utilityPrev').value) || 0;
+    const curr = parseFloat(document.getElementById('utilityCurr').value) || 0;
+    const date = document.getElementById('utilityDate').value;
+
+    if (!tenantId) { showNotification('Select a tenant', 'warning'); return; }
+    const usage = Math.max(0, curr - prev);
+    if (usage <= 0) { showNotification('Current reading must be greater than previous', 'warning'); return; }
+
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+
+    if (type === 'electric') {
+        const rate = BASE_CHARGES.electricRate;
+        const amount = usage * rate;
+        t.electric.push({ date, desc: `${new Date(date).toLocaleString('en', { month: 'short' })} ${new Date(date).getFullYear()}`, meter: usage, rate, debit: amount, credit: 0, reading: curr });
+        t.electric.sort((a, b) => a.date.localeCompare(b.date));
+        showNotification(`⚡ Electricity reading saved – ${formatUGX(amount)}`);
+    } else {
+        const rate = BASE_CHARGES.waterRate;
+        const subtotal = usage * rate;
+        const sewer = subtotal * BASE_CHARGES.seweragePercent / 100;
+        const service = BASE_CHARGES.serviceCharge;
+        const vat = (subtotal + sewer + service) * BASE_CHARGES.vatPercent / 100;
+        const total = subtotal + sewer + service + vat;
+        t.water.push({ date, desc: `Meter-${usage} @${rate}+${BASE_CHARGES.seweragePercent}%+${service}+${BASE_CHARGES.vatPercent}%`, meter: usage, rate, debit: total, credit: 0, reading: curr });
+        t.water.sort((a, b) => a.date.localeCompare(b.date));
+        showNotification(`💧 Water reading saved – ${formatUGX(total)}`);
+    }
+    closeModal('utilityModal');
+    renderUtilityPage();
+    renderDashboard();
+    await firestoreSaveTenant(t);
+}
+
+function openBaseChargesModal() {
+    if (!can('add_utility')) { showNotification('Permission denied', 'warning'); return; }
+    document.getElementById('baseElectricRate').value = BASE_CHARGES.electricRate;
+    document.getElementById('baseWaterRate').value = BASE_CHARGES.waterRate;
+    document.getElementById('baseSewerage').value = BASE_CHARGES.seweragePercent;
+    document.getElementById('baseService').value = BASE_CHARGES.serviceCharge;
+    document.getElementById('baseVat').value = BASE_CHARGES.vatPercent;
+    openModal('baseChargesModal');
+}
+
+function saveBaseCharges(e) {
+    e.preventDefault();
+    if (!can('add_utility')) { showNotification('Permission denied', 'warning'); return; }
+    BASE_CHARGES.electricRate = parseFloat(document.getElementById('baseElectricRate').value) || 1100;
+    BASE_CHARGES.waterRate = parseFloat(document.getElementById('baseWaterRate').value) || 4433;
+    BASE_CHARGES.seweragePercent = parseFloat(document.getElementById('baseSewerage').value) || 75;
+    BASE_CHARGES.serviceCharge = parseFloat(document.getElementById('baseService').value) || 1500;
+    BASE_CHARGES.vatPercent = parseFloat(document.getElementById('baseVat').value) || 18;
+    showNotification('Base charges updated');
+    closeModal('baseChargesModal');
+}
+
+// ============================================================
+// EXPENSES
+// ============================================================
+function onExpenseFilterChange() { renderExpensesPage(); }
+
+function renderExpensesPage() {
+    const filterTenant = document.getElementById('expenseFilterTenant').value;
+    const allVisible = getVisibleTenants();
+    const selectedTenants = filterTenant === 'all' ? allVisible : allVisible.filter(t => t.id === filterTenant);
+
+    const selectedTotal = totalExpensesReceived(selectedTenants);
+    const selectedLabel = filterTenant === 'all' ? 'All Tenants' : (selectedTenants[0] ? `Apt ${selectedTenants[0].apt} – ${selectedTenants[0].name}` : '—');
+    const count = selectedTenants.reduce((s, t) => s + t.expenses.length, 0);
+    document.getElementById('expenseSummary').innerHTML = `
+        <div class="expense-total-card">
+            <div class="exp-label">Total Expenses – ${selectedLabel}</div>
+            <div class="exp-value">${formatUGX(selectedTotal)}</div>
+            <div class="exp-sub">${count} item${count === 1 ? '' : 's'}</div>
+        </div>
+    `;
+
+    const tbody = document.getElementById('expensesTableBody');
+    const all = [];
+    selectedTenants.forEach(t => { t.expenses.forEach((e, idx) => { all.push({ tenantId: t.id, tenantName: t.name, apt: t.apt, ...e, idx }); }); });
+    all.sort((a, b) => b.date.localeCompare(a.date));
+
+    if (all.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:2rem;">No expenses found.</td></tr>'; return; }
+
+    tbody.innerHTML = all.map(e => `
+        <tr>
+            <td>${e.date}</td>
+            <td>Apt ${e.apt}</td>
+            <td>${e.tenantName}</td>
+            <td><span class="badge ${e.category === 'Plumbing' ? 'cat-plumbing' : e.category === 'Electric' ? 'cat-electric' : 'cat-general'}">${e.category || 'General'}</span></td>
+            <td>${e.desc}</td>
+            <td>${formatUGX(e.amount)}</td>
+            <td>${can('delete_expenses') ? `<button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.tenantId}', ${e.idx})">Delete</button>` : '—'}</td>
+        </tr>
+    `).join('');
+}
+
+function openAddExpenseModal() {
+    if (!can('add_expenses')) { showNotification('Permission denied', 'warning'); return; }
+    const tenants = getVisibleTenants();
+    const sel = document.getElementById('expenseTenant');
+    sel.innerHTML = '<option value="">Select apartment</option>' + tenants.map(t => `<option value="${t.id}">Apt ${t.apt} – ${t.name}</option>`).join('');
+    document.getElementById('expenseForm').reset();
+    document.getElementById('expenseDate').value = todayStr;
+    openModal('expenseModal');
+}
+
+async function saveExpense(e) {
+    e.preventDefault();
+    if (!can('add_expenses')) { showNotification('Permission denied', 'warning'); return; }
+    const tenantId = document.getElementById('expenseTenant').value;
+    const category = document.getElementById('expenseCategory').value;
+    const desc = document.getElementById('expenseDesc').value.trim();
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const date = document.getElementById('expenseDate').value;
+    if (!tenantId || !desc || !amount) { showNotification('Please fill all fields', 'warning'); return; }
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (t) { t.expenses.push({ desc, amount, date, category }); showNotification('Expense added'); }
+    closeModal('expenseModal');
+    renderExpensesPage();
+    renderDashboard();
+    if (t) await firestoreSaveTenant(t);
+}
+
+async function deleteExpense(tenantId, idx) {
+    if (!can('delete_expenses')) { showNotification('Permission denied', 'warning'); return; }
+    if (!confirm('Delete this expense?')) return;
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (t) { t.expenses.splice(idx, 1); showNotification('Expense deleted', 'warning'); renderExpensesPage(); renderDashboard(); await firestoreSaveTenant(t); }
+}
+
+function printExpensesContextual() {
+    const filterTenant = document.getElementById('expenseFilterTenant').value;
+    const allVisible = getVisibleTenants();
+    const selectedTenants = filterTenant === 'all' ? allVisible : allVisible.filter(t => t.id === filterTenant);
+    if (selectedTenants.length === 0) { showNotification('No tenant selected', 'warning'); return; }
+
+    const all = [];
+    selectedTenants.forEach(t => { t.expenses.forEach(e => all.push({ ...e, tenantName: t.name, apt: t.apt })); });
+    all.sort((a, b) => b.date.localeCompare(a.date));
+    const total = all.reduce((s, e) => s + e.amount, 0);
+    const isAll = filterTenant === 'all';
+    const title = isAll ? 'All Expenses' : `Expenses – ${selectedTenants[0].name} (Apt ${selectedTenants[0].apt})`;
+
+    const html = `
+    <html><head><title>${title}</title><style>
+        body { font-family: Arial, sans-serif; padding: 2rem; color: #0f172a; }
+        h1 { font-size: 1.6rem; } table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 0.6rem; background: #0f172a; color: white; }
+        td { padding: 0.5rem 0.6rem; border-bottom: 1px solid #e2e8f0; }
+        .total { font-weight: 700; font-size: 1.1rem; margin-top: 1rem; text-align: right; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+        .logo { font-size: 1.5rem; font-weight: 800; } .logo span { color: #facc15; }
+    </style></head><body>
+        <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
+        <h1>${title}</h1>
+        <table><thead><tr><th>Date</th><th>Apartment</th><th>Tenant</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
+        <tbody>${all.map(e => `<tr><td>${e.date}</td><td>Apt ${e.apt}</td><td>${e.tenantName}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td>${formatUGX(e.amount)}</td></tr>`).join('') || '<tr><td colspan="6">No expenses</td></tr>'}</tbody></table>
+        <div class="total">Grand Total: ${formatUGX(total)}</div>
+    </body></html>`;
+    const w = window.open('', '_blank');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 500);
+}
+
+// ============================================================
+// PRINT STATEMENTS
+// ============================================================
+function openPrintModal(tenantId) {
+    const tenants = getVisibleTenants();
+    const sel = document.getElementById('printTenant');
+    sel.innerHTML = '<option value="">Select tenant</option>' + tenants.map(t => `<option value="${t.id}">${t.name} (Apt ${t.apt})</option>`).join('');
+    if (tenantId) sel.value = tenantId;
+    openModal('printModal');
+}
+
+function doPrintStatement() {
+    const tenantId = document.getElementById('printTenant').value;
+    const type = document.getElementById('printType').value;
+    if (!tenantId) { showNotification('Select a tenant', 'warning'); return; }
+    closeModal('printModal');
+    const t = TENANTS.find(x => x.id === tenantId);
+    if (!t) return;
+    let html = '';
+    if (type === 'rental') html = buildRentalStatement(t);
+    else if (type === 'utility') html = buildUtilityStatement(t);
+    else html = buildExpenseReport(t);
+    const w = window.open('', '_blank');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 500);
+}
+
+function buildRentalStatement(t) {
+    const rentBal = rentBalance(t);
+    return `<html><head><title>Rental Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem;}h1{font-size:1.6rem;}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem;}table{width:100%;border-collapse:collapse;font-size:0.85rem;}th{text-align:left;padding:0.6rem;background:#0f172a;color:white;}td{padding:0.5rem 0.6rem;border-bottom:1px solid #e2e8f0;}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right;}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem;}.logo{font-size:1.5rem;font-weight:800;}.logo span{color:#facc15;}</style></head><body>
+    <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
+    <h1>Rental Statement</h1><h2>${t.name} · Apt ${t.apt} · ${t.mobile}</h2>
+    <table><thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
+    ${t.rent.map((r, idx) => { const run = t.rent.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0); return `<tr><td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`; }).join('')}
+    </tbody></table><div class="total">Outstanding Rent Balance: ${formatUGX(rentBal)}</div></body></html>`;
+}
+
+function buildUtilityStatement(t) {
+    const elecBal = electricBalance(t);
+    const waterBal = waterBalance(t);
+    return `<html><head><title>Utility Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem;}h1{font-size:1.6rem;}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem;}h3{margin-top:1.5rem;font-size:1rem;}table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:1rem;}th{text-align:left;padding:0.6rem;background:#0f172a;color:white;}td{padding:0.5rem 0.6rem;border-bottom:1px solid #e2e8f0;}.total{font-weight:700;font-size:1.1rem;text-align:right;}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem;}.logo{font-size:1.5rem;font-weight:800;}.logo span{color:#facc15;}</style></head><body>
+    <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
+    <h1>Utility Statement</h1><h2>${t.name} · Apt ${t.apt} · ${t.mobile}</h2>
+    <h3>⚡ Electricity (Yaka)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
+    ${t.electric.map((r, idx) => { const run = t.electric.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0); return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td>${r.meter||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`; }).join('')}
+    </tbody></table><div class="total">Electricity Balance: ${formatUGX(elecBal)}</div>
+    <h3>💧 Water (NWSC)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
+    ${t.water.length ? t.water.map((r, idx) => { const run = t.water.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0); return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td>${r.meter||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`; }).join('') : '<tr><td colspan="6">No water records</td></tr>'}
+    </tbody></table><div class="total">Water Balance: ${formatUGX(waterBal)}</div></body></html>`;
+}
+
+function buildExpenseReport(t) {
+    const total = totalExpenses(t);
+    return `<html><head><title>Expense Report – ${t.name}</title><style>body{font-family:Arial;padding:2rem;}h1{font-size:1.6rem;}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem;}table{width:100%;border-collapse:collapse;font-size:0.85rem;}th{text-align:left;padding:0.6rem;background:#0f172a;color:white;}td{padding:0.5rem 0.6rem;border-bottom:1px solid #e2e8f0;}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right;}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem;}.logo{font-size:1.5rem;font-weight:800;}.logo span{color:#facc15;}</style></head><body>
+    <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
+    <h1>Expense Report</h1><h2>${t.name} · Apt ${t.apt}</h2>
+    <table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>
+    ${t.expenses.map(e => `<tr><td>${e.date}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td>${formatUGX(e.amount)}</td></tr>`).join('') || '<tr><td colspan="4">No expenses</td></tr>'}
+    </tbody></table><div class="total">Total Expenses: ${formatUGX(total)}</div></body></html>`;
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+function renderAdminPage() {
+    if (!currentUser) return;
+    if (!can('view_admin')) return;
+
+    const role = currentUser.role;
+    document.getElementById('adminPanelTitle').textContent = role === 'admin' ? 'Admin Panel' : 'Manage Users';
+    document.getElementById('adminLocationsCard').style.display = (role === 'admin') ? '' : 'none';
+
+    let statsTenants = TENANTS;
+    let statsUsers = USERS;
+    if (role === 'manager') {
+        statsTenants = TENANTS.filter(t => t.locationId === currentUser.locationId);
+        statsUsers = USERS.filter(u => u.locationId === currentUser.locationId);
+    }
+
+    const visibleLocations = role === 'admin' ? LOCATIONS.length : 1;
+    const visibleRentals = statsTenants.length;
+    const visibleUsers = statsUsers.filter(u => ['user','accountant','cashier'].includes(u.role)).length;
+    const visibleManagers = statsUsers.filter(u => u.role === 'manager').length;
+
+    document.getElementById('adminStats').innerHTML = `
+        <div class="admin-stat-card locations"><div class="admin-label">📍 Locations</div><div class="admin-value">${visibleLocations}</div><div class="admin-sub">${role === 'admin' ? 'Total areas managed' : 'Your location'}</div></div>
+        <div class="admin-stat-card rentals"><div class="admin-label">🏠 Rentals</div><div class="admin-value">${visibleRentals}</div><div class="admin-sub">Active tenants</div></div>
+        <div class="admin-stat-card users"><div class="admin-label">👤 Users</div><div class="admin-value">${visibleUsers}</div><div class="admin-sub">Accountants & cashiers</div></div>
+        <div class="admin-stat-card managers"><div class="admin-label">🧑‍💼 Managers</div><div class="admin-value">${visibleManagers}</div><div class="admin-sub">Location managers</div></div>
+    `;
+
+    if (role === 'admin') {
+        const locList = document.getElementById('adminLocationsList');
+        if (LOCATIONS.length === 0) {
+            locList.innerHTML = '<p style="color:#94a3b8; font-size:0.88rem;">No locations yet.</p>';
+        } else {
+            locList.innerHTML = LOCATIONS.map(loc => {
+                const locTenants = TENANTS.filter(t => t.locationId === loc.id);
+                const locIncome = totalRentReceived(locTenants) + totalElectricReceived(locTenants) + totalWaterReceived(locTenants);
+                const locExpenses = totalExpensesReceived(locTenants);
+                return `
+                    <div class="location-income">
+                        <div>
+                            <div class="loc-name">📍 ${loc.area}, ${loc.city}</div>
+                            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.15rem;">${locTenants.length} tenant${locTenants.length === 1 ? '' : 's'}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="loc-amount">${formatUGX(locIncome)}</div>
+                            <div style="font-size:0.7rem; color:#94a3b8;">Expenses: ${formatUGX(locExpenses)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    let visibleUsersList = USERS;
+    if (role === 'manager') visibleUsersList = USERS.filter(u => u.locationId === currentUser.locationId || u.id === currentUser.id);
+
+    const userList = document.getElementById('adminUsersList');
+    if (visibleUsersList.length === 0) { userList.innerHTML = '<p style="color:#94a3b8; font-size:0.88rem;">No users yet.</p>'; return; }
+
+    userList.innerHTML = visibleUsersList.map(u => {
+        const canEditThis = (role === 'admin') || (role === 'manager' && u.locationId === currentUser.locationId && u.role !== 'admin' && u.id !== currentUser.id);
+        const isSelf = u.id === currentUser.id;
+        return `
+            <div class="admin-list-item">
+                <div class="info">
+                    <div class="primary">${u.fullName} <span style="color:#94a3b8; font-weight:400;">@${u.username}</span>${isSelf ? ' <span style="color:#facc15; font-size:0.72rem;">(you)</span>' : ''}</div>
+                    <div class="secondary">
+                        <span class="badge role ${u.role}">${u.role.toUpperCase()}</span>
+                        &nbsp;· ${u.locationName || 'All Locations'}
+                    </div>
+                </div>
+                <div class="actions">
+                    ${canEditThis ? `
+                        <button class="btn btn-warning btn-sm" onclick="openEditUserModal('${u.id}')">Edit</button>
+                        <button class="btn btn-outline btn-sm" onclick="openAdminResetPassword('${u.id}')">🔒</button>
+                    ` : '<span style="font-size:0.7rem;color:#94a3b8;">—</span>'}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openAddLocationModal() {
+    if (currentUser.role !== 'admin') { showNotification('Only admin can add locations', 'warning'); return; }
+    document.getElementById('locationForm').reset();
+    openModal('locationModal');
+}
+
+async function saveLocation(e) {
+    e.preventDefault();
+    if (currentUser.role !== 'admin') { showNotification('Permission denied', 'warning'); return; }
+    const area = document.getElementById('locationArea').value.trim();
+    const city = document.getElementById('locationCity').value.trim();
+    const newLoc = { id: 'loc_' + Date.now(), area, city };
+    LOCATIONS.push(newLoc);
+    showNotification(`Location "${area}, ${city}" added`);
+    await firestoreSaveLocation(newLoc);
+    closeModal('locationModal');
+    renderAdminPage();
+    refreshLocationDropdowns();
+    refreshFilterOptions();
+}
+
+function refreshLocationDropdowns() {
+    const sel = document.getElementById('userLocation');
+    const esel = document.getElementById('editUserLocation');
+    const visibleLocs = currentUser?.role === 'admin' ? LOCATIONS : LOCATIONS.filter(l => l.id === currentUser?.locationId);
+    const opts = visibleLocs.map(l => `<option value="${l.id}">${l.area}, ${l.city}</option>`).join('');
+    if (sel) sel.innerHTML = '<option value="">Select location</option>' + opts;
+    if (esel) esel.innerHTML = '<option value="">All Locations</option>' + opts;
+}
+
+function openAddUserModal() {
+    if (currentUser.role !== 'admin' && currentUser.role !== 'manager') { showNotification('Permission denied', 'warning'); return; }
+    document.getElementById('userForm').reset();
+    refreshLocationDropdowns();
+    if (currentUser.role === 'manager' && currentUser.locationId) {
+        const sel = document.getElementById('userLocation');
+        sel.value = currentUser.locationId;
+    }
+    openModal('userModal');
+}
+
+async function saveUser(e) {
+    e.preventDefault();
+    if (currentUser.role !== 'admin' && currentUser.role !== 'manager') { showNotification('Permission denied', 'warning'); return; }
+    const fullName = document.getElementById('userFullName').value.trim();
+    const username = document.getElementById('userUsername').value.trim().toLowerCase();
+    const password = document.getElementById('userPassword').value;
+    const role = document.getElementById('userRole').value;
+    const locationId = document.getElementById('userLocation').value;
+
+    if (USERS.find(u => u.username.toLowerCase() === username)) { showNotification('Username already exists', 'warning'); return; }
+    if (currentUser.role === 'manager') {
+        if (role === 'admin') { showNotification('Managers cannot create admins', 'warning'); return; }
+        if (locationId !== currentUser.locationId) { showNotification('You can only create users in your location', 'warning'); return; }
+    }
+
+    const loc = LOCATIONS.find(l => l.id === locationId);
+    const newUser = {
+        id: 'u_' + Date.now(),
+        username, password, fullName, role,
+        locationId: locationId || null,
+        locationName: loc ? `${loc.area}, ${loc.city}` : 'All Locations'
+    };
+    USERS.push(newUser);
+    showNotification(`User "${fullName}" added as ${role}`);
+    await firestoreSaveUser(newUser);
+    closeModal('userModal');
+    renderAdminPage();
+}
+
+function openEditUserModal(userId) {
+    const u = USERS.find(x => x.id === userId);
+    if (!u) return;
+    const role = currentUser.role;
+    if (role === 'manager') {
+        if (u.locationId !== currentUser.locationId && u.id !== currentUser.id) { showNotification('Permission denied', 'warning'); return; }
+        if (u.role === 'admin') { showNotification('Cannot edit admin', 'warning'); return; }
+    }
+    if (role !== 'admin' && role !== 'manager') { showNotification('Permission denied', 'warning'); return; }
+
+    document.getElementById('editUserId').value = u.id;
+    document.getElementById('editUserFullName').value = u.fullName;
+    document.getElementById('editUserUsername').value = u.username;
+    document.getElementById('editUserRole').value = u.role;
+    refreshLocationDropdowns();
+    document.getElementById('editUserLocation').value = u.locationId || '';
+    openModal('editUserModal');
+}
+
+async function saveUserEdit(e) {
+    e.preventDefault();
+    const id = document.getElementById('editUserId').value;
+    const u = USERS.find(x => x.id === id);
+    if (!u) return;
+
+    const role = currentUser.role;
+    if (role === 'manager' && u.locationId !== currentUser.locationId && u.id !== currentUser.id) {
+        showNotification('Permission denied', 'warning'); return;
+    }
+
+    const newUsername = document.getElementById('editUserUsername').value.trim().toLowerCase();
+    if (USERS.find(x => x.id !== id && x.username.toLowerCase() === newUsername)) { showNotification('Username already exists', 'warning'); return; }
+
+    const locId = document.getElementById('editUserLocation').value;
+    const loc = LOCATIONS.find(l => l.id === locId);
+    const newRole = document.getElementById('editUserRole').value;
+
+    if (role === 'manager' && newRole === 'admin') { showNotification('Managers cannot assign admin role', 'warning'); return; }
+
+    u.fullName = document.getElementById('editUserFullName').value.trim();
+    u.username = newUsername;
+    u.role = newRole;
+    u.locationId = locId || null;
+    u.locationName = loc ? `${loc.area}, ${loc.city}` : 'All Locations';
+
+    if (currentUser && currentUser.id === id) {
+        currentUser = { ...currentUser, ...u };
+        sessionStorage.setItem('bmr_currentUser', JSON.stringify(currentUser));
+        document.getElementById('userNameBadge').textContent = currentUser.fullName;
+        document.getElementById('userRoleBadge').textContent = currentUser.role.toUpperCase();
+    }
+
+    await firestoreSaveUser(u);
+    showNotification('User updated');
+    closeModal('editUserModal');
+    renderAdminPage();
+}
+
+function openOwnPasswordModal() {
+    if (!currentUser) return;
+    document.getElementById('passwordModalTitle').textContent = 'Change My Password';
+    document.getElementById('passwordTargetUserId').value = currentUser.id;
+    document.getElementById('passwordTargetUser').value = `${currentUser.fullName} (@${currentUser.username})`;
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    openModal('passwordModal');
+}
+
+function openAdminResetPassword(userId) {
+    const u = USERS.find(x => x.id === userId);
+    if (!u) return;
+    const role = currentUser.role;
+    if (role === 'manager') {
+        if (u.locationId !== currentUser.locationId || u.role === 'admin') { showNotification('Permission denied', 'warning'); return; }
+    }
+    if (role !== 'admin' && role !== 'manager') { showNotification('Permission denied', 'warning'); return; }
+    document.getElementById('passwordModalTitle').textContent = `Reset Password – ${u.fullName}`;
+    document.getElementById('passwordTargetUserId').value = u.id;
+    document.getElementById('passwordTargetUser').value = `${u.fullName} (@${u.username})`;
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    openModal('passwordModal');
+}
+
+async function savePasswordReset(e) {
+    e.preventDefault();
+    const userId = document.getElementById('passwordTargetUserId').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confirmPass = document.getElementById('confirmPassword').value;
+
+    if (newPass !== confirmPass) { showNotification('Passwords do not match', 'warning'); return; }
+    if (newPass.length < 4) { showNotification('Password must be at least 4 characters', 'warning'); return; }
+
+    const u = USERS.find(x => x.id === userId);
+    if (!u) { showNotification('User not found', 'warning'); return; }
+
+    if (currentUser.role !== 'admin' && currentUser.id !== userId) {
+        if (currentUser.role !== 'manager' || u.locationId !== currentUser.locationId) {
+            showNotification('Permission denied', 'warning'); return;
+        }
+    }
+
+    u.password = newPass;
+    if (currentUser.id === userId) {
+        currentUser.password = newPass;
+        sessionStorage.setItem('bmr_currentUser', JSON.stringify(currentUser));
+    }
+
+    await firestoreSaveUser(u);
+    showNotification('Password updated successfully');
+    closeModal('passwordModal');
+    renderAdminPage();
+}
+
+// ============================================================
+// AUTO INVOICE
+// ============================================================
+function generateAutoInvoices() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const currentDay = now.getDate();
+    TENANTS.forEach(t => {
+        if (currentDay >= t.billingDate) {
+            const monthStr = String(currentMonth).padStart(2, '0');
+            const yearStr = String(currentYear);
+            const monthName = now.toLocaleString('en', { month: 'long' });
+            const expectedDesc = `Rent for ${monthName} ${yearStr}`;
+            const alreadyInvoiced = t.rent.some(r => r.desc.includes(monthName) && r.desc.includes(yearStr) && r.debit > 0);
+            if (!alreadyInvoiced) {
+                const totalCredits = t.rent.reduce((s, r) => s + (r.credit || 0), 0);
+                const totalDebits = t.rent.reduce((s, r) => s + (r.debit || 0), 0);
+                if (totalCredits > totalDebits) return;
+                t.rent.push({ date: `${yearStr}-${monthStr}-${String(t.billingDate).padStart(2, '0')}`, desc: expectedDesc, debit: t.monthlyRent, credit: 0, invoiceNo: getNextInvoiceNo(t) });
+            }
+        }
+    });
+}
+
+// Expose
+window.openLogin = openLogin;
+window.closeLogin = closeLogin;
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.scrollToFeatures = scrollToFeatures;
+window.scrollToPricing = scrollToPricing;
+window.openAddTenantModal = openAddTenantModal;
+window.editTenant = editTenant;
+window.deleteTenant = deleteTenant;
+window.viewTenant = viewTenant;
+window.openAddPaymentModal = openAddPaymentModal;
+window.openPaymentForTenant = openPaymentForTenant;
+window.onPaymentTenantChange = onPaymentTenantChange;
+window.loadPendingInvoices = loadPendingInvoices;
+window.savePayment = savePayment;
+window.saveTenant = saveTenant;
+window.closeModal = closeModal;
+window.openModal = openModal;
+window.openAddExpenseModal = openAddExpenseModal;
+window.saveExpense = saveExpense;
+window.deleteExpense = deleteExpense;
+window.openUtilityModal = openUtilityModal;
+window.onUtilityTenantChange = onUtilityTenantChange;
+window.updateUtilityPreview = updateUtilityPreview;
+window.saveUtilityReading = saveUtilityReading;
+window.viewUtilityDetail = viewUtilityDetail;
+window.toggleUtilityPaid = toggleUtilityPaid;
+window.openBaseChargesModal = openBaseChargesModal;
+window.saveBaseCharges = saveBaseCharges;
+window.openPrintModal = openPrintModal;
+window.doPrintStatement = doPrintStatement;
+window.printExpensesContextual = printExpensesContextual;
+window.renderExpensesPage = renderExpensesPage;
+window.renderUtilityPage = renderUtilityPage;
+window.onExpenseFilterChange = onExpenseFilterChange;
+window.openEditRentModal = openEditRentModal;
+window.saveRentEdit = saveRentEdit;
+window.deleteRentTransaction = deleteRentTransaction;
+window.openAddLocationModal = openAddLocationModal;
+window.saveLocation = saveLocation;
+window.openAddUserModal = openAddUserModal;
+window.saveUser = saveUser;
+window.openEditUserModal = openEditUserModal;
+window.saveUserEdit = saveUserEdit;
+window.openOwnPasswordModal = openOwnPasswordModal;
+window.openAdminResetPassword = openAdminResetPassword;
+window.savePasswordReset = savePasswordReset;
+</script>
+</body>
+</html>

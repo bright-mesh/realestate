@@ -152,6 +152,9 @@
         .dash-card.outstanding { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); }
         .dash-card.rent { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); }
         .dash-card.expenses { background: linear-gradient(135deg, #78350f 0%, #d97706 100%); }
+        .dash-card.units { background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%); }
+        .dash-card.occupied { background: linear-gradient(135deg, #065f46 0%, #16a34a 100%); }
+        .dash-card.vacant { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); }
 
         .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
         .chart-card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 1.25rem; }
@@ -196,6 +199,7 @@
         .badge.cat-general { background: #e0e7ff; color: #3730a3; }
         .badge.electric { background: #fef3c7; color: #92400e; }
         .badge.water { background: #dbeafe; color: #1e40af; }
+        .badge.info { background: #e0e7ff; color: #3730a3; }
         .badge.role { background: #fef3c7; color: #92400e; }
         .badge.role.admin { background: #fee2e2; color: #991b1b; }
         .badge.role.manager { background: #dbeafe; color: #1e40af; }
@@ -212,7 +216,7 @@
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 1rem; font-size: 1rem; font-family: inherit; background: #f8fafc; transition: 0.15s; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #facc15; background: white; box-shadow: 0 0 0 3px rgba(250,204,21,0.15); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #facc15; background: white; box-shadow: 0 0 0 3px rgba(250,204,21,0.15); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.25rem; flex-wrap: wrap; }
 
@@ -267,6 +271,7 @@
         .admin-stat-card.rentals { background: linear-gradient(135deg, #065f46 0%, #16a34a 100%); }
         .admin-stat-card.users { background: linear-gradient(135deg, #78350f 0%, #d97706 100%); }
         .admin-stat-card.managers { background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%); }
+        .admin-stat-card.properties { background: linear-gradient(135deg, #9d174d 0%, #ec4899 100%); }
 
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
         .admin-card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 1.5rem; }
@@ -282,7 +287,6 @@
         .location-income .loc-name { font-weight: 600; }
         .location-income .loc-amount { font-weight: 700; color: #16a34a; }
 
-        /* Multi-month rent picker */
         .month-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; max-height: 220px; overflow-y: auto; padding: 0.5rem; background: #f8fafc; border-radius: 1rem; border: 1.5px solid #e2e8f0; }
         .month-chip { display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0.75rem; border-radius: 0.75rem; background: white; border: 1.5px solid #e2e8f0; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.15s; user-select: none; }
         .month-chip:hover { border-color: #cbd5e1; }
@@ -573,6 +577,7 @@
 
     <nav class="main-nav" id="mainNav">
         <button class="nav-tab active" data-page="dashboard">📊 Dashboard</button>
+        <button class="nav-tab" data-page="property">🏢 Property</button>
         <button class="nav-tab" data-page="tenants">🏠 Tenants</button>
         <button class="nav-tab" data-page="utility">⚡ Utility</button>
         <button class="nav-tab" data-page="expenses">💰 Expenses</button>
@@ -588,9 +593,44 @@
             <div class="chart-card"><h3>Outstanding Balances</h3><div class="chart-container"><canvas id="balanceChart"></canvas></div></div>
         </div>
         <div class="charts-row">
-            <div class="chart-card"><h3>Monthly Profit Trend</h3><div class="chart-container"><canvas id="profitChart"></canvas></div></div>
-            <div class="chart-card"><h3>Rent Collection Status</h3><div class="chart-container"><canvas id="collectionChart"></canvas></div></div>
+            <div class="chart-card">
+                <h3>🏢 Property Occupancy Overview</h3>
+                <div id="propertyOccupancyList" style="max-height:400px; overflow-y:auto;"></div>
+            </div>
+            <div class="chart-card">
+                <h3>🔑 Unit Details</h3>
+                <div id="unitDetailPanel" style="max-height:400px; overflow-y:auto;">
+                    <p style="color:#94a3b8; font-size:0.85rem; padding:1rem 0;">Click a unit from the left panel to see tenant details, rent, and contact information.</p>
+                </div>
+            </div>
         </div>
+    </section>
+
+    <section id="page-property" class="page-section">
+        <div class="section-header">
+            <h2>Properties & Units</h2>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openAddPropertyModal()">＋ Add Property</button>
+                <button class="btn btn-success" onclick="openAddUnitModal()">＋ Add Unit</button>
+            </div>
+        </div>
+        <div class="utility-summary" id="propertySummary"></div>
+        <div class="filter-bar">
+            <label>Filter by Property:</label>
+            <select id="propertyFilterProperty" onchange="renderPropertyPage()"><option value="all">All Properties</option></select>
+        </div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th><th>Type</th><th>Address</th><th>Location</th>
+                        <th>Units</th><th>Occupied</th><th>Vacant</th><th>Monthly Rent Roll</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="propertiesTableBody"></tbody>
+            </table>
+        </div>
+        <div id="propertyDetailPanel"></div>
     </section>
 
     <section id="page-tenants" class="page-section">
@@ -605,7 +645,7 @@
         <div class="tenant-summary" id="tenantSummary"></div>
         <div class="table-card">
             <table>
-                <thead><tr><th>Tenant</th><th>Apt</th><th>Mobile</th><th>Monthly Rent</th><th>Billing Date</th><th>Rent Balance</th><th>Electric</th><th>Water</th><th>Total Due</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Tenant</th><th>Property</th><th>Unit</th><th>Mobile</th><th>Monthly Rent</th><th>Billing Date</th><th>Rent Balance</th><th>Electric</th><th>Water</th><th>Total Due</th><th>Actions</th></tr></thead>
                 <tbody id="tenantsTableBody"></tbody>
             </table>
         </div>
@@ -657,7 +697,6 @@
         </div>
     </section>
 
-    <!-- RECEIPTS TAB -->
     <section id="page-receipts" class="page-section">
         <div class="section-header">
             <h2>Payment Receipts</h2>
@@ -706,18 +745,21 @@
     </section>
 </div>
 
+<!-- TENANT MODAL -->
 <div class="modal-overlay" id="tenantModal">
     <div class="modal">
         <h3 id="tenantModalTitle">Add Tenant</h3>
         <form id="tenantForm" onsubmit="saveTenant(event)">
             <input type="hidden" id="tenantEditId">
+            <input type="hidden" id="tenantApt">
+            <div class="form-group"><label>Full Name *</label><input type="text" id="tenantName" required></div>
             <div class="form-row">
-                <div class="form-group"><label>Full Name *</label><input type="text" id="tenantName" required></div>
-                <div class="form-group"><label>Apartment No. *</label><input type="number" id="tenantApt" required min="1"></div>
+                <div class="form-group"><label>Property *</label><select id="tenantProperty" required onchange="onTenantPropertyChange()"><option value="">Select property</option></select></div>
+                <div class="form-group"><label>Unit *</label><select id="tenantUnit" required onchange="onTenantUnitChange()"><option value="">Select unit</option></select></div>
             </div>
             <div class="form-row">
                 <div class="form-group"><label>Mobile Number *</label><input type="text" id="tenantMobile" required></div>
-                <div class="form-group"><label>Monthly Rent (UGX) *</label><input type="number" id="tenantRent" required min="0"></div>
+                <div class="form-group"><label>Monthly Rent (UGX) *</label><input type="number" id="tenantRent" required min="0" readonly style="background:#f1f5f9;"></div>
             </div>
             <div class="form-row">
                 <div class="form-group"><label>Billing Date (day) *</label><input type="number" id="tenantBillingDate" required min="1" max="28" value="1"></div>
@@ -732,6 +774,92 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-outline" onclick="closeModal('tenantModal')">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Tenant</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- PROPERTY MODAL -->
+<div class="modal-overlay" id="propertyModal">
+    <div class="modal">
+        <h3 id="propertyModalTitle">Add Property</h3>
+        <form id="propertyForm" onsubmit="saveProperty(event)">
+            <input type="hidden" id="propertyEditId">
+            <div class="form-group"><label>Property Name *</label><input type="text" id="propertyName" required placeholder="e.g. Bright Mesh Apartments"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Property Type *</label>
+                    <select id="propertyType" required>
+                        <option value="Apartment Block">Apartment Block</option>
+                        <option value="Flat">Flat</option>
+                        <option value="Bungalow">Bungalow</option>
+                        <option value="Villa">Villa</option>
+                        <option value="Commercial Building">Commercial Building</option>
+                        <option value="Mixed Use">Mixed Use</option>
+                        <option value="Hostel">Hostel</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Location *</label><select id="propertyLocation" required><option value="">Select location</option></select></div>
+            </div>
+            <div class="form-group"><label>Address / Street *</label><input type="text" id="propertyAddress" required placeholder="e.g. Plot 12, Nkoma Road"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Total Floors</label><input type="number" id="propertyFloors" min="0" value="1"></div>
+                <div class="form-group"><label>Year Built</label><input type="number" id="propertyYear" min="1900" max="2100" placeholder="e.g. 2020"></div>
+            </div>
+            <div class="form-group"><label>Landlord / Owner Name</label><input type="text" id="propertyOwner" placeholder="Optional"></div>
+            <div class="form-group"><label>Owner Contact</label><input type="text" id="propertyOwnerContact" placeholder="Phone or email"></div>
+            <div class="form-group"><label>Notes / Important Information</label><textarea id="propertyNotes" rows="2" placeholder="Parking, security, water tank, etc."></textarea></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('propertyModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Property</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- UNIT MODAL -->
+<div class="modal-overlay" id="unitModal">
+    <div class="modal">
+        <h3 id="unitModalTitle">Add Unit</h3>
+        <form id="unitForm" onsubmit="saveUnit(event)">
+            <input type="hidden" id="unitEditId">
+            <div class="form-group"><label>Property *</label><select id="unitProperty" required><option value="">Select property</option></select></div>
+            <div class="form-row">
+                <div class="form-group"><label>Unit Number *</label><input type="text" id="unitNumber" required placeholder="e.g. A1, 101"></div>
+                <div class="form-group"><label>Unit Type *</label>
+                    <select id="unitType" required>
+                        <option value="Single Room">Single Room</option>
+                        <option value="Double Room">Double Room</option>
+                        <option value="1 Bedroom">1 Bedroom</option>
+                        <option value="2 Bedroom">2 Bedroom</option>
+                        <option value="3 Bedroom">3 Bedroom</option>
+                        <option value="4 Bedroom">4 Bedroom</option>
+                        <option value="Studio">Studio</option>
+                        <option value="Shop">Shop</option>
+                        <option value="Office">Office</option>
+                        <option value="Warehouse">Warehouse</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Monthly Rent (UGX) *</label><input type="number" id="unitRent" required min="0"></div>
+                <div class="form-group"><label>Floor</label><input type="number" id="unitFloor" min="0" value="0"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Bathrooms</label><input type="number" id="unitBathrooms" min="0" value="1"></div>
+                <div class="form-group"><label>Bedrooms</label><input type="number" id="unitBedrooms" min="0" value="1"></div>
+            </div>
+            <div class="form-group"><label>Unit Status *</label>
+                <select id="unitStatus" required>
+                    <option value="vacant">Vacant</option>
+                    <option value="occupied">Occupied</option>
+                    <option value="maintenance">Under Maintenance</option>
+                    <option value="reserved">Reserved</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Notes</label><input type="text" id="unitNotes" placeholder="Optional"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('unitModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Unit</button>
             </div>
         </form>
     </div>
@@ -757,7 +885,6 @@
     </div>
 </div>
 
-<!-- ADVANCE RENT MODAL -->
 <div class="modal-overlay" id="advanceRentModal">
     <div class="modal">
         <h3>📅 Advance Rent Payment</h3>
@@ -969,6 +1096,38 @@ async function firestoreLoadTenants() {
         }
     } catch (err) { console.warn('Tenants load failed:', err.message); }
 }
+async function firestoreLoadProperties() {
+    if (!firebaseReady) return;
+    try {
+        const snap = await db.collection('properties').get();
+        if (!snap.empty) {
+            const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            remote.forEach(r => {
+                const idx = PROPERTIES.findIndex(p => p.id === r.id);
+                if (idx > -1) PROPERTIES[idx] = r;
+                else PROPERTIES.push(r);
+            });
+        } else {
+            for (const p of DEFAULT_PROPERTIES) await db.collection('properties').doc(p.id).set(p);
+        }
+    } catch (err) { console.warn('Properties load failed:', err.message); }
+}
+async function firestoreLoadUnits() {
+    if (!firebaseReady) return;
+    try {
+        const snap = await db.collection('units').get();
+        if (!snap.empty) {
+            const remote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            remote.forEach(r => {
+                const idx = UNITS.findIndex(u => u.id === r.id);
+                if (idx > -1) UNITS[idx] = r;
+                else UNITS.push(r);
+            });
+        } else {
+            for (const u of DEFAULT_UNITS) await db.collection('units').doc(u.id).set(u);
+        }
+    } catch (err) { console.warn('Units load failed:', err.message); }
+}
 async function firestoreSaveUser(user) {
     if (!firebaseReady) return;
     try { await db.collection('users').doc(user.id).set(user, { merge: true }); } catch (err) { console.warn('User save failed:', err.message); }
@@ -984,6 +1143,22 @@ async function firestoreSaveTenant(tenant) {
 async function firestoreDeleteTenant(id) {
     if (!firebaseReady) return;
     try { await db.collection('tenants').doc(id).delete(); } catch (err) { console.warn('Tenant delete failed:', err.message); }
+}
+async function firestoreSaveProperty(p) {
+    if (!firebaseReady) return;
+    try { await db.collection('properties').doc(p.id).set(p, { merge: true }); } catch (err) { console.warn('Property save failed:', err.message); }
+}
+async function firestoreDeleteProperty(id) {
+    if (!firebaseReady) return;
+    try { await db.collection('properties').doc(id).delete(); } catch (err) { console.warn('Property delete failed:', err.message); }
+}
+async function firestoreSaveUnit(u) {
+    if (!firebaseReady) return;
+    try { await db.collection('units').doc(u.id).set(u, { merge: true }); } catch (err) { console.warn('Unit save failed:', err.message); }
+}
+async function firestoreDeleteUnit(id) {
+    if (!firebaseReady) return;
+    try { await db.collection('units').doc(id).delete(); } catch (err) { console.warn('Unit delete failed:', err.message); }
 }
 
 // ============================================================
@@ -1002,12 +1177,32 @@ const DEFAULT_USERS = [
 let LOCATIONS = [...DEFAULT_LOCATIONS];
 let USERS = [...DEFAULT_USERS];
 
+const DEFAULT_PROPERTIES = [
+    {
+        id: 'prop1', name: 'Bright Mesh Apartments', type: 'Apartment Block',
+        locationId: 'loc1', address: 'Plot 12, Nkoma Road', floors: 2, yearBuilt: 2018,
+        owner: 'Bright Mesh Ltd', ownerContact: '+256 700 000 000',
+        notes: 'Secure parking, borehole backup, 24/7 security'
+    }
+];
+
+const DEFAULT_UNITS = [
+    { id: 'u_apt1', propertyId: 'prop1', unitNumber: '1', unitType: '2 Bedroom', rent: 150000, floor: 0, bathrooms: 1, bedrooms: 2, status: 'occupied', notes: '' },
+    { id: 'u_apt2', propertyId: 'prop1', unitNumber: '2', unitType: '2 Bedroom', rent: 200000, floor: 0, bathrooms: 1, bedrooms: 2, status: 'occupied', notes: '' },
+    { id: 'u_apt3', propertyId: 'prop1', unitNumber: '3', unitType: '3 Bedroom', rent: 300000, floor: 1, bathrooms: 2, bedrooms: 3, status: 'occupied', notes: '' },
+    { id: 'u_apt4', propertyId: 'prop1', unitNumber: '4', unitType: '2 Bedroom', rent: 250000, floor: 1, bathrooms: 1, bedrooms: 2, status: 'occupied', notes: '' },
+    { id: 'u_apt5', propertyId: 'prop1', unitNumber: '5', unitType: '3 Bedroom', rent: 300000, floor: 1, bathrooms: 2, bedrooms: 3, status: 'occupied', notes: '' },
+];
+
+let PROPERTIES = [...DEFAULT_PROPERTIES];
+let UNITS = [...DEFAULT_UNITS];
+
 function can(action) {
     if (!currentUser) return false;
     const role = currentUser.role;
     const perms = {
-        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','mark_utility_paid','view_receipts'],
-        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','mark_utility_paid','view_receipts'],
+        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','mark_utility_paid','view_receipts','manage_properties'],
+        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','mark_utility_paid','view_receipts','manage_properties'],
         accountant: ['view_dashboard','view_tenants','edit_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','print','mark_utility_paid','view_receipts'],
         cashier: ['view_dashboard','view_tenants','add_payments','view_expenses','print','mark_utility_paid','view_receipts'],
         user: ['view_dashboard','view_tenants','view_expenses','print','view_receipts']
@@ -1016,12 +1211,13 @@ function can(action) {
 }
 
 // ============================================================
-// TENANTS DATA (same as before)
+// TENANTS DATA
 // ============================================================
 const TENANTS = [
     {
         id: 'ivan', name: 'Ivan', apt: 1, mobile: '+256 772 100 001',
         monthlyRent: 150000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        propertyId: 'prop1', unitId: 'u_apt1',
         rent: [
             { date: '2025-07-16', desc: 'Rent for Jul,Aug,Sept 2025', debit: 450000, credit: 0, invoiceNo: 'INV-001' },
             { date: '2025-07-27', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 450000, invoiceNo: 'INV-001', receiptNo: 'RCPT-0001' },
@@ -1080,6 +1276,7 @@ const TENANTS = [
     {
         id: 'bob', name: 'Bob', apt: 2, mobile: '+256 772 100 002',
         monthlyRent: 200000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        propertyId: 'prop1', unitId: 'u_apt2',
         rent: [
             { date: '2025-07-01', desc: 'Rent for Jul,Aug,Sept 2025', debit: 600000, credit: 0, invoiceNo: 'INV-101' },
             { date: '2025-07-01', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 500000, invoiceNo: 'INV-101', receiptNo: 'RCPT-0101' },
@@ -1135,6 +1332,7 @@ const TENANTS = [
     {
         id: 'peter', name: 'Peter', apt: 3, mobile: '+256 772 100 003',
         monthlyRent: 300000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        propertyId: 'prop1', unitId: 'u_apt3',
         rent: [
             { date: '2025-07-01', desc: 'Rent for Jul 2025', debit: 350000, credit: 0, invoiceNo: 'INV-201' },
             { date: '2025-07-01', desc: 'Payment – Jul 2025', debit: 0, credit: 350000, invoiceNo: 'INV-201', receiptNo: 'RCPT-0201' },
@@ -1200,6 +1398,7 @@ const TENANTS = [
     {
         id: 'vitus', name: 'Vitus', apt: 4, mobile: '+256 772 100 004',
         monthlyRent: 250000, billingDate: 1, electricRate: 1100, locationId: 'loc1',
+        propertyId: 'prop1', unitId: 'u_apt4',
         rent: [
             { date: '2026-04-10', desc: 'Rent for Apr,May 2026', debit: 500000, credit: 0, invoiceNo: 'INV-301' },
             { date: '2026-04-10', desc: 'Payment – Apr,May 2026', debit: 0, credit: 500000, invoiceNo: 'INV-301', receiptNo: 'RCPT-0301' },
@@ -1229,6 +1428,7 @@ const TENANTS = [
     {
         id: 'jackson', name: 'Jackson', apt: 5, mobile: '+256 772 100 005',
         monthlyRent: 300000, billingDate: 10, electricRate: 1100, locationId: 'loc1',
+        propertyId: 'prop1', unitId: 'u_apt5',
         rent: [
             { date: '2026-08-10', desc: 'Rent for Aug,Sept,Oct 2026', debit: 900000, credit: 0, invoiceNo: 'INV-401' },
             { date: '2026-08-10', desc: 'Payment – Aug,Sept,Oct 2026', debit: 0, credit: 900000, invoiceNo: 'INV-401', receiptNo: 'RCPT-0401' },
@@ -1293,7 +1493,6 @@ function getNextInvoiceNo(t) {
     return 'INV-' + String(max + 1).padStart(3, '0');
 }
 
-// Global receipt counter — based on existing receipts to avoid collision
 function getNextReceiptNo(prefix) {
     const allReceipts = [];
     TENANTS.forEach(t => {
@@ -1339,24 +1538,6 @@ function resetLoginButton() {
     if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
 }
 
-// Get list of months between two dates
-function getMonthsBetween(startDate, endDate) {
-    const months = [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    let cur = new Date(start.getFullYear(), start.getMonth(), 1);
-    while (cur <= end) {
-        months.push({
-            year: cur.getFullYear(),
-            month: cur.getMonth() + 1,
-            label: cur.toLocaleString('en', { month: 'short', year: 'numeric' })
-        });
-        cur.setMonth(cur.getMonth() + 1);
-    }
-    return months;
-}
-
-// Build a list of next 12 months starting from the current month
 function getForwardMonths(count) {
     const months = [];
     const now = new Date();
@@ -1371,10 +1552,46 @@ function getForwardMonths(count) {
     return months;
 }
 
-// Check if a specific month already has an invoice (debit) for this tenant
 function hasInvoiceForMonth(t, year, month) {
     const monthName = new Date(year, month - 1, 1).toLocaleString('en', { month: 'long' });
     return t.rent.some(r => r.debit > 0 && r.desc.includes(monthName) && r.desc.includes(String(year)));
+}
+
+// ============================================================
+// PROPERTY & UNIT HELPERS
+// ============================================================
+function getVisibleProperties() {
+    if (!currentUser) return [];
+    if (currentUser.role === 'admin') return PROPERTIES;
+    return PROPERTIES.filter(p => p.locationId === currentUser.locationId);
+}
+function getVisibleUnits() {
+    const props = getVisibleProperties().map(p => p.id);
+    return UNITS.filter(u => props.includes(u.propertyId));
+}
+function getUnitsForProperty(propId) { return UNITS.filter(u => u.propertyId === propId); }
+function getPropertyById(id) { return PROPERTIES.find(p => p.id === id); }
+function getUnitById(id) { return UNITS.find(u => u.id === id); }
+
+function getTenantUnit(t) {
+    if (t.unitId) {
+        const unit = getUnitById(t.unitId);
+        if (unit) return unit;
+    }
+    const props = getVisibleProperties().map(p => p.id);
+    return UNITS.find(u => props.includes(u.propertyId) && u.unitNumber === String(t.apt));
+}
+
+function getUnitOccupant(unitId) {
+    return TENANTS.find(t => t.unitId === unitId);
+}
+
+async function syncUnitStatuses() {
+    for (const u of UNITS) {
+        const occupant = getUnitOccupant(u.id);
+        if (occupant && u.status !== 'occupied') { u.status = 'occupied'; await firestoreSaveUnit(u); }
+        else if (!occupant && u.status === 'occupied') { u.status = 'vacant'; await firestoreSaveUnit(u); }
+    }
 }
 
 // ============================================================
@@ -1490,7 +1707,9 @@ function enterApp() {
 
     applyPermissions();
     refreshFilterOptions();
+    refreshAllPropertyDropdowns();
     renderDashboard();
+    renderPropertyPage();
     if (can('view_admin')) renderAdminPage();
 }
 
@@ -1500,6 +1719,9 @@ function applyPermissions() {
     if (can('view_admin')) adminTab.classList.remove('hidden');
     else adminTab.classList.add('hidden');
 
+    const propertyTab = document.querySelector('.nav-tab[data-page="property"]');
+    if (propertyTab) propertyTab.classList.toggle('hidden', !can('view_tenants'));
+
     document.querySelectorAll('#page-tenants .section-header .btn-primary').forEach(b => { b.style.display = can('add_tenants') ? '' : 'none'; });
     document.querySelectorAll('#page-tenants .section-header .btn-success').forEach(b => { b.style.display = can('add_payments') ? '' : 'none'; });
     document.querySelectorAll('#page-tenants .section-header .btn-info').forEach(b => { b.style.display = can('add_payments') ? '' : 'none'; });
@@ -1508,6 +1730,9 @@ function applyPermissions() {
     document.querySelectorAll('#page-utility .section-header .btn-outline').forEach(b => { b.style.display = can('add_utility') ? '' : 'none'; });
     document.querySelectorAll('#page-expenses .section-header .btn-primary').forEach(b => { b.style.display = can('add_expenses') ? '' : 'none'; });
     document.querySelectorAll('.admin-add-location').forEach(b => { b.style.display = (role === 'admin') ? '' : 'none'; });
+
+    document.querySelectorAll('#page-property .section-header .btn-primary').forEach(b => { b.style.display = can('manage_properties') ? '' : 'none'; });
+    document.querySelectorAll('#page-property .section-header .btn-success').forEach(b => { b.style.display = can('manage_properties') ? '' : 'none'; });
 }
 
 // ============================================================
@@ -1520,15 +1745,22 @@ function applyPermissions() {
         try { currentUser = JSON.parse(saved); } catch (e) { sessionStorage.removeItem('bmr_currentUser'); }
     }
 
-    const loadTimeout = new Promise(resolve => setTimeout(resolve, 3000));
+    const loadTimeout = new Promise(resolve => setTimeout(resolve, 4000));
     try {
         await Promise.race([
-            Promise.all([firestoreLoadLocations(), firestoreLoadUsers(), firestoreLoadTenants()]),
+            Promise.all([
+                firestoreLoadLocations(),
+                firestoreLoadUsers(),
+                firestoreLoadTenants(),
+                firestoreLoadProperties(),
+                firestoreLoadUnits()
+            ]),
             loadTimeout
         ]);
     } catch (err) { console.warn('Data load incomplete:', err); }
 
     generateAutoInvoices();
+    await syncUnitStatuses();
 
     splash.classList.add('hidden');
     setTimeout(() => { splash.style.display = 'none'; }, 400);
@@ -1547,6 +1779,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
         document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
         document.getElementById('page-' + tab.dataset.page).classList.add('active');
         if (tab.dataset.page === 'dashboard') renderDashboard();
+        if (tab.dataset.page === 'property') renderPropertyPage();
         if (tab.dataset.page === 'tenants') renderTenantsPage();
         if (tab.dataset.page === 'utility') renderUtilityPage();
         if (tab.dataset.page === 'expenses') renderExpensesPage();
@@ -1570,12 +1803,20 @@ function renderDashboard() {
     const profit = totalIncome - totalExp;
     const outstanding = tenants.reduce((s, t) => s + Math.max(0, totalBalance(t)), 0);
 
+    const allUnits = getVisibleUnits();
+    const occupiedUnits = allUnits.filter(u => u.status === 'occupied').length;
+    const vacantUnits = allUnits.filter(u => u.status === 'vacant').length;
+    const occRate = allUnits.length ? Math.round((occupiedUnits / allUnits.length) * 100) : 0;
+
     document.getElementById('dashboardCards').innerHTML = `
         <div class="dash-card income"><div class="label">Total Income</div><div class="value">${formatUGX(totalIncome)}</div><div class="sub">All received payments</div></div>
         <div class="dash-card profit"><div class="label">Profit</div><div class="value">${formatUGX(profit)}</div><div class="sub">Income – Expenses</div></div>
         <div class="dash-card rent"><div class="label">💰 Rent Received</div><div class="value">${formatUGX(totalRentPaid)}</div><div class="sub">Total rent payments</div></div>
         <div class="dash-card outstanding"><div class="label">Outstanding</div><div class="value">${formatUGX(outstanding)}</div><div class="sub">Pending balances</div></div>
         <div class="dash-card expenses"><div class="label">Total Expenses</div><div class="value">${formatUGX(totalExp)}</div><div class="sub">${tenants.reduce((s, t) => s + t.expenses.length, 0)} items</div></div>
+        <div class="dash-card units"><div class="label">🏢 Total Units</div><div class="value">${allUnits.length}</div><div class="sub">${getVisibleProperties().length} properties</div></div>
+        <div class="dash-card occupied"><div class="label">🔑 Occupied</div><div class="value">${occupiedUnits}</div><div class="sub">${occRate}% occupancy rate</div></div>
+        <div class="dash-card vacant"><div class="label">🚪 Vacant</div><div class="value">${vacantUnits}</div><div class="sub">Available for rent</div></div>
     `;
 
     const overdue = getOverdueTenants(tenants);
@@ -1613,37 +1854,164 @@ function renderDashboard() {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
     });
 
-    const months = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
-    const monthMap = { 'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12','Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06' };
-    const monthlyProfit = months.map(m => {
-        const mm = monthMap[m];
-        let income = 0, expense = 0;
-        tenants.forEach(t => {
-            t.rent.forEach(r => { if (r.date.includes('-'+mm+'-')) income += (r.credit || 0); });
-            t.electric.forEach(r => { if (r.date.includes('-'+mm+'-')) income += (r.credit || 0); });
-            (t.water||[]).forEach(r => { if (r.date.includes('-'+mm+'-')) income += (r.credit || 0); });
-            t.expenses.forEach(e => { if (e.date.includes('-'+mm+'-')) expense += e.amount; });
-        });
-        return income - expense;
-    });
+    renderPropertyOccupancyDashboard();
+}
 
-    const profitCtx = document.getElementById('profitChart').getContext('2d');
-    if (charts.profit) charts.profit.destroy();
-    charts.profit = new Chart(profitCtx, {
-        type: 'bar',
-        data: { labels: months, datasets: [{ label: 'Profit (UGX)', data: monthlyProfit, backgroundColor: monthlyProfit.map(v => v >= 0 ? '#16a34a' : '#dc2626'), borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000)+'k', font: { size: 10 } } }, x: { ticks: { font: { size: 10 } } } } }
-    });
+function renderPropertyOccupancyDashboard() {
+    const listEl = document.getElementById('propertyOccupancyList');
+    if (!listEl) return;
 
-    const totalRentInvoiced = tenants.reduce((s, t) => s + t.rent.reduce((a, r) => a + (r.debit || 0), 0), 0);
-    const pendingRent = Math.max(0, totalRentInvoiced - totalRentPaid);
-    const collCtx = document.getElementById('collectionChart').getContext('2d');
-    if (charts.collection) charts.collection.destroy();
-    charts.collection = new Chart(collCtx, {
-        type: 'pie',
-        data: { labels: ['Collected', 'Pending'], datasets: [{ data: [totalRentPaid, pendingRent], backgroundColor: ['#16a34a', '#dc2626'], borderWidth: 2, borderColor: '#fff' }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
-    });
+    const props = getVisibleProperties();
+    if (props.length === 0) {
+        listEl.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; padding:1rem 0;">No properties yet. Add one in the Property tab.</p>';
+        return;
+    }
+
+    const detailEl = document.getElementById('unitDetailPanel');
+    if (detailEl) detailEl.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; padding:1rem 0;">Click a unit from the left panel to see tenant details, rent, and contact information.</p>';
+
+    listEl.innerHTML = props.map(p => {
+        const units = getUnitsForProperty(p.id);
+        const occ = units.filter(u => u.status === 'occupied').length;
+        const vac = units.filter(u => u.status === 'vacant').length;
+        const maint = units.filter(u => u.status === 'maintenance').length;
+        const reserved = units.filter(u => u.status === 'reserved').length;
+        const roll = units.filter(u => u.status === 'occupied').reduce((s, u) => s + (u.rent || 0), 0);
+
+        const unitRows = units.length === 0
+            ? '<div style="color:#94a3b8; font-size:0.8rem; padding:0.6rem 1rem;">No units</div>'
+            : units.map(u => {
+                const occupant = getUnitOccupant(u.id);
+                const statusColors = { occupied: 'paid', vacant: 'pending', maintenance: 'partial', reserved: 'info' };
+                const cls = statusColors[u.status] || 'pending';
+                return `
+                    <div onclick="showUnitDetail('${u.id}')" style="display:flex; justify-content:space-between; align-items:center; padding:0.55rem 1rem; margin:0.2rem 0; border-radius:0.65rem; background:#f8fafc; cursor:pointer; transition:background 0.15s; font-size:0.82rem; gap:0.5rem;"
+                         onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">
+                        <div style="min-width:0; flex:1; display:flex; align-items:center; gap:0.5rem;">
+                            <span style="font-weight:700; color:#0f172a; flex-shrink:0;">Unit ${u.unitNumber}</span>
+                            <span style="color:#64748b; font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${u.unitType}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
+                            <span style="color:#475569; font-size:0.75rem;">${occupant ? occupant.name : ''}</span>
+                            <span class="badge ${cls}">${u.status}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        return `
+            <div style="margin-bottom:0.85rem; border:1px solid #e2e8f0; border-radius:0.85rem; overflow:hidden;">
+                <div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%); color:white; padding:0.65rem 1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+                        <div style="font-weight:700; font-size:0.9rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🏢 ${p.name}</div>
+                        <div style="font-size:0.7rem; color:#facc15; font-weight:700; flex-shrink:0;">${units.length} units</div>
+                    </div>
+                    <div style="display:flex; gap:0.85rem; margin-top:0.4rem; font-size:0.7rem; color:#cbd5e1; flex-wrap:wrap;">
+                        <span>🟢 ${occ} occupied</span>
+                        <span>🔴 ${vac} vacant</span>
+                        ${maint ? `<span>🟡 ${maint} maint</span>` : ''}
+                        ${reserved ? `<span>🔵 ${reserved} reserved</span>` : ''}
+                        <span style="margin-left:auto; color:#facc15; font-weight:700;">${formatUGX(roll)}</span>
+                    </div>
+                </div>
+                <div style="padding:0.4rem 0;">
+                    ${unitRows}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function showUnitDetail(unitId) {
+    const u = getUnitById(unitId);
+    if (!u) return;
+    const prop = getPropertyById(u.propertyId);
+    const occupant = getUnitOccupant(u.id);
+    const detailEl = document.getElementById('unitDetailPanel');
+    if (!detailEl) return;
+
+    const statusColors = { occupied: 'paid', vacant: 'pending', maintenance: 'partial', reserved: 'info' };
+    const cls = statusColors[u.status] || 'pending';
+
+    let financialBlock = '';
+    if (occupant) {
+        const rBal = rentBalance(occupant);
+        const eBal = electricBalance(occupant);
+        const wBal = waterBalance(occupant);
+        const totalDue = rBal + eBal + wBal;
+
+        financialBlock = `
+            <div style="background:linear-gradient(135deg,#065f46 0%,#16a34a 100%); color:white; border-radius:0.85rem; padding:0.9rem 1rem; margin-bottom:0.9rem;">
+                <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; opacity:0.9;">Tenant</div>
+                <div style="font-size:1.1rem; font-weight:800; margin-top:0.2rem;">${occupant.name}</div>
+                <div style="font-size:0.8rem; opacity:0.9; margin-top:0.15rem;">📞 ${occupant.mobile || '—'}</div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.9rem;">
+                <div style="background:#f1f5f9; border-radius:0.65rem; padding:0.6rem 0.75rem;">
+                    <div style="font-size:0.65rem; text-transform:uppercase; color:#64748b; font-weight:700;">Rent Balance</div>
+                    <div style="font-size:0.95rem; font-weight:800; color:${rBal > 0 ? '#dc2626' : '#16a34a'}; margin-top:0.15rem;">${formatUGX(rBal)}</div>
+                </div>
+                <div style="background:#f1f5f9; border-radius:0.65rem; padding:0.6rem 0.75rem;">
+                    <div style="font-size:0.65rem; text-transform:uppercase; color:#64748b; font-weight:700;">Electric</div>
+                    <div style="font-size:0.95rem; font-weight:800; color:${eBal > 0 ? '#dc2626' : '#16a34a'}; margin-top:0.15rem;">${formatUGX(eBal)}</div>
+                </div>
+                <div style="background:#f1f5f9; border-radius:0.65rem; padding:0.6rem 0.75rem;">
+                    <div style="font-size:0.65rem; text-transform:uppercase; color:#64748b; font-weight:700;">Water</div>
+                    <div style="font-size:0.95rem; font-weight:800; color:${wBal > 0 ? '#dc2626' : '#16a34a'}; margin-top:0.15rem;">${formatUGX(wBal)}</div>
+                </div>
+                <div style="background:#f1f5f9; border-radius:0.65rem; padding:0.6rem 0.75rem;">
+                    <div style="font-size:0.65rem; text-transform:uppercase; color:#64748b; font-weight:700;">Total Due</div>
+                    <div style="font-size:0.95rem; font-weight:800; color:${totalDue > 0 ? '#dc2626' : '#16a34a'}; margin-top:0.15rem;">${formatUGX(totalDue)}</div>
+                </div>
+            </div>
+            <div style="background:#f8fafc; border-radius:0.85rem; padding:0.75rem 0.9rem; font-size:0.82rem; margin-bottom:0.9rem;">
+                <div style="display:flex; justify-content:space-between; padding:0.25rem 0;"><span style="color:#64748b;">Monthly Rent</span><strong>${formatUGX(occupant.monthlyRent)}</strong></div>
+                <div style="display:flex; justify-content:space-between; padding:0.25rem 0;"><span style="color:#64748b;">Billing Date</span><strong>${ordinal(occupant.billingDate)}</strong></div>
+                <div style="display:flex; justify-content:space-between; padding:0.25rem 0;"><span style="color:#64748b;">Electric Rate</span><strong>${formatUGX(occupant.electricRate)}/unit</strong></div>
+            </div>
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="viewTenant('${occupant.id}')" style="flex:1;">📋 View Tenant</button>
+                ${can('add_payments') ? `<button class="btn btn-success btn-sm" onclick="openPaymentForTenant('${occupant.id}')" style="flex:1;">💵 Payment</button>` : ''}
+            </div>
+        `;
+    } else {
+        financialBlock = `
+            <div style="background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 100%); color:white; border-radius:0.85rem; padding:0.9rem 1rem; margin-bottom:0.9rem; text-align:center;">
+                <div style="font-size:1.6rem;">🚪</div>
+                <div style="font-size:1rem; font-weight:800; margin-top:0.3rem;">Vacant Unit</div>
+                <div style="font-size:0.78rem; opacity:0.9; margin-top:0.15rem;">No tenant currently assigned</div>
+            </div>
+            <div style="background:#f8fafc; border-radius:0.85rem; padding:0.75rem 0.9rem; font-size:0.82rem; margin-bottom:0.9rem;">
+                <div style="display:flex; justify-content:space-between; padding:0.25rem 0;"><span style="color:#64748b;">Expected Rent</span><strong>${formatUGX(u.rent)}</strong></div>
+                <div style="display:flex; justify-content:space-between; padding:0.25rem 0;"><span style="color:#64748b;">Unit Type</span><strong>${u.unitType}</strong></div>
+            </div>
+            ${can('add_tenants') ? `<button class="btn btn-primary btn-sm" onclick="openAddTenantModal()" style="width:100%;">＋ Assign Tenant</button>` : ''}
+        `;
+    }
+
+    detailEl.innerHTML = `
+        <div style="border:1px solid #e2e8f0; border-radius:0.85rem; overflow:hidden;">
+            <div style="background:#f8fafc; padding:0.75rem 1rem; border-bottom:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <div>
+                        <div style="font-weight:800; font-size:0.95rem; color:#0f172a;">Unit ${u.unitNumber}</div>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:0.1rem;">${prop ? prop.name : '—'} · ${u.unitType}</div>
+                    </div>
+                    <span class="badge ${cls}">${u.status}</span>
+                </div>
+                <div style="display:flex; gap:0.85rem; margin-top:0.5rem; font-size:0.75rem; color:#475569; flex-wrap:wrap;">
+                    <span>🛏️ ${u.bedrooms} bed</span>
+                    <span>🚿 ${u.bathrooms} bath</span>
+                    <span>🏢 Floor ${u.floor}</span>
+                    <span>💰 ${formatUGX(u.rent)}/mo</span>
+                </div>
+            </div>
+            <div style="padding:0.9rem 1rem;">
+                ${financialBlock}
+                ${u.notes ? `<div style="background:#fffbeb; border-left:3px solid #f59e0b; border-radius:0.5rem; padding:0.6rem 0.75rem; font-size:0.8rem; color:#78350f;"><strong>Notes:</strong> ${u.notes}</div>` : ''}
+            </div>
+        </div>
+    `;
 }
 
 function getOverdueTenants(tenants) {
@@ -1665,7 +2033,356 @@ function getOverdueTenants(tenants) {
 }
 
 // ============================================================
-// TENANTS
+// PROPERTY PAGE
+// ============================================================
+function renderPropertyPage() {
+    const props = getVisibleProperties();
+    const filterId = document.getElementById('propertyFilterProperty')?.value || 'all';
+    const filtered = filterId === 'all' ? props : props.filter(p => p.id === filterId);
+
+    const allUnits = filtered.flatMap(p => getUnitsForProperty(p.id));
+    const occupied = allUnits.filter(u => u.status === 'occupied').length;
+    const vacant = allUnits.filter(u => u.status === 'vacant').length;
+    const maint = allUnits.filter(u => u.status === 'maintenance').length;
+    const reserved = allUnits.filter(u => u.status === 'reserved').length;
+    const totalRentRoll = allUnits.filter(u => u.status === 'occupied').reduce((s, u) => s + (u.rent || 0), 0);
+    const occRate = allUnits.length ? Math.round((occupied / allUnits.length) * 100) : 0;
+
+    document.getElementById('propertySummary').innerHTML = `
+        <div class="tenant-total-card"><div class="exp-label">🏢 Properties</div><div class="exp-value">${filtered.length}</div><div class="exp-sub">Managed buildings</div></div>
+        <div class="tenant-amount-card"><div class="exp-label">🔑 Total Units</div><div class="exp-value">${allUnits.length}</div><div class="exp-sub">${occupied} occupied · ${vacant} vacant</div></div>
+        <div class="admin-stat-card properties" style="border-radius:1.15rem;"><div class="admin-label">📈 Occupancy Rate</div><div class="admin-value">${occRate}%</div><div class="admin-sub">${maint} maint · ${reserved} reserved</div></div>
+        <div class="expense-total-card"><div class="exp-label">💰 Monthly Rent Roll</div><div class="exp-value">${formatUGX(totalRentRoll)}</div><div class="exp-sub">From occupied units</div></div>
+    `;
+
+    const fsel = document.getElementById('propertyFilterProperty');
+    if (fsel) {
+        const cur = fsel.value;
+        fsel.innerHTML = '<option value="all">All Properties</option>' + props.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        fsel.value = cur && [...fsel.options].some(o => o.value === cur) ? cur : 'all';
+    }
+
+    const tbody = document.getElementById('propertiesTableBody');
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:2rem;">No properties yet. Click "Add Property" to start.</td></tr>';
+        document.getElementById('propertyDetailPanel').innerHTML = '';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(p => {
+        const units = getUnitsForProperty(p.id);
+        const occ = units.filter(u => u.status === 'occupied').length;
+        const vac = units.filter(u => u.status === 'vacant').length;
+        const roll = units.filter(u => u.status === 'occupied').reduce((s, u) => s + (u.rent || 0), 0);
+        const loc = LOCATIONS.find(l => l.id === p.locationId);
+        return `
+            <tr>
+                <td><strong>${p.name}</strong></td>
+                <td>${p.type}</td>
+                <td>${p.address}</td>
+                <td>${loc ? loc.area + ', ' + loc.city : '—'}</td>
+                <td>${units.length}</td>
+                <td><span class="badge paid">${occ}</span></td>
+                <td><span class="badge pending">${vac}</span></td>
+                <td>${formatUGX(roll)}</td>
+                <td><div class="action-btns">
+                    <button class="btn btn-outline btn-sm" onclick="viewProperty('${p.id}')">View</button>
+                    ${can('manage_properties') ? `<button class="btn btn-warning btn-sm" onclick="editProperty('${p.id}')">Edit</button>` : ''}
+                    ${currentUser.role === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteProperty('${p.id}')">Del</button>` : ''}
+                </div></td>
+            </tr>
+        `;
+    }).join('');
+    document.getElementById('propertyDetailPanel').innerHTML = '';
+}
+
+function viewProperty(id) {
+    const p = getPropertyById(id);
+    if (!p) return;
+    const units = getUnitsForProperty(p.id);
+    const loc = LOCATIONS.find(l => l.id === p.locationId);
+    const panel = document.getElementById('propertyDetailPanel');
+    const occ = units.filter(u => u.status === 'occupied').length;
+    const vac = units.filter(u => u.status === 'vacant').length;
+    const roll = units.filter(u => u.status === 'occupied').reduce((s, u) => s + (u.rent || 0), 0);
+
+    const statusBadge = s => {
+        const map = { occupied: 'paid', vacant: 'pending', maintenance: 'partial', reserved: 'info' };
+        return `<span class="badge ${map[s] || 'pending'}">${s}</span>`;
+    };
+
+    panel.innerHTML = `
+        <div class="detail-panel">
+            <div class="detail-header">
+                <h2>${p.name} <small>${p.type} · ${p.address}${loc ? ' · ' + loc.area + ', ' + loc.city : ''}</small></h2>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    ${can('manage_properties') ? `<button class="btn btn-success btn-sm" onclick="openAddUnitModal('${p.id}')">＋ Add Unit</button>` : ''}
+                    ${can('manage_properties') ? `<button class="btn btn-warning btn-sm" onclick="editProperty('${p.id}')">✏️ Edit Property</button>` : ''}
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('propertyDetailPanel').innerHTML='';">Close</button>
+                </div>
+            </div>
+            <div class="utility-summary">
+                <div class="util-card electric-received"><div class="util-label">Total Units</div><div class="util-value">${units.length}</div></div>
+                <div class="util-card water-received"><div class="util-label">Occupied</div><div class="util-value">${occ}</div></div>
+                <div class="util-card" style="background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 100%);"><div class="util-label">Vacant</div><div class="util-value">${vac}</div></div>
+                <div class="expense-total-card"><div class="exp-label">Rent Roll</div><div class="exp-value">${formatUGX(roll)}</div></div>
+            </div>
+            ${p.owner || p.notes || p.yearBuilt ? `
+            <div style="background:#f8fafc;border-radius:1rem;padding:1rem;margin-bottom:1rem;font-size:0.85rem;">
+                ${p.owner ? `<div><strong>Owner:</strong> ${p.owner}${p.ownerContact ? ' · ' + p.ownerContact : ''}</div>` : ''}
+                ${p.yearBuilt ? `<div><strong>Year Built:</strong> ${p.yearBuilt}</div>` : ''}
+                ${p.floors ? `<div><strong>Floors:</strong> ${p.floors}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:0.4rem;"><strong>Notes:</strong> ${p.notes}</div>` : ''}
+            </div>` : ''}
+            <h3 style="font-size:0.95rem; margin:1rem 0 0.75rem 0;">🔑 Units</h3>
+            ${units.length === 0 ? '<p style="color:#94a3b8;">No units yet. Click "Add Unit" to create one.</p>' : `
+            <table>
+                <thead><tr><th>Unit</th><th>Type</th><th>Floor</th><th>Beds/Baths</th><th>Rent</th><th>Status</th><th>Tenant</th><th>Actions</th></tr></thead>
+                <tbody>${units.map(u => {
+                    const occupant = getUnitOccupant(u.id);
+                    return `<tr>
+                        <td><strong>${u.unitNumber}</strong></td>
+                        <td>${u.unitType}</td>
+                        <td>${u.floor}</td>
+                        <td>${u.bedrooms}bd / ${u.bathrooms}ba</td>
+                        <td>${formatUGX(u.rent)}</td>
+                        <td>${statusBadge(u.status)}</td>
+                        <td>${occupant ? `<strong>${occupant.name}</strong>` : '<span style="color:#94a3b8;">—</span>'}</td>
+                        <td><div class="action-btns">
+                            ${can('manage_properties') ? `<button class="btn btn-warning btn-sm" onclick="editUnit('${u.id}')">Edit</button>` : ''}
+                            ${can('manage_properties') ? `<button class="btn btn-danger btn-sm" onclick="deleteUnit('${u.id}')">Delete</button>` : ''}
+                        </div></td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>`}
+        </div>
+    `;
+}
+
+function openAddPropertyModal() {
+    if (!can('manage_properties')) { showNotification('Permission denied', 'warning'); return; }
+    document.getElementById('propertyModalTitle').textContent = 'Add Property';
+    document.getElementById('propertyForm').reset();
+    document.getElementById('propertyEditId').value = '';
+    refreshPropertyLocationDropdown();
+    openModal('propertyModal');
+}
+
+function editProperty(id) {
+    if (!can('manage_properties')) { showNotification('Permission denied', 'warning'); return; }
+    const p = getPropertyById(id);
+    if (!p) return;
+    document.getElementById('propertyModalTitle').textContent = 'Edit Property';
+    document.getElementById('propertyEditId').value = p.id;
+    document.getElementById('propertyName').value = p.name;
+    document.getElementById('propertyType').value = p.type;
+    refreshPropertyLocationDropdown();
+    document.getElementById('propertyLocation').value = p.locationId || '';
+    document.getElementById('propertyAddress').value = p.address;
+    document.getElementById('propertyFloors').value = p.floors || 1;
+    document.getElementById('propertyYear').value = p.yearBuilt || '';
+    document.getElementById('propertyOwner').value = p.owner || '';
+    document.getElementById('propertyOwnerContact').value = p.ownerContact || '';
+    document.getElementById('propertyNotes').value = p.notes || '';
+    openModal('propertyModal');
+}
+
+function refreshPropertyLocationDropdown() {
+    const sel = document.getElementById('propertyLocation');
+    if (!sel) return;
+    const visibleLocs = currentUser?.role === 'admin' ? LOCATIONS : LOCATIONS.filter(l => l.id === currentUser?.locationId);
+    sel.innerHTML = '<option value="">Select location</option>' + visibleLocs.map(l => `<option value="${l.id}">${l.area}, ${l.city}</option>`).join('');
+}
+
+async function saveProperty(e) {
+    e.preventDefault();
+    if (!can('manage_properties')) { showNotification('Permission denied', 'warning'); return; }
+    const editId = document.getElementById('propertyEditId').value;
+    const data = {
+        name: document.getElementById('propertyName').value.trim(),
+        type: document.getElementById('propertyType').value,
+        locationId: document.getElementById('propertyLocation').value,
+        address: document.getElementById('propertyAddress').value.trim(),
+        floors: parseInt(document.getElementById('propertyFloors').value) || 1,
+        yearBuilt: parseInt(document.getElementById('propertyYear').value) || null,
+        owner: document.getElementById('propertyOwner').value.trim(),
+        ownerContact: document.getElementById('propertyOwnerContact').value.trim(),
+        notes: document.getElementById('propertyNotes').value.trim()
+    };
+
+    let prop;
+    if (editId) {
+        prop = getPropertyById(editId);
+        if (prop) Object.assign(prop, data);
+        showNotification('Property updated');
+    } else {
+        prop = { id: 'prop_' + Date.now(), ...data };
+        PROPERTIES.push(prop);
+        showNotification('Property added');
+    }
+    await firestoreSaveProperty(prop);
+    closeModal('propertyModal');
+    renderPropertyPage();
+    renderDashboard();
+    refreshAllPropertyDropdowns();
+}
+
+async function deleteProperty(id) {
+    if (currentUser.role !== 'admin') { showNotification('Only admin can delete properties', 'warning'); return; }
+    const units = getUnitsForProperty(id);
+    const occupied = units.filter(u => getUnitOccupant(u.id));
+    if (occupied.length > 0) { showNotification('Cannot delete: property has occupied units', 'warning'); return; }
+    if (!confirm('Delete this property and all its units?')) return;
+    for (const u of units) await firestoreDeleteUnit(u.id);
+    UNITS = UNITS.filter(u => u.propertyId !== id);
+    PROPERTIES = PROPERTIES.filter(p => p.id !== id);
+    await firestoreDeleteProperty(id);
+    showNotification('Property deleted', 'warning');
+    renderPropertyPage();
+    renderDashboard();
+    refreshAllPropertyDropdowns();
+}
+
+function openAddUnitModal(propId) {
+    if (!can('manage_properties')) { showNotification('Permission denied', 'warning'); return; }
+    document.getElementById('unitModalTitle').textContent = 'Add Unit';
+    document.getElementById('unitForm').reset();
+    document.getElementById('unitEditId').value = '';
+    refreshUnitPropertyDropdown();
+    if (propId) document.getElementById('unitProperty').value = propId;
+    document.getElementById('unitFloor').value = 0;
+    document.getElementById('unitBathrooms').value = 1;
+    document.getElementById('unitBedrooms').value = 1;
+    document.getElementById('unitStatus').value = 'vacant';
+    openModal('unitModal');
+}
+
+function editUnit(id) {
+    if (!can('manage_properties')) { showNotification('Permission denied', 'warning'); return; }
+    const u = getUnitById(id);
+    if (!u) return;
+    document.getElementById('unitModalTitle').textContent = 'Edit Unit';
+    document.getElementById('unitEditId').value = u.id;
+    refreshUnitPropertyDropdown();
+    document.getElementById('unitProperty').value = u.propertyId;
+    document.getElementById('unitNumber').value = u.unitNumber;
+    document.getElementById('unitType').value = u.unitType;
+    document.getElementById('unitRent').value = u.rent;
+    document.getElementById('unitFloor').value = u.floor || 0;
+    document.getElementById('unitBathrooms').value = u.bathrooms || 1;
+    document.getElementById('unitBedrooms').value = u.bedrooms || 1;
+    document.getElementById('unitStatus').value = u.status;
+    document.getElementById('unitNotes').value = u.notes || '';
+    openModal('unitModal');
+}
+
+function refreshUnitPropertyDropdown() {
+    const sel = document.getElementById('unitProperty');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Select property</option>' + getVisibleProperties().map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+async function saveUnit(e) {
+    e.preventDefault();
+    if (!can('manage_properties')) { showNotification('Permission denied', 'warning'); return; }
+    const editId = document.getElementById('unitEditId').value;
+    const data = {
+        propertyId: document.getElementById('unitProperty').value,
+        unitNumber: document.getElementById('unitNumber').value.trim(),
+        unitType: document.getElementById('unitType').value,
+        rent: parseFloat(document.getElementById('unitRent').value) || 0,
+        floor: parseInt(document.getElementById('unitFloor').value) || 0,
+        bathrooms: parseInt(document.getElementById('unitBathrooms').value) || 0,
+        bedrooms: parseInt(document.getElementById('unitBedrooms').value) || 0,
+        status: document.getElementById('unitStatus').value,
+        notes: document.getElementById('unitNotes').value.trim()
+    };
+
+    const dup = UNITS.find(u => u.propertyId === data.propertyId && u.unitNumber === data.unitNumber && u.id !== editId);
+    if (dup) { showNotification('Unit number already exists in this property', 'warning'); return; }
+
+    let unit;
+    if (editId) {
+        unit = getUnitById(editId);
+        if (unit) Object.assign(unit, data);
+        showNotification('Unit updated');
+    } else {
+        unit = { id: 'unit_' + Date.now(), ...data };
+        UNITS.push(unit);
+        showNotification('Unit added');
+    }
+    await firestoreSaveUnit(unit);
+    closeModal('unitModal');
+    renderPropertyPage();
+    renderDashboard();
+    refreshAllPropertyDropdowns();
+}
+
+async function deleteUnit(id) {
+    if (!can('manage_properties')) { showNotification('Permission denied', 'warning'); return; }
+    const u = getUnitById(id);
+    if (!u) { showNotification('Unit not found', 'warning'); return; }
+    const occupant = getUnitOccupant(id);
+    let message = `Delete Unit ${u.unitNumber}?`;
+    if (occupant) {
+        message = `⚠️ Unit ${u.unitNumber} is currently occupied by ${occupant.name}.\n\nDeleting this unit will NOT remove the tenant, but the tenant will lose their unit assignment.\n\nContinue?`;
+    }
+    if (!confirm(message)) return;
+    UNITS = UNITS.filter(x => x.id !== id);
+    // If unit was occupied, clear the tenant's unitId (but keep tenant)
+    if (occupant) {
+        const t = TENANTS.find(x => x.id === occupant.id);
+        if (t) {
+            t.unitId = null;
+            await firestoreSaveTenant(t);
+        }
+    }
+    await firestoreDeleteUnit(id);
+    showNotification('Unit deleted', 'warning');
+    renderPropertyPage();
+    renderDashboard();
+}
+
+function refreshAllPropertyDropdowns() {
+    const fsel = document.getElementById('propertyFilterProperty');
+    if (fsel) {
+        const cur = fsel.value;
+        const props = getVisibleProperties();
+        fsel.innerHTML = '<option value="all">All Properties</option>' + props.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        if (cur && [...fsel.options].some(o => o.value === cur)) fsel.value = cur;
+    }
+    const tpsel = document.getElementById('tenantProperty');
+    if (tpsel) {
+        tpsel.innerHTML = '<option value="">Select property</option>' + getVisibleProperties().map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
+}
+
+function onTenantPropertyChange() {
+    const propId = document.getElementById('tenantProperty').value;
+    const usel = document.getElementById('tenantUnit');
+    const editId = document.getElementById('tenantEditId').value;
+    if (!propId) { usel.innerHTML = '<option value="">Select unit</option>'; return; }
+    const units = getUnitsForProperty(propId).filter(u => {
+        const occupant = getUnitOccupant(u.id);
+        return !occupant || occupant.id === editId;
+    });
+    usel.innerHTML = '<option value="">Select unit</option>' + units.map(u =>
+        `<option value="${u.id}">${u.unitNumber} – ${u.unitType} – ${formatUGX(u.rent)}</option>`
+    ).join('');
+    if (units.length === 0) usel.innerHTML = '<option value="">No vacant units</option>';
+}
+
+function onTenantUnitChange() {
+    const unitId = document.getElementById('tenantUnit').value;
+    const u = getUnitById(unitId);
+    if (u) {
+        document.getElementById('tenantRent').value = u.rent;
+        document.getElementById('tenantApt').value = u.unitNumber;
+    }
+}
+
+// ============================================================
+// TENANTS PAGE
 // ============================================================
 function renderTenantsPage() {
     const tenants = getVisibleTenants();
@@ -1685,25 +2402,28 @@ function renderTenantsPage() {
 
     const tbody = document.getElementById('tenantsTableBody');
     tbody.innerHTML = tenants.map(t => {
-        const rentBal = rentBalance(t);
-        const elecBal = electricBalance(t);
-        const waterBal = waterBalance(t);
-        const totalDue = rentBal + elecBal + waterBal;
+        const rBal = rentBalance(t);
+        const eBal = electricBalance(t);
+        const wBal = waterBalance(t);
+        const totalDue = rBal + eBal + wBal;
         const statusClass = totalDue <= 0 ? 'paid' : (totalDue < t.monthlyRent ? 'partial' : 'pending');
         const editDelete = (can('edit_tenants') || can('delete_tenants')) ? `
             ${can('edit_tenants') ? `<button class="btn btn-warning btn-sm" onclick="editTenant('${t.id}')">Edit</button>` : ''}
             ${can('delete_tenants') ? `<button class="btn btn-danger btn-sm" onclick="deleteTenant('${t.id}')">Delete</button>` : ''}
         ` : '';
+        const unit = getTenantUnit(t);
+        const prop = t.propertyId ? getPropertyById(t.propertyId) : (unit ? getPropertyById(unit.propertyId) : null);
         return `
             <tr>
                 <td><strong>${t.name}</strong></td>
-                <td>${t.apt}</td>
+                <td>${prop ? prop.name : '—'}</td>
+                <td>${unit ? unit.unitNumber : t.apt}</td>
                 <td>${t.mobile}</td>
                 <td>${formatUGX(t.monthlyRent)}</td>
                 <td>${ordinal(t.billingDate)}</td>
-                <td>${formatUGX(rentBal)}</td>
-                <td>${formatUGX(elecBal)}</td>
-                <td>${formatUGX(waterBal)}</td>
+                <td>${formatUGX(rBal)}</td>
+                <td>${formatUGX(eBal)}</td>
+                <td>${formatUGX(wBal)}</td>
                 <td><span class="badge ${statusClass}">${formatUGX(totalDue)}</span></td>
                 <td>
                     <div class="action-btns">
@@ -1716,21 +2436,22 @@ function renderTenantsPage() {
     }).join('');
     document.getElementById('tenantDetailPanel').innerHTML = '';
 }
-
 function viewTenant(id) {
     const t = TENANTS.find(x => x.id === id);
     if (!t) return;
     const panel = document.getElementById('tenantDetailPanel');
-    const rentBal = rentBalance(t);
-    const elecBal = electricBalance(t);
-    const waterBal = waterBalance(t);
-    const totalDue = rentBal + elecBal + waterBal;
+    const rBal = rentBalance(t);
+    const eBal = electricBalance(t);
+    const wBal = waterBalance(t);
+    const totalDue = rBal + eBal + wBal;
     const canEditRent = can('edit_tenants');
+    const unit = getTenantUnit(t);
+    const prop = unit ? getPropertyById(unit.propertyId) : null;
 
     panel.innerHTML = `
         <div class="detail-panel">
             <div class="detail-header">
-                <h2>${t.name} <small>Apt ${t.apt} · ${t.mobile} · Rent ${formatUGX(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}</small></h2>
+                <h2>${t.name} <small>${prop ? prop.name + ' · Unit ' + unit.unitNumber : 'Apt ' + t.apt} · ${t.mobile} · Rent ${formatUGX(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}</small></h2>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                     ${can('add_payments') ? `<button class="btn btn-success btn-sm" onclick="openPaymentForTenant('${t.id}')">💵 Add Payment</button>` : ''}
                     ${can('add_payments') ? `<button class="btn btn-info btn-sm" onclick="openAdvanceRentForTenant('${t.id}')">📅 Advance Rent</button>` : ''}
@@ -1739,9 +2460,9 @@ function viewTenant(id) {
                 </div>
             </div>
             <div style="display:flex; gap:1.5rem; margin-bottom:1rem; flex-wrap:wrap;">
-                <span>Rent: <strong>${formatUGX(rentBal)}</strong></span>
-                <span>Electric: <strong>${formatUGX(elecBal)}</strong></span>
-                <span>Water: <strong>${formatUGX(waterBal)}</strong></span>
+                <span>Rent: <strong>${formatUGX(rBal)}</strong></span>
+                <span>Electric: <strong>${formatUGX(eBal)}</strong></span>
+                <span>Water: <strong>${formatUGX(wBal)}</strong></span>
                 <span>Total Due: <strong style="color:${totalDue>0?'#dc2626':'#16a34a'}">${formatUGX(totalDue)}</strong></span>
             </div>
             <div class="section-tabs">
@@ -1870,13 +2591,29 @@ function editTenant(id) {
     document.getElementById('tenantModalTitle').textContent = 'Edit Tenant';
     document.getElementById('tenantEditId').value = t.id;
     document.getElementById('tenantName').value = t.name;
-    document.getElementById('tenantApt').value = t.apt;
     document.getElementById('tenantMobile').value = t.mobile;
     document.getElementById('tenantRent').value = t.monthlyRent;
     document.getElementById('tenantBillingDate').value = t.billingDate;
     document.getElementById('tenantElectricRate').value = t.electricRate;
     document.getElementById('tenantAdvanceRent').checked = false;
     document.getElementById('tenantAdvanceRent').disabled = true;
+
+    refreshAllPropertyDropdowns();
+    let unit = getTenantUnit(t);
+    let propId = t.propertyId;
+    if (unit) propId = unit.propertyId;
+    if (!propId) {
+        const props = getVisibleProperties();
+        if (props.length) propId = props[0].id;
+    }
+    if (propId) {
+        document.getElementById('tenantProperty').value = propId;
+        onTenantPropertyChange();
+        if (unit) {
+            document.getElementById('tenantUnit').value = unit.id;
+            document.getElementById('tenantApt').value = unit.unitNumber;
+        }
+    }
     openModal('tenantModal');
 }
 
@@ -1886,9 +2623,14 @@ async function deleteTenant(id) {
     const idx = TENANTS.findIndex(x => x.id === id);
     if (idx > -1) {
         const removed = TENANTS.splice(idx, 1)[0];
+        if (removed.unitId) {
+            const unit = getUnitById(removed.unitId);
+            if (unit && !getUnitOccupant(removed.unitId)) { unit.status = 'vacant'; await firestoreSaveUnit(unit); }
+        }
         showNotification('Tenant deleted', 'warning');
         renderTenantsPage();
         renderDashboard();
+        renderPropertyPage();
         await firestoreDeleteTenant(removed.id);
     }
 }
@@ -1902,6 +2644,9 @@ function openAddTenantModal() {
     document.getElementById('tenantElectricRate').value = 1100;
     document.getElementById('tenantAdvanceRent').checked = true;
     document.getElementById('tenantAdvanceRent').disabled = false;
+    document.getElementById('tenantApt').value = '';
+    refreshAllPropertyDropdowns();
+    document.getElementById('tenantUnit').innerHTML = '<option value="">Select unit</option>';
     openModal('tenantModal');
 }
 
@@ -1910,36 +2655,64 @@ async function saveTenant(e) {
     if (!can('add_tenants') && !can('edit_tenants')) { showNotification('Permission denied', 'warning'); return; }
     const editId = document.getElementById('tenantEditId').value;
     const name = document.getElementById('tenantName').value.trim();
-    const apt = parseInt(document.getElementById('tenantApt').value);
     const mobile = document.getElementById('tenantMobile').value.trim();
     const monthlyRent = parseFloat(document.getElementById('tenantRent').value);
     const billingDate = parseInt(document.getElementById('tenantBillingDate').value);
     const electricRate = parseFloat(document.getElementById('tenantElectricRate').value) || 1100;
+    const unitId = document.getElementById('tenantUnit').value;
+    const propertyId = document.getElementById('tenantProperty').value;
+    const unit = getUnitById(unitId);
+    if (!unit) { showNotification('Please select a valid unit', 'warning'); return; }
+    const apt = unit.unitNumber;
     const generateAdvance = !editId && document.getElementById('tenantAdvanceRent').checked;
 
+    const occupant = getUnitOccupant(unitId);
+    if (occupant && occupant.id !== editId) {
+        showNotification(`Unit ${unit.unitNumber} is already occupied by ${occupant.name}`, 'warning');
+        return;
+    }
+
     let tenantToSave = null;
+    let oldUnitId = null;
     if (editId) {
         const t = TENANTS.find(x => x.id === editId);
-        if (t) { t.name = name; t.apt = apt; t.mobile = mobile; t.monthlyRent = monthlyRent; t.billingDate = billingDate; t.electricRate = electricRate; tenantToSave = t; showNotification('Tenant updated'); }
+        if (t) {
+            oldUnitId = t.unitId;
+            t.name = name; t.apt = apt; t.mobile = mobile; t.monthlyRent = monthlyRent;
+            t.billingDate = billingDate; t.electricRate = electricRate;
+            t.unitId = unitId; t.propertyId = propertyId;
+            tenantToSave = t;
+            showNotification('Tenant updated');
+        }
     } else {
-        tenantToSave = { id: 't_' + Date.now(), name, apt, mobile, monthlyRent, billingDate, electricRate, locationId: currentUser?.locationId || 'loc1', rent: [], electric: [], water: [], expenses: [] };
+        tenantToSave = {
+            id: 't_' + Date.now(), name, apt, mobile, monthlyRent, billingDate, electricRate,
+            locationId: currentUser?.locationId || 'loc1',
+            propertyId, unitId,
+            rent: [], electric: [], water: [], expenses: []
+        };
         TENANTS.push(tenantToSave);
         showNotification('Tenant added');
     }
+
+    if (oldUnitId && oldUnitId !== unitId) {
+        const oldUnit = getUnitById(oldUnitId);
+        if (oldUnit && !getUnitOccupant(oldUnitId)) { oldUnit.status = 'vacant'; await firestoreSaveUnit(oldUnit); }
+    }
+    if (unit.status !== 'occupied') { unit.status = 'occupied'; await firestoreSaveUnit(unit); }
+
     closeModal('tenantModal');
     renderTenantsPage();
     renderDashboard();
+    renderPropertyPage();
     refreshFilterOptions();
+
     if (tenantToSave) {
         await firestoreSaveTenant(tenantToSave);
-        if (generateAdvance) {
-            // Auto-generate 3 months advance invoice
-            await generateAdvanceInvoice(tenantToSave.id, 3);
-        }
+        if (generateAdvance) await generateAdvanceInvoice(tenantToSave.id, 3);
     }
 }
 
-// Generate advance invoice for N months starting from next month
 async function generateAdvanceInvoice(tenantId, monthsCount) {
     const t = TENANTS.find(x => x.id === tenantId);
     if (!t) return;
@@ -1949,7 +2722,6 @@ async function generateAdvanceInvoice(tenantId, monthsCount) {
         const m = months[i];
         if (hasInvoiceForMonth(t, m.year, m.month)) continue;
         const desc = `Rent for ${m.label}`;
-        // Invoice date = first day of that month
         const invDate = `${m.year}-${String(m.month).padStart(2, '0')}-01`;
         t.rent.push({
             date: invDate,
@@ -1962,7 +2734,7 @@ async function generateAdvanceInvoice(tenantId, monthsCount) {
     }
     t.rent.sort((a, b) => a.date.localeCompare(b.date));
     await firestoreSaveTenant(t);
-    showNotification(`${addedCount} advance month${addedCount === 1 ? '' : 's'} invoiced for ${t.name}`, 'success');
+    if (addedCount > 0) showNotification(`${addedCount} advance month${addedCount === 1 ? '' : 's'} invoiced for ${t.name}`, 'success');
     renderTenantsPage();
     renderDashboard();
 }
@@ -1981,6 +2753,8 @@ function refreshFilterOptions() {
 // ============================================================
 // ADVANCE RENT MODAL
 // ============================================================
+let selectedAdvanceMonths = [];
+
 function openAdvanceRentModal() {
     if (!can('add_payments')) { showNotification('Permission denied', 'warning'); return; }
     const tenants = getVisibleTenants();
@@ -1991,6 +2765,7 @@ function openAdvanceRentModal() {
     document.getElementById('advanceMonthsCount').value = 0;
     document.getElementById('advanceAmount').value = 0;
     document.getElementById('advanceMonthPicker').innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; padding:0.5rem;">Select a tenant to see months</p>';
+    selectedAdvanceMonths = [];
     openModal('advanceRentModal');
 }
 
@@ -1999,8 +2774,6 @@ function openAdvanceRentForTenant(tenantId) {
     document.getElementById('advanceRentTenant').value = tenantId;
     loadAdvanceMonths();
 }
-
-let selectedAdvanceMonths = [];
 
 function loadAdvanceMonths() {
     const tenantId = document.getElementById('advanceRentTenant').value;
@@ -2016,7 +2789,7 @@ function loadAdvanceMonths() {
     if (!t) return;
 
     const months = getForwardMonths(12);
-    picker.innerHTML = months.map((m, i) => {
+    picker.innerHTML = months.map((m) => {
         const alreadyInvoiced = hasInvoiceForMonth(t, m.year, m.month);
         const cls = alreadyInvoiced ? 'paid' : '';
         return `<div class="month-chip ${cls}" data-year="${m.year}" data-month="${m.month}" onclick="toggleAdvanceMonth(this, ${alreadyInvoiced})">
@@ -2070,13 +2843,11 @@ async function saveAdvanceRent(e) {
     const t = TENANTS.find(x => x.id === tenantId);
     if (!t) return;
 
-    // Sort months chronologically
     selectedAdvanceMonths.sort((a, b) => a.key.localeCompare(b.key));
 
     let totalAmount = 0;
     const invoiceNums = [];
 
-    // 1. Create an invoice (debit) for each selected month if not exists, then add a payment that covers all
     for (const m of selectedAdvanceMonths) {
         if (!hasInvoiceForMonth(t, m.year, m.month)) {
             const label = new Date(m.year, m.month - 1, 1).toLocaleString('en', { month: 'long', year: 'numeric' });
@@ -2093,7 +2864,6 @@ async function saveAdvanceRent(e) {
         totalAmount += t.monthlyRent;
     }
 
-    // 2. Add a single payment entry covering all selected months
     const monthLabels = selectedAdvanceMonths.map(m => new Date(m.year, m.month - 1, 1).toLocaleString('en', { month: 'short', year: 'numeric' })).join(', ');
     const receiptNo = getNextReceiptNo('RCPT-');
     t.rent.push({
@@ -2113,7 +2883,6 @@ async function saveAdvanceRent(e) {
 
     closeModal('advanceRentModal');
 
-    // Auto-print receipt
     setTimeout(() => {
         printAdvanceReceipt(t.id, receiptNo);
     }, 400);
@@ -2220,7 +2989,6 @@ async function savePayment(e) {
     showNotification(`Payment of ${formatUGX(amount)} recorded`);
     closeModal('paymentModal');
 
-    // Auto-print receipt
     setTimeout(() => {
         printReceipt(tenantId, type, paymentIndex);
     }, 400);
@@ -2246,8 +3014,7 @@ function renderReceiptsPage() {
                 if (r.credit > 0) receipts.push({
                     receiptNo: r.receiptNo || '—',
                     date: r.date, tenantName: t.name, tenantId: t.id, apt: t.apt,
-                    type: 'Rent', typeKey: 'rent', desc: r.desc, amount: r.credit, idx: idx,
-                    invoiceNo: r.invoiceNo, advanceMonths: r.advanceMonths || null
+                    type: 'Rent', typeKey: 'rent', desc: r.desc, amount: r.credit, idx: idx
                 });
             });
         }
@@ -2256,8 +3023,7 @@ function renderReceiptsPage() {
                 if (r.credit > 0) receipts.push({
                     receiptNo: r.receiptNo || '—',
                     date: r.date, tenantName: t.name, tenantId: t.id, apt: t.apt,
-                    type: 'Electricity', typeKey: 'electric', desc: r.desc, amount: r.credit, idx: idx,
-                    invoiceNo: null
+                    type: 'Electricity', typeKey: 'electric', desc: r.desc, amount: r.credit, idx: idx
                 });
             });
         }
@@ -2266,8 +3032,7 @@ function renderReceiptsPage() {
                 if (r.credit > 0) receipts.push({
                     receiptNo: r.receiptNo || '—',
                     date: r.date, tenantName: t.name, tenantId: t.id, apt: t.apt,
-                    type: 'Water', typeKey: 'water', desc: r.desc, amount: r.credit, idx: idx,
-                    invoiceNo: null
+                    type: 'Water', typeKey: 'water', desc: r.desc, amount: r.credit, idx: idx
                 });
             });
         }
@@ -2294,7 +3059,6 @@ function renderReceiptsPage() {
     `).join('');
 }
 
-// Print a receipt for a specific payment row
 function printReceipt(tenantId, type, idx) {
     const t = TENANTS.find(x => x.id === tenantId);
     if (!t) return;
@@ -2305,6 +3069,8 @@ function printReceipt(tenantId, type, idx) {
     const receiptNo = payment.receiptNo || 'RCPT-' + Date.now().toString().slice(-6);
     const typeLabel = type === 'rent' ? 'Rent' : (type === 'electric' ? 'Electricity (Yaka)' : 'Water (NWSC)');
     const amountWords = numberToWords(payment.credit);
+    const unit = getTenantUnit(t);
+    const prop = unit ? getPropertyById(unit.propertyId) : null;
 
     const html = `
     <html><head><title>Receipt ${receiptNo} – ${t.name}</title>
@@ -2362,7 +3128,7 @@ function printReceipt(tenantId, type, idx) {
             <div>
                 <div class="section-label">Received From</div>
                 <div class="section-value">${t.name}</div>
-                <div style="font-size:0.82rem; color:#64748b; margin-top:0.15rem;">Apt ${t.apt} · ${t.mobile}</div>
+                <div style="font-size:0.82rem; color:#64748b; margin-top:0.15rem;">${prop ? prop.name + ' · Unit ' + unit.unitNumber : 'Apt ' + t.apt} · ${t.mobile}</div>
             </div>
             <div style="text-align:right;">
                 <div class="section-label">Payment Type</div>
@@ -2405,7 +3171,6 @@ function printReceipt(tenantId, type, idx) {
     setTimeout(() => w.print(), 500);
 }
 
-// Print an advance payment receipt by receipt number
 function printAdvanceReceipt(tenantId, receiptNo) {
     const t = TENANTS.find(x => x.id === tenantId);
     if (!t) return;
@@ -2415,7 +3180,6 @@ function printAdvanceReceipt(tenantId, receiptNo) {
     }
 }
 
-// Number to words (simple)
 function numberToWords(num) {
     const n = Math.floor(Number(num) || 0);
     if (n === 0) return 'Zero';
@@ -2436,7 +3200,7 @@ function numberToWords(num) {
 }
 
 // ============================================================
-// UTILITY (same as before)
+// UTILITY
 // ============================================================
 function renderUtilityPage() {
     const filterTenant = document.getElementById('utilityFilterTenant').value;
@@ -2545,8 +3309,8 @@ function viewUtilityDetail(tenantId, type, date) {
     const reading = arr.find(r => r.date === date && r.meter);
     if (!reading) { panel.innerHTML = '<p style="color:#64748b; padding:1rem 0;">Reading not found.</p>'; return; }
 
-    const elecBal = electricBalance(t);
-    const waterBal = waterBalance(t);
+    const eBal = electricBalance(t);
+    const wBal = waterBalance(t);
 
     panel.innerHTML = `
         <div class="detail-panel">
@@ -2555,9 +3319,9 @@ function viewUtilityDetail(tenantId, type, date) {
                 <button class="btn btn-outline btn-sm" onclick="document.getElementById('utilityDetailPanel').innerHTML='';">Close</button>
             </div>
             <div class="utility-summary">
-                <div class="util-card electric-received"><div class="util-label">⚡ Electricity Balance</div><div class="util-value">${formatUGX(elecBal)}</div></div>
-                <div class="util-card water-received"><div class="util-label">💧 Water Balance</div><div class="util-value">${formatUGX(waterBal)}</div></div>
-                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Total Utility Due</div><div class="util-value">${formatUGX(elecBal + waterBal)}</div></div>
+                <div class="util-card electric-received"><div class="util-label">⚡ Electricity Balance</div><div class="util-value">${formatUGX(eBal)}</div></div>
+                <div class="util-card water-received"><div class="util-label">💧 Water Balance</div><div class="util-value">${formatUGX(wBal)}</div></div>
+                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Total Utility Due</div><div class="util-value">${formatUGX(eBal + wBal)}</div></div>
             </div>
             <h3 style="font-size:0.95rem; margin-bottom:1rem;">📋 Reading Details</h3>
             <table>
@@ -2842,17 +3606,17 @@ function buildRentalStatement(t) {
 }
 
 function buildUtilityStatement(t) {
-    const elecBal = electricBalance(t);
-    const waterBal = waterBalance(t);
+    const eBal = electricBalance(t);
+    const wBal = waterBalance(t);
     return `<html><head><title>Utility Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem;}h1{font-size:1.6rem;}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem;}h3{margin-top:1.5rem;font-size:1rem;}table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:1rem;}th{text-align:left;padding:0.6rem;background:#0f172a;color:white;}td{padding:0.5rem 0.6rem;border-bottom:1px solid #e2e8f0;}.total{font-weight:700;font-size:1.1rem;text-align:right;}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem;}.logo{font-size:1.5rem;font-weight:800;}.logo span{color:#facc15;}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Utility Statement</h1><h2>${t.name} · Apt ${t.apt} · ${t.mobile}</h2>
     <h3>⚡ Electricity (Yaka)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
     ${t.electric.map((r, idx) => { const run = t.electric.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0); return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td>${r.meter||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`; }).join('')}
-    </tbody></table><div class="total">Electricity Balance: ${formatUGX(elecBal)}</div>
+    </tbody></table><div class="total">Electricity Balance: ${formatUGX(eBal)}</div>
     <h3>💧 Water (NWSC)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
     ${t.water.length ? t.water.map((r, idx) => { const run = t.water.slice(0, idx+1).reduce((s, x) => s + (x.debit||0) - (x.credit||0), 0); return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td>${r.meter||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`; }).join('') : '<tr><td colspan="6">No water records</td></tr>'}
-    </tbody></table><div class="total">Water Balance: ${formatUGX(waterBal)}</div></body></html>`;
+    </tbody></table><div class="total">Water Balance: ${formatUGX(wBal)}</div></body></html>`;
 }
 
 function buildExpenseReport(t) {
@@ -2878,18 +3642,22 @@ function renderAdminPage() {
 
     let statsTenants = TENANTS;
     let statsUsers = USERS;
+    let statsProperties = PROPERTIES;
     if (role === 'manager') {
         statsTenants = TENANTS.filter(t => t.locationId === currentUser.locationId);
         statsUsers = USERS.filter(u => u.locationId === currentUser.locationId);
+        statsProperties = PROPERTIES.filter(p => p.locationId === currentUser.locationId);
     }
 
     const visibleLocations = role === 'admin' ? LOCATIONS.length : 1;
     const visibleRentals = statsTenants.length;
     const visibleUsers = statsUsers.filter(u => ['user','accountant','cashier'].includes(u.role)).length;
     const visibleManagers = statsUsers.filter(u => u.role === 'manager').length;
+    const visibleProperties = statsProperties.length;
 
     document.getElementById('adminStats').innerHTML = `
         <div class="admin-stat-card locations"><div class="admin-label">📍 Locations</div><div class="admin-value">${visibleLocations}</div><div class="admin-sub">${role === 'admin' ? 'Total areas managed' : 'Your location'}</div></div>
+        <div class="admin-stat-card properties"><div class="admin-label">🏢 Properties</div><div class="admin-value">${visibleProperties}</div><div class="admin-sub">Buildings managed</div></div>
         <div class="admin-stat-card rentals"><div class="admin-label">🏠 Rentals</div><div class="admin-value">${visibleRentals}</div><div class="admin-sub">Active tenants</div></div>
         <div class="admin-stat-card users"><div class="admin-label">👤 Users</div><div class="admin-value">${visibleUsers}</div><div class="admin-sub">Accountants & cashiers</div></div>
         <div class="admin-stat-card managers"><div class="admin-label">🧑‍💼 Managers</div><div class="admin-value">${visibleManagers}</div><div class="admin-sub">Location managers</div></div>
@@ -2902,13 +3670,14 @@ function renderAdminPage() {
         } else {
             locList.innerHTML = LOCATIONS.map(loc => {
                 const locTenants = TENANTS.filter(t => t.locationId === loc.id);
+                const locProperties = PROPERTIES.filter(p => p.locationId === loc.id);
                 const locIncome = totalRentReceived(locTenants) + totalElectricReceived(locTenants) + totalWaterReceived(locTenants);
                 const locExpenses = totalExpensesReceived(locTenants);
                 return `
                     <div class="location-income">
                         <div>
                             <div class="loc-name">📍 ${loc.area}, ${loc.city}</div>
-                            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.15rem;">${locTenants.length} tenant${locTenants.length === 1 ? '' : 's'}</div>
+                            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.15rem;">${locProperties.length} propert${locProperties.length === 1 ? 'y' : 'ies'} · ${locTenants.length} tenant${locTenants.length === 1 ? '' : 's'}</div>
                         </div>
                         <div style="text-align:right;">
                             <div class="loc-amount">${formatUGX(locIncome)}</div>
@@ -3158,7 +3927,9 @@ function generateAutoInvoices() {
     });
 }
 
-// Expose
+// ============================================================
+// EXPOSE TO WINDOW
+// ============================================================
 window.openLogin = openLogin;
 window.closeLogin = closeLogin;
 window.handleLogin = handleLogin;
@@ -3213,6 +3984,21 @@ window.toggleAdvanceMonth = toggleAdvanceMonth;
 window.saveAdvanceRent = saveAdvanceRent;
 window.printReceipt = printReceipt;
 window.renderReceiptsPage = renderReceiptsPage;
+window.openAddPropertyModal = openAddPropertyModal;
+window.editProperty = editProperty;
+window.deleteProperty = deleteProperty;
+window.viewProperty = viewProperty;
+window.saveProperty = saveProperty;
+window.openAddUnitModal = openAddUnitModal;
+window.editUnit = editUnit;
+window.deleteUnit = deleteUnit;
+window.saveUnit = saveUnit;
+window.renderPropertyPage = renderPropertyPage;
+window.onTenantPropertyChange = onTenantPropertyChange;
+window.onTenantUnitChange = onTenantUnitChange;
+window.refreshAllPropertyDropdowns = refreshAllPropertyDropdowns;
+window.renderPropertyOccupancyDashboard = renderPropertyOccupancyDashboard;
+window.showUnitDetail = showUnitDetail;
 </script>
 </body>
 </html>

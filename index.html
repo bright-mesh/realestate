@@ -544,6 +544,7 @@ input,select,textarea{font-size:16px}
         <button class="nav-tab" data-page="utility">⚡ Utility</button>
         <button class="nav-tab" data-page="expenses">💰 Expenses</button>
         <button class="nav-tab" data-page="receipts">🧾 Receipts</button>
+        <button class="nav-tab" data-page="statements">📄 Statements</button>
         <button class="nav-tab admin-only hidden" data-page="admin">🛡️ Admin</button>
     </nav>
 
@@ -674,6 +675,48 @@ input,select,textarea{font-size:16px}
             <table>
                 <thead><tr><th>Receipt #</th><th>Date</th><th>Tenant</th><th>Apt</th><th>Type</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
                 <tbody id="receiptsTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- NEW STATEMENTS SECTION -->
+    <section id="page-statements" class="page-section">
+        <div class="section-header">
+            <h2>Tenant Statements</h2>
+            <div class="header-actions">
+                <button class="btn btn-success" onclick="printTenantStatementSummary()">🖨️ Print Summary PDF</button>
+            </div>
+        </div>
+        <div class="filter-bar">
+            <label>Statement Type:</label>
+            <select id="statementType" onchange="renderStatementsPage()">
+                <option value="all">All Utilities</option>
+                <option value="rent">Rent Only</option>
+                <option value="electric">Electricity Only</option>
+                <option value="water">Water Only</option>
+            </select>
+            <label>Property:</label>
+            <select id="statementPropertyFilter" onchange="renderStatementsPage()"><option value="all">All Properties</option></select>
+            <label>Location:</label>
+            <select id="statementLocationFilter" onchange="renderStatementsPage()"><option value="all">All Locations</option></select>
+        </div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tenant</th>
+                        <th>Property</th>
+                        <th>Unit</th>
+                        <th id="stmtCol1">Rent Paid</th>
+                        <th id="stmtCol2">Electric Paid</th>
+                        <th id="stmtCol3">Water Paid</th>
+                        <th>Total Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="statementsTableBody"></tbody>
             </table>
         </div>
     </section>
@@ -1195,11 +1238,11 @@ function can(action) {
     if (!currentUser) return false;
     const role = currentUser.role;
     const perms = {
-        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','mark_utility_paid','view_receipts','manage_properties'],
-        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','mark_utility_paid','view_receipts','manage_properties'],
-        accountant: ['view_dashboard','view_tenants','edit_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','print','mark_utility_paid','view_receipts'],
-        cashier: ['view_dashboard','view_tenants','add_payments','view_expenses','print','mark_utility_paid','view_receipts'],
-        user: ['view_dashboard','view_tenants','view_expenses','print','view_receipts']
+        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','mark_utility_paid','view_receipts','manage_properties','view_statements'],
+        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','mark_utility_paid','view_receipts','manage_properties','view_statements'],
+        accountant: ['view_dashboard','view_tenants','edit_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','print','mark_utility_paid','view_receipts','view_statements'],
+        cashier: ['view_dashboard','view_tenants','add_payments','view_expenses','print','mark_utility_paid','view_receipts','view_statements'],
+        user: ['view_dashboard','view_tenants','view_expenses','print','view_receipts','view_statements']
     };
     return (perms[role] || []).includes(action);
 }
@@ -1469,7 +1512,7 @@ async function syncUnitStatuses(){
 }
 
 // ============================================================
-// AUTO INVOICE (FIXED — no duplicate month invoices)
+// AUTO INVOICE
 // ============================================================
 function generateAutoInvoices(){
     const now=new Date();
@@ -1477,21 +1520,18 @@ function generateAutoInvoices(){
     const currentMonth=now.getMonth()+1;
     const currentDay=now.getDate();
 
-    const longMonthName=now.toLocaleString('en',{month:'long'});      // "October"
-    const shortMonthName=now.toLocaleString('en',{month:'short'});    // "Oct"
+    const longMonthName=now.toLocaleString('en',{month:'long'});
+    const shortMonthName=now.toLocaleString('en',{month:'short'});
     const yearStr=String(currentYear);
     const monthStr=String(currentMonth).padStart(2,'0');
 
-    // Safe upper bound for the current month — last day
     const lastDay=new Date(currentYear,currentMonth,0).getDate();
     const monthStartISO=`${yearStr}-${monthStr}-01`;
     const monthEndISO=`${yearStr}-${monthStr}-${String(lastDay).padStart(2,'0')}`;
 
     TENANTS.forEach(t=>{
-        // Billing date not yet reached this month
         if(currentDay<t.billingDate)return;
 
-        // Check 1: any invoice (debit) dated this month?
         const hasInvoiceThisMonth=t.rent.some(r=>{
             if(!r.debit||r.debit<=0)return false;
             if(!r.date)return false;
@@ -1499,7 +1539,6 @@ function generateAutoInvoices(){
         });
         if(hasInvoiceThisMonth)return;
 
-        // Check 2: any invoice description mentions this month/year (long or short)?
         const hasInvoiceByDesc=t.rent.some(r=>{
             if(!r.debit||r.debit<=0)return false;
             const d=(r.desc||'').toLowerCase();
@@ -1508,12 +1547,10 @@ function generateAutoInvoices(){
         });
         if(hasInvoiceByDesc)return;
 
-        // Check 3: tenant already in advance?
         const totalCredits=t.rent.reduce((s,r)=>s+(r.credit||0),0);
         const totalDebits=t.rent.reduce((s,r)=>s+(r.debit||0),0);
         if(totalCredits>totalDebits)return;
 
-        // Create invoice using SHORT month name to match convention
         t.rent.push({
             date:`${yearStr}-${monthStr}-${String(t.billingDate).padStart(2,'0')}`,
             desc:`Rent for ${shortMonthName} ${yearStr}`,
@@ -1587,6 +1624,8 @@ function enterApp(){
     renderDashboard();
     renderPropertyPage();
     if(can('view_admin'))renderAdminPage();
+    // initialize statements page
+    renderStatementsPage();
 }
 
 function applyPermissions(){
@@ -1595,6 +1634,9 @@ function applyPermissions(){
     if(can('view_admin'))adminTab.classList.remove('hidden');else adminTab.classList.add('hidden');
     const propTab=document.querySelector('.nav-tab[data-page="property"]');
     if(propTab)propTab.classList.toggle('hidden',!can('view_tenants'));
+    // statements tab visible to all roles (view_statements in perms)
+    const stmtTab=document.querySelector('.nav-tab[data-page="statements"]');
+    if(stmtTab)stmtTab.classList.toggle('hidden',!can('view_statements'));
     document.querySelectorAll('#page-tenants .section-header .btn-primary').forEach(b=>{b.style.display=can('add_tenants')?'':'none';});
     document.querySelectorAll('#page-tenants .section-header .btn-success').forEach(b=>{b.style.display=can('add_payments')?'':'none';});
     document.querySelectorAll('#page-tenants .section-header .btn-info').forEach(b=>{b.style.display=can('add_payments')?'':'none';});
@@ -1645,6 +1687,7 @@ document.querySelectorAll('.nav-tab').forEach(tab=>{
         if(tab.dataset.page==='utility')renderUtilityPage();
         if(tab.dataset.page==='expenses')renderExpensesPage();
         if(tab.dataset.page==='receipts')renderReceiptsPage();
+        if(tab.dataset.page==='statements')renderStatementsPage();
         if(tab.dataset.page==='admin')renderAdminPage();
     });
 });
@@ -2010,7 +2053,6 @@ async function saveUnit(e){
     let unit;
     if(editId){unit=getUnitById(editId);if(unit)Object.assign(unit,data);showNotification('Unit updated');}
     else{unit={id:'unit_'+Date.now(),...data};UNITS.push(unit);showNotification('Unit added');}
-    // If the unit's rent changed, sync to any tenant occupying it
     if(unit){
         const occ=TENANTS.find(t=>t.unitId===unit.id);
         if(occ&&occ.monthlyRent!==unit.rent){
@@ -2041,6 +2083,11 @@ function refreshAllPropertyDropdowns(){
     if(fsel){const cur=fsel.value;const props=getVisibleProperties();fsel.innerHTML='<option value="all">All Properties</option>'+props.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');if(cur&&[...fsel.options].some(o=>o.value===cur))fsel.value=cur;}
     const tpsel=document.getElementById('tenantProperty');
     if(tpsel)tpsel.innerHTML='<option value="">Select property</option>'+getVisibleProperties().map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    // statements property dropdown
+    const sp=document.getElementById('statementPropertyFilter');
+    if(sp){const cur=sp.value;sp.innerHTML='<option value="all">All Properties</option>'+getVisibleProperties().map(p=>`<option value="${p.id}">${p.name}</option>`).join('');if(cur&&[...sp.options].some(o=>o.value===cur))sp.value=cur;}
+    const sl=document.getElementById('statementLocationFilter');
+    if(sl){const cur=sl.value;const vis=currentUser?.role==='admin'?LOCATIONS:LOCATIONS.filter(l=>l.id===currentUser?.locationId);sl.innerHTML='<option value="all">All Locations</option>'+vis.map(l=>`<option value="${l.id}">${l.area}, ${l.city}</option>`).join('');if(cur&&[...sl.options].some(o=>o.value===cur))sl.value=cur;}
 }
 function onTenantPropertyChange(){const propId=document.getElementById('tenantProperty').value;const usel=document.getElementById('tenantUnit');const editId=document.getElementById('tenantEditId').value;if(!propId){usel.innerHTML='<option value="">Select unit</option>';return;}const units=getUnitsForProperty(propId).filter(u=>{const o=getUnitOccupant(u.id);return !o||o.id===editId;});usel.innerHTML='<option value="">Select unit</option>'+units.map(u=>`<option value="${u.id}">${u.unitNumber} – ${u.unitType} – ${formatUGX(u.rent)}</option>`).join('');if(units.length===0)usel.innerHTML='<option value="">No vacant units</option>';}
 function onTenantUnitChange(){const unitId=document.getElementById('tenantUnit').value;const u=getUnitById(unitId);if(u){document.getElementById('tenantRent').value=u.rent;document.getElementById('tenantApt').value=u.unitNumber;}}
@@ -2179,7 +2226,6 @@ async function deleteRentTransaction(tenantId,idx){
     await saveTenantNow(t);
 }
 
-// Edit tenant — now auto-fills rent from the assigned unit's rent
 function editTenant(id){
     if(!can('edit_tenants')){showNotification('Permission denied','warning');return;}
     const t=TENANTS.find(x=>x.id===id);
@@ -2203,7 +2249,6 @@ function editTenant(id){
         if(unit){
             document.getElementById('tenantUnit').value=unit.id;
             document.getElementById('tenantApt').value=unit.unitNumber;
-            // Auto-fill rent from the unit's current rent
             document.getElementById('tenantRent').value=unit.rent;
         }else{
             document.getElementById('tenantRent').value=t.monthlyRent;
@@ -2222,7 +2267,7 @@ async function deleteTenant(id){
         const removed=TENANTS.splice(idx,1)[0];
         if(removed.unitId){const unit=getUnitById(removed.unitId);if(unit&&!getUnitOccupant(removed.unitId)){unit.status='vacant';await saveUnitNow(unit);}}
         showNotification('Tenant deleted','warning');
-        renderTenantsPage();renderDashboard();renderPropertyPage();
+        renderTenantsPage();renderDashboard();renderPropertyPage();renderStatementsPage();
         await deleteTenantNow(removed.id);
     }
 }
@@ -2270,7 +2315,7 @@ async function saveTenant(e){
     if(oldUnitId&&oldUnitId!==unitId){const oldUnit=getUnitById(oldUnitId);if(oldUnit&&!getUnitOccupant(oldUnitId)){oldUnit.status='vacant';await saveUnitNow(oldUnit);}}
     if(unit.status!=='occupied'){unit.status='occupied';await saveUnitNow(unit);}
     closeModal('tenantModal');
-    renderTenantsPage();renderDashboard();renderPropertyPage();refreshFilterOptions();
+    renderTenantsPage();renderDashboard();renderPropertyPage();refreshFilterOptions();renderStatementsPage();
     if(tenantToSave){
         await saveTenantNow(tenantToSave);
         if(generateAdvance)await generateAdvanceInvoice(tenantToSave.id,3);
@@ -2292,13 +2337,178 @@ async function generateAdvanceInvoice(tenantId,monthsCount){
     t.rent.sort((a,b)=>a.date.localeCompare(b.date));
     await saveTenantNow(t);
     if(addedCount>0)showNotification(`${addedCount} advance month${addedCount===1?'':'s'} invoiced for ${t.name}`,'success');
-    renderTenantsPage();renderDashboard();
+    renderTenantsPage();renderDashboard();renderStatementsPage();
 }
 function refreshFilterOptions(){
     const tenants=getVisibleTenants();
     const opts='<option value="all">All Tenants</option>'+tenants.map(t=>`<option value="${t.id}">Apt ${t.apt} – ${t.name}</option>`).join('');
     const uf=document.getElementById('utilityFilterTenant'),ef=document.getElementById('expenseFilterTenant'),rf=document.getElementById('receiptFilterTenant');
     if(uf)uf.innerHTML=opts;if(ef)ef.innerHTML=opts;if(rf)rf.innerHTML=opts;
+}
+
+// ============================================================
+// NEW STATEMENTS PAGE
+// ============================================================
+function renderStatementsPage(){
+    if(!can('view_statements'))return;
+    const type=document.getElementById('statementType')?.value||'all';
+    const propFilter=document.getElementById('statementPropertyFilter')?.value||'all';
+    const locFilter=document.getElementById('statementLocationFilter')?.value||'all';
+    let tenants=getVisibleTenants();
+    if(propFilter!=='all'){
+        tenants=tenants.filter(t=>{
+            const unit=getTenantUnit(t);
+            const pid=unit?unit.propertyId:t.propertyId;
+            return pid===propFilter;
+        });
+    }
+    if(locFilter!=='all'){
+        tenants=tenants.filter(t=>t.locationId===locFilter);
+    }
+    // Update column headers based on type
+    const col1=document.getElementById('stmtCol1'),col2=document.getElementById('stmtCol2'),col3=document.getElementById('stmtCol3');
+    if(col1&&col2&&col3){
+        if(type==='rent'){col1.style.display='';col1.textContent='Rent Paid';col2.style.display='none';col3.style.display='none';}
+        else if(type==='electric'){col1.style.display='none';col2.style.display='';col2.textContent='Electric Paid';col3.style.display='none';}
+        else if(type==='water'){col1.style.display='none';col2.style.display='none';col3.style.display='';col3.textContent='Water Paid';}
+        else{col1.style.display='';col1.textContent='Rent Paid';col2.style.display='';col2.textContent='Electric Paid';col3.style.display='';col3.textContent='Water Paid';}
+    }
+    const tbody=document.getElementById('statementsTableBody');
+    if(!tbody)return;
+    if(tenants.length===0){
+        tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:2rem;">No tenants match the selected filters.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML=tenants.map(t=>{
+        const unit=getTenantUnit(t);
+        const prop=unit?getPropertyById(unit.propertyId):(t.propertyId?getPropertyById(t.propertyId):null);
+        const rentPaid=t.rent.reduce((s,r)=>s+(r.credit||0),0);
+        const elecPaid=t.electric.reduce((s,r)=>s+(r.credit||0),0);
+        const waterPaid=(t.water||[]).reduce((s,r)=>s+(r.credit||0),0);
+        const totalPaid=rentPaid+elecPaid+waterPaid;
+        const rentBal=rentBalance(t),elecBal=electricBalance(t),waterBal=waterBalance(t);
+        const totalBal=rentBal+elecBal+waterBal;
+        const statusClass=totalBal<=0?'paid':(totalBal<t.monthlyRent?'partial':'pending');
+        // Conditional columns
+        let rentCol='',elecCol='',waterCol='';
+        if(type==='rent'){rentCol=`<td>${formatUGX(rentPaid)}</td>`;}
+        else if(type==='electric'){elecCol=`<td>${formatUGX(elecPaid)}</td>`;}
+        else if(type==='water'){waterCol=`<td>${formatUGX(waterPaid)}</td>`;}
+        else{rentCol=`<td>${formatUGX(rentPaid)}</td>`;elecCol=`<td>${formatUGX(elecPaid)}</td>`;waterCol=`<td>${formatUGX(waterPaid)}</td>`;}
+        return `<tr>
+            <td><strong>${t.name}</strong></td>
+            <td>${prop?prop.name:'—'}</td>
+            <td>${unit?unit.unitNumber:t.apt}</td>
+            ${rentCol}${elecCol}${waterCol}
+            <td>${formatUGX(totalPaid)}</td>
+            <td><span class="badge ${statusClass}">${formatUGX(totalBal)}</span></td>
+            <td><span class="badge ${totalBal<=0?'paid':'pending'}">${totalBal<=0?'Cleared':'Pending'}</span></td>
+            <td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="printSingleTenantStatement('${t.id}')">🖨️ Print</button></div></td>
+        </tr>`;
+    }).join('');
+}
+
+function printSingleTenantStatement(tenantId){
+    const t=TENANTS.find(x=>x.id===tenantId);
+    if(!t){showNotification('Tenant not found','warning');return;}
+    const unit=getTenantUnit(t);
+    const prop=unit?getPropertyById(unit.propertyId):(t.propertyId?getPropertyById(t.propertyId):null);
+    const type=document.getElementById('statementType')?.value||'all';
+    const rentPaid=t.rent.reduce((s,r)=>s+(r.credit||0),0);
+    const elecPaid=t.electric.reduce((s,r)=>s+(r.credit||0),0);
+    const waterPaid=(t.water||[]).reduce((s,r)=>s+(r.credit||0),0);
+    const totalPaid=rentPaid+elecPaid+waterPaid;
+    const rentBal=rentBalance(t),elecBal=electricBalance(t),waterBal=waterBalance(t);
+    const totalBal=rentBal+elecBal+waterBal;
+    let html=`<html><head><title>Statement – ${t.name}</title>
+    <style>body{font-family:'Segoe UI',Arial,sans-serif;padding:2rem;color:#0f172a}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#f59e0b}h1{font-size:1.4rem;margin-bottom:.25rem}h2{color:#64748b;font-size:.95rem;font-weight:400;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:1rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.55rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;text-align:right;margin-top:1rem}.badge{display:inline-block;padding:.2rem .6rem;border-radius:100px;font-weight:600;font-size:.75rem}.cleared{background:#dcfce7;color:#166534}.pending{background:#fee2e2;color:#b91c1c}@media print{body{padding:0}}</style></head><body>
+    <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
+    <h1>Tenant Statement – ${t.name}</h1>
+    <h2>${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile}</h2>
+    <table><thead><tr><th>Metric</th><th>Amount</th><th>Balance</th></tr></thead><tbody>`;
+    if(type==='rent'||type==='all'){
+        html+=`<tr><td>Rent Paid</td><td>${formatUGX(rentPaid)}</td><td>${formatUGX(rentBal)}</td></tr>`;
+    }
+    if(type==='electric'||type==='all'){
+        html+=`<tr><td>Electricity Paid</td><td>${formatUGX(elecPaid)}</td><td>${formatUGX(elecBal)}</td></tr>`;
+    }
+    if(type==='water'||type==='all'){
+        html+=`<tr><td>Water Paid</td><td>${formatUGX(waterPaid)}</td><td>${formatUGX(waterBal)}</td></tr>`;
+    }
+    html+=`<tr style="font-weight:700;background:#f8fafc;"><td>Total</td><td>${formatUGX(totalPaid)}</td><td>${formatUGX(totalBal)}</td></tr>
+    </tbody></table>
+    <div class="total">Outstanding Balance: <span class="badge ${totalBal<=0?'cleared':'pending'}">${totalBal<=0?'CLEARED':'PENDING'} ${formatUGX(totalBal)}</span></div>
+    </body></html>`;
+    const w=window.open('','_blank');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(()=>w.print(),500);
+}
+
+function printTenantStatementSummary(){
+    if(!can('view_statements')){showNotification('Permission denied','warning');return;}
+    const type=document.getElementById('statementType')?.value||'all';
+    const propFilter=document.getElementById('statementPropertyFilter')?.value||'all';
+    const locFilter=document.getElementById('statementLocationFilter')?.value||'all';
+    let tenants=getVisibleTenants();
+    if(propFilter!=='all'){
+        tenants=tenants.filter(t=>{
+            const unit=getTenantUnit(t);
+            const pid=unit?unit.propertyId:t.propertyId;
+            return pid===propFilter;
+        });
+    }
+    if(locFilter!=='all'){
+        tenants=tenants.filter(t=>t.locationId===locFilter);
+    }
+    if(tenants.length===0){showNotification('No tenants to print','warning');return;}
+    let propLabel='All Properties';
+    if(propFilter!=='all'){const p=getPropertyById(propFilter);if(p)propLabel=p.name;}
+    let locLabel='All Locations';
+    if(locFilter!=='all'){const l=LOCATIONS.find(x=>x.id===locFilter);if(l)locLabel=l.area+', '+l.city;}
+    const typeLabel=type==='all'?'All Utilities':(type==='rent'?'Rent Only':(type==='electric'?'Electricity Only':'Water Only'));
+    const rows=tenants.map(t=>{
+        const unit=getTenantUnit(t);
+        const prop=unit?getPropertyById(unit.propertyId):(t.propertyId?getPropertyById(t.propertyId):null);
+        const rentPaid=t.rent.reduce((s,r)=>s+(r.credit||0),0);
+        const elecPaid=t.electric.reduce((s,r)=>s+(r.credit||0),0);
+        const waterPaid=(t.water||[]).reduce((s,r)=>s+(r.credit||0),0);
+        const totalPaid=rentPaid+elecPaid+waterPaid;
+        const totalBal=rentBalance(t)+electricBalance(t)+waterBalance(t);
+        let rentCell='',elecCell='',waterCell='';
+        if(type==='rent')rentCell=`<td>${formatUGX(rentPaid)}</td>`;
+        else if(type==='electric')elecCell=`<td>${formatUGX(elecPaid)}</td>`;
+        else if(type==='water')waterCell=`<td>${formatUGX(waterPaid)}</td>`;
+        else{rentCell=`<td>${formatUGX(rentPaid)}</td>`;elecCell=`<td>${formatUGX(elecPaid)}</td>`;waterCell=`<td>${formatUGX(waterPaid)}</td>`;}
+        return `<tr>
+            <td>${t.name}</td>
+            <td>${prop?prop.name:'—'}</td>
+            <td>${unit?unit.unitNumber:t.apt}</td>
+            ${rentCell}${elecCell}${waterCell}
+            <td>${formatUGX(totalPaid)}</td>
+            <td>${formatUGX(totalBal)}</td>
+            <td>${totalBal<=0?'Cleared':'Pending'}</td>
+        </tr>`;
+    }).join('');
+    // Build header cells conditionally
+    let headerCells='<th>Tenant</th><th>Property</th><th>Unit</th>';
+    if(type==='rent')headerCells+='<th>Rent Paid</th>';
+    else if(type==='electric')headerCells+='<th>Electric Paid</th>';
+    else if(type==='water')headerCells+='<th>Water Paid</th>';
+    else headerCells+='<th>Rent Paid</th><th>Electric Paid</th><th>Water Paid</th>';
+    headerCells+='<th>Total Paid</th><th>Balance</th><th>Status</th>';
+    const html=`<html><head><title>Tenant Statement Summary</title>
+    <style>body{font-family:'Segoe UI',Arial,sans-serif;padding:2rem;color:#0f172a}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#f59e0b}h1{font-size:1.4rem;margin-bottom:.25rem}.sub{color:#64748b;font-size:.9rem;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.8rem}th{text-align:left;padding:.55rem;background:#0f172a;color:#fff}td{padding:.5rem .55rem;border-bottom:1px solid #e2e8f0}.footer{margin-top:1.5rem;font-size:.8rem;color:#64748b;text-align:center}@media print{body{padding:0}}</style></head><body>
+    <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
+    <h1>Tenant Statement Summary</h1>
+    <div class="sub">Type: ${typeLabel} · Property: ${propLabel} · Location: ${locLabel}</div>
+    <table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>
+    <div class="footer">Generated on ${new Date().toLocaleString()}</div>
+    </body></html>`;
+    const w=window.open('','_blank');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(()=>w.print(),500);
 }
 
 // ============================================================
@@ -2380,7 +2590,7 @@ async function saveAdvanceRent(e){
     showNotification(`Advance payment of ${formatUGX(totalAmount)} recorded (${selectedAdvanceMonths.length} months)`,'success');
     closeModal('advanceRentModal');
     setTimeout(()=>{printAdvanceReceipt(t.id,receiptNo);},400);
-    renderTenantsPage();renderDashboard();
+    renderTenantsPage();renderDashboard();renderStatementsPage();
 }
 
 // ============================================================
@@ -2454,7 +2664,7 @@ async function savePayment(e){
     showNotification(`Payment of ${formatUGX(amount)} recorded`);
     closeModal('paymentModal');
     setTimeout(()=>{printReceipt(tenantId,type,paymentIndex);},400);
-    renderTenantsPage();renderDashboard();
+    renderTenantsPage();renderDashboard();renderStatementsPage();
     await saveTenantNow(t);
 }
 
@@ -2608,7 +2818,7 @@ async function toggleUtilityPaid(tenantId,type,index){
         showNotification('Marked as Paid','success');
     }
     arr.sort((a,b)=>a.date.localeCompare(b.date));
-    renderUtilityPage();renderDashboard();renderTenantsPage();
+    renderUtilityPage();renderDashboard();renderTenantsPage();renderStatementsPage();
     await saveTenantNow(t);
 }
 function viewUtilityDetail(tenantId,type,date){
@@ -2664,7 +2874,6 @@ function openUtilityModal(type){
     openModal('utilityModal');
 }
 
-// Auto-fills previous reading from last month, but user can edit it
 function onUtilityTenantChange(){
     const tenantId=document.getElementById('utilityTenant').value;
     const type=document.getElementById('utilityType').value;
@@ -2737,7 +2946,7 @@ async function saveUtilityReading(e){
         showNotification(`💧 Water reading saved – ${formatUGX(total)}`);
     }
     closeModal('utilityModal');
-    renderUtilityPage();renderDashboard();
+    renderUtilityPage();renderDashboard();renderStatementsPage();
     await saveTenantNow(t);
 }
 function openBaseChargesModal(){
@@ -2844,7 +3053,7 @@ function printExpensesContextual(){
 }
 
 // ============================================================
-// PRINT STATEMENTS
+// PRINT STATEMENTS (Individual)
 // ============================================================
 function openPrintModal(tenantId){
     const tenants=getVisibleTenants();
@@ -2974,7 +3183,7 @@ async function saveLocation(e){
     showNotification(`Location "${area}, ${city}" added`);
     await saveLocationNow(newLoc);
     closeModal('locationModal');
-    renderAdminPage();refreshLocationDropdowns();refreshFilterOptions();
+    renderAdminPage();refreshLocationDropdowns();refreshFilterOptions();refreshAllPropertyDropdowns();
 }
 function refreshLocationDropdowns(){
     const sel=document.getElementById('userLocation'),esel=document.getElementById('editUserLocation');
@@ -3123,6 +3332,7 @@ window.openAddPropertyModal=openAddPropertyModal;window.editProperty=editPropert
 window.openAddUnitModal=openAddUnitModal;window.editUnit=editUnit;window.deleteUnit=deleteUnit;window.saveUnit=saveUnit;
 window.renderPropertyPage=renderPropertyPage;window.onTenantPropertyChange=onTenantPropertyChange;window.onTenantUnitChange=onTenantUnitChange;
 window.refreshAllPropertyDropdowns=refreshAllPropertyDropdowns;window.renderPropertyOccupancyDashboard=renderPropertyOccupancyDashboard;window.showUnitDetail=showUnitDetail;
+window.renderStatementsPage=renderStatementsPage;window.printTenantStatementSummary=printTenantStatementSummary;window.printSingleTenantStatement=printSingleTenantStatement;
 </script>
 </body>
 </html>

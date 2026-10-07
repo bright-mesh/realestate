@@ -622,12 +622,18 @@ input,select,textarea{font-size:16px}
         <div class="filter-bar">
             <label>Filter by Tenant:</label>
             <select id="utilityFilterTenant" onchange="renderUtilityPage()"><option value="all">All Tenants</option></select>
+            <label>Utility Type:</label>
+            <select id="utilityFilterType" onchange="renderUtilityPage()">
+                <option value="all">All Utilities</option>
+                <option value="electric">⚡ Electricity</option>
+                <option value="water">💧 Water</option>
+            </select>
             <span class="rate-note">⚡ UGX 1,100/unit · 💧 UGX 4,433/unit + 75% sewer + 1,500 service + 18% VAT</span>
         </div>
         <div class="utility-summary" id="utilitySummary"></div>
         <div class="table-card">
             <table>
-                <thead><tr><th>Tenant</th><th>Apt</th><th>Utility</th><th>Date</th><th>Prev</th><th>Current</th><th>Usage</th><th>Rate</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Tenant</th><th>Apt</th><th>Utility</th><th>Date</th><th>Prev</th><th>Current</th><th>Usage</th><th>Rate</th><th>Amount</th><th>Status</th><th>Running Balance</th><th>Actions</th></tr></thead>
                 <tbody id="utilityTableBody"></tbody>
             </table>
         </div>
@@ -679,7 +685,6 @@ input,select,textarea{font-size:16px}
         </div>
     </section>
 
-    <!-- NEW STATEMENTS SECTION -->
     <section id="page-statements" class="page-section">
         <div class="section-header">
             <h2>Tenant Statements</h2>
@@ -1041,12 +1046,12 @@ try {
 // LOCALSTORAGE
 // ============================================================
 const LS_KEYS = {
-    tenants: 'bmr_tenants_v3',
-    properties: 'bmr_properties_v3',
-    units: 'bmr_units_v3',
-    users: 'bmr_users_v3',
-    locations: 'bmr_locations_v3',
-    syncOff: 'bmr_sync_off_v3'
+    tenants: 'bmr_tenants_v4',
+    properties: 'bmr_properties_v4',
+    units: 'bmr_units_v4',
+    users: 'bmr_users_v4',
+    locations: 'bmr_locations_v4',
+    syncOff: 'bmr_sync_off_v4'
 };
 
 function saveLocalCache() {
@@ -1129,7 +1134,7 @@ async function fsDelete(collectionName, docId) {
 }
 
 // ============================================================
-// CLOUD LOADERS — enrich only, never overwrite local
+// CLOUD LOADERS
 // ============================================================
 function mergeRemoteIntoLocal(remoteList, localList) {
     remoteList.forEach(r => {
@@ -1248,7 +1253,7 @@ function can(action) {
 }
 
 // ============================================================
-// SEED TENANTS
+// SEED TENANTS — Ivan's electricity mirrors Book1111.xlsx exactly
 // ============================================================
 const TENANTS = [
     { id: 'ivan', name: 'Ivan', apt: 1, mobile: '+256 772 100 001', monthlyRent: 150000, billingDate: 1, electricRate: 1100, locationId: 'loc1', propertyId: 'prop1', unitId: 'u_apt1',
@@ -1282,24 +1287,25 @@ const TENANTS = [
         { date: '2026-10-01', desc: 'Rent for Oct 2026', debit: 170000, credit: 0, invoiceNo: 'INV-014' }
       ],
       electric: [
-        { date: '2025-10-31', desc: 'Oct 2025', meter: 7.7, rate: 1100, debit: 8470, credit: 0, reading: 7.7 },
-        { date: '2025-11-30', desc: 'Nov 2025', meter: 7.4, rate: 1100, debit: 8140, credit: 0, reading: 15.1 },
-        { date: '2025-12-08', desc: 'Payment – Oct 2025', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0001' },
-        { date: '2026-01-01', desc: 'Dec 2025', meter: 7.1, rate: 1100, debit: 7810, credit: 0, reading: 22.2 },
-        { date: '2026-01-16', desc: 'Payment – Dec 2025', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0002' },
-        { date: '2026-02-01', desc: 'Jan 2026', meter: 7.7, rate: 1100, debit: 8470, credit: 0, reading: 29.9 },
-        { date: '2026-03-01', desc: 'Feb 2026', meter: 7.4, rate: 1100, debit: 8140, credit: 0, reading: 37.3 },
-        { date: '2026-03-21', desc: 'Payment – Feb 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null, receiptNo: 'RCPT-E0003' },
-        { date: '2026-04-01', desc: 'Mar 2026', meter: 8.6, rate: 1100, debit: 9460, credit: 0, reading: 45.9 },
-        { date: '2026-05-01', desc: 'Apr 2026', meter: 8.0, rate: 1100, debit: 8800, credit: 0, reading: 53.9 },
-        { date: '2026-06-30', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0004' },
-        { date: '2026-06-01', desc: 'May 2026', meter: 7.6, rate: 1100, debit: 8360, credit: 0, reading: 61.5 },
-        { date: '2026-06-15', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0005' },
-        { date: '2026-07-01', desc: 'June 2026', meter: 7.0, rate: 1100, debit: 7700, credit: 0, reading: 68.5 },
-        { date: '2026-07-17', desc: 'Payment – June 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0006' },
-        { date: '2026-08-01', desc: 'July 2026', meter: 8.1, rate: 1100, debit: 8910, credit: 0, reading: 76.6 },
-        { date: '2026-08-08', desc: 'Payment – July 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0007' },
-        { date: '2026-09-01', desc: 'Aug 2026', meter: 8.4, rate: 1100, debit: 9240, credit: 0, reading: 85.0 }
+        // === Source: Book1111.xlsx (Ivan Yaka ledger) ===
+        { date: '2025-10-31', desc: 'Inv- Oct 2025',  meter: 7.7,  rate: 1100, debit: 8470,  credit: 0,     reading: 7.7  },
+        { date: '2025-11-30', desc: 'Inv- Nov 2025',  meter: 7.4,  rate: 1100, debit: 8140,  credit: 0,     reading: 15.1 },
+        { date: '2025-12-08', desc: 'RC-oct 2025',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0001' },
+        { date: '2026-01-01', desc: 'Inv- Dec 2025',  meter: 7.1,  rate: 1100, debit: 7810,  credit: 0,     reading: 22.2 },
+        { date: '2026-01-16', desc: 'RC-Dec 2025',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0002' },
+        { date: '2026-02-01', desc: 'Inv- Jan 2026',  meter: 7.7,  rate: 1100, debit: 8470,  credit: 0,     reading: 29.9 },
+        { date: '2026-03-01', desc: 'Inv- Feb 2026',  meter: 7.4,  rate: 1100, debit: 8140,  credit: 0,     reading: 37.3 },
+        { date: '2026-03-21', desc: 'RC-Feb 2026',   meter: null, rate: null, debit: 0,     credit: 20000, reading: null, receiptNo: 'RCPT-E0003' },
+        { date: '2026-04-01', desc: 'Inv- Mar 2026',  meter: 8.6,  rate: 1100, debit: 9460,  credit: 0,     reading: 45.9 },
+        { date: '2026-05-01', desc: 'Inv- Apr 2026',  meter: 8.0,  rate: 1100, debit: 8800,  credit: 0,     reading: 53.9 },
+        { date: '2026-06-30', desc: 'RC-Mar 2026',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0004' },
+        { date: '2026-06-01', desc: 'Inv- May 2026',  meter: 7.6,  rate: 1100, debit: 8360,  credit: 0,     reading: 61.5 },
+        { date: '2026-06-15', desc: 'RC-May 2026',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0005' },
+        { date: '2026-07-01', desc: 'Inv- June 2026', meter: 7.0,  rate: 1100, debit: 7700,  credit: 0,     reading: 68.5 },
+        { date: '2026-07-17', desc: 'RC-June 2026',  meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0006' },
+        { date: '2026-08-01', desc: 'Inv- July 2026', meter: 8.1,  rate: 1100, debit: 8910,  credit: 0,     reading: 76.6 },
+        { date: '2026-08-08', desc: 'RC-July 2026',  meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0007' },
+        { date: '2026-09-01', desc: 'Inv- Aug 2026',  meter: 8.4,  rate: 1100, debit: 9240,  credit: 0,     reading: 85.0 }
       ],
       water: [],
       expenses: [
@@ -1484,7 +1490,45 @@ function totalRentReceived(l){return (l||TENANTS).reduce((s,t)=>s+t.rent.reduce(
 function totalElectricReceived(l){return (l||TENANTS).reduce((s,t)=>s+t.electric.reduce((a,r)=>a+(r.credit||0),0),0);}
 function totalWaterReceived(l){return (l||TENANTS).reduce((s,t)=>s+(t.water||[]).reduce((a,r)=>a+(r.credit||0),0),0);}
 function totalExpensesReceived(l){return (l||TENANTS).reduce((s,t)=>s+totalExpenses(t),0);}
-function isReadingPaid(arr,i){const r=arr[i];if(!r||!r.meter)return false;return arr.slice(0,i+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0)<=0;}
+
+/**
+ * Determines if a reading is fully paid.
+ * A reading at index i is considered PAID if the running balance
+ * immediately BEFORE the NEXT reading is <= 0.
+ *
+ * This properly accounts for payments (credits) that appear AFTER
+ * this reading but BEFORE the next reading.
+ */
+function isReadingPaid(arr, i) {
+    if (!arr || i < 0 || i >= arr.length) return false;
+    const reading = arr[i];
+    if (!reading || !reading.meter) return false;
+
+    // Find the next reading index (or end of array)
+    let nextReadingIdx = arr.length;
+    for (let j = i + 1; j < arr.length; j++) {
+        if (arr[j] && arr[j].meter) { nextReadingIdx = j; break; }
+    }
+
+    // Sum running balance up to (but not including) the next reading
+    let balance = 0;
+    for (let k = 0; k < nextReadingIdx; k++) {
+        balance += (arr[k].debit || 0) - (arr[k].credit || 0);
+    }
+    return balance <= 0;
+}
+
+/**
+ * Returns the running balance at a given index (inclusive).
+ */
+function runningBalanceAt(arr, i) {
+    let bal = 0;
+    for (let k = 0; k <= i && k < arr.length; k++) {
+        bal += (arr[k].debit || 0) - (arr[k].credit || 0);
+    }
+    return bal;
+}
+
 function getVisibleTenants(){if(!currentUser)return [];if(currentUser.role==='admin')return TENANTS;return TENANTS.filter(t=>t.locationId===currentUser.locationId);}
 function getVisibleProperties(){if(!currentUser)return [];if(currentUser.role==='admin')return PROPERTIES;return PROPERTIES.filter(p=>p.locationId===currentUser.locationId);}
 function getVisibleUnits(){const p=getVisibleProperties().map(x=>x.id);return UNITS.filter(u=>p.includes(u.propertyId));}
@@ -1496,7 +1540,20 @@ function getUnitOccupant(id){return TENANTS.find(t=>t.unitId===id);}
 function getNextInvoiceNo(t){const n=t.rent.filter(r=>r.invoiceNo).map(r=>{const m=r.invoiceNo.match(/\d+/);return m?parseInt(m[0]):0;});const mx=n.length?Math.max(...n):0;return 'INV-'+String(mx+1).padStart(3,'0');}
 function getNextReceiptNo(prefix){const all=[];TENANTS.forEach(t=>{t.rent.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.electric.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.water.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});});const n=all.map(r=>{const m=r.match(/\d+/);return m?parseInt(m[0]):0;});const mx=n.length?Math.max(...n):0;return (prefix||'RCPT-')+String(mx+1).padStart(4,'0');}
 function showNotification(msg,type='success'){const n=document.getElementById('notification');n.textContent=msg;n.className='notification '+type+' show';setTimeout(()=>n.classList.remove('show'),3000);}
-function closeModal(id){const o=document.getElementById(id);if(!o)return;o.classList.remove('active');o.style.display='none';setTimeout(()=>{o.style.display='';},50);}
+
+/**
+ * closeModal — properly hides the overlay and releases UI state
+ * so dropdowns don't get "stuck" after a modal interaction.
+ */
+function closeModal(id){
+    const o=document.getElementById(id);
+    if(!o)return;
+    o.classList.remove('active');
+    o.style.display='none';
+    // Force reflow so browser releases any stuck input focus/state
+    void o.offsetHeight;
+    setTimeout(()=>{o.style.display='';},60);
+}
 function openModal(id){const o=document.getElementById(id);if(!o)return;o.style.display='flex';o.classList.add('active');}
 function getLastMeterReading(t,type){const arr=type==='electric'?t.electric:t.water;const r=arr.filter(x=>x.reading!==null&&x.reading!==undefined).map(x=>x.reading);return r.length?r[r.length-1]:0;}
 function resetLoginButton(){const b=document.getElementById('loginBtn');if(b){b.textContent='Sign In';b.disabled=false;}}
@@ -1624,7 +1681,6 @@ function enterApp(){
     renderDashboard();
     renderPropertyPage();
     if(can('view_admin'))renderAdminPage();
-    // initialize statements page
     renderStatementsPage();
 }
 
@@ -1634,7 +1690,6 @@ function applyPermissions(){
     if(can('view_admin'))adminTab.classList.remove('hidden');else adminTab.classList.add('hidden');
     const propTab=document.querySelector('.nav-tab[data-page="property"]');
     if(propTab)propTab.classList.toggle('hidden',!can('view_tenants'));
-    // statements tab visible to all roles (view_statements in perms)
     const stmtTab=document.querySelector('.nav-tab[data-page="statements"]');
     if(stmtTab)stmtTab.classList.toggle('hidden',!can('view_statements'));
     document.querySelectorAll('#page-tenants .section-header .btn-primary').forEach(b=>{b.style.display=can('add_tenants')?'':'none';});
@@ -2083,7 +2138,6 @@ function refreshAllPropertyDropdowns(){
     if(fsel){const cur=fsel.value;const props=getVisibleProperties();fsel.innerHTML='<option value="all">All Properties</option>'+props.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');if(cur&&[...fsel.options].some(o=>o.value===cur))fsel.value=cur;}
     const tpsel=document.getElementById('tenantProperty');
     if(tpsel)tpsel.innerHTML='<option value="">Select property</option>'+getVisibleProperties().map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-    // statements property dropdown
     const sp=document.getElementById('statementPropertyFilter');
     if(sp){const cur=sp.value;sp.innerHTML='<option value="all">All Properties</option>'+getVisibleProperties().map(p=>`<option value="${p.id}">${p.name}</option>`).join('');if(cur&&[...sp.options].some(o=>o.value===cur))sp.value=cur;}
     const sl=document.getElementById('statementLocationFilter');
@@ -2347,7 +2401,7 @@ function refreshFilterOptions(){
 }
 
 // ============================================================
-// NEW STATEMENTS PAGE
+// STATEMENTS PAGE
 // ============================================================
 function renderStatementsPage(){
     if(!can('view_statements'))return;
@@ -2365,7 +2419,6 @@ function renderStatementsPage(){
     if(locFilter!=='all'){
         tenants=tenants.filter(t=>t.locationId===locFilter);
     }
-    // Update column headers based on type
     const col1=document.getElementById('stmtCol1'),col2=document.getElementById('stmtCol2'),col3=document.getElementById('stmtCol3');
     if(col1&&col2&&col3){
         if(type==='rent'){col1.style.display='';col1.textContent='Rent Paid';col2.style.display='none';col3.style.display='none';}
@@ -2389,7 +2442,6 @@ function renderStatementsPage(){
         const rentBal=rentBalance(t),elecBal=electricBalance(t),waterBal=waterBalance(t);
         const totalBal=rentBal+elecBal+waterBal;
         const statusClass=totalBal<=0?'paid':(totalBal<t.monthlyRent?'partial':'pending');
-        // Conditional columns
         let rentCol='',elecCol='',waterCol='';
         if(type==='rent'){rentCol=`<td>${formatUGX(rentPaid)}</td>`;}
         else if(type==='electric'){elecCol=`<td>${formatUGX(elecPaid)}</td>`;}
@@ -2490,7 +2542,6 @@ function printTenantStatementSummary(){
             <td>${totalBal<=0?'Cleared':'Pending'}</td>
         </tr>`;
     }).join('');
-    // Build header cells conditionally
     let headerCells='<th>Tenant</th><th>Property</th><th>Unit</th>';
     if(type==='rent')headerCells+='<th>Rent Paid</th>';
     else if(type==='electric')headerCells+='<th>Electric Paid</th>';
@@ -2664,7 +2715,7 @@ async function savePayment(e){
     showNotification(`Payment of ${formatUGX(amount)} recorded`);
     closeModal('paymentModal');
     setTimeout(()=>{printReceipt(tenantId,type,paymentIndex);},400);
-    renderTenantsPage();renderDashboard();renderStatementsPage();
+    renderTenantsPage();renderDashboard();renderStatementsPage();renderUtilityPage();
     await saveTenantNow(t);
 }
 
@@ -2765,91 +2816,214 @@ function numberToWords(num){
 }
 
 // ============================================================
-// UTILITY
+// UTILITY PAGE — fully inter-linked with tenant ledger
 // ============================================================
 function renderUtilityPage(){
     const filterTenant=document.getElementById('utilityFilterTenant').value;
+    const filterType=document.getElementById('utilityFilterType')?.value||'all';
     const allVisible=getVisibleTenants();
-    const selectedTenants=filterTenant==='all'?allVisible:allVisible.filter(t=>t.id===filterTenant);
+    let selectedTenants=filterTenant==='all'?allVisible:allVisible.filter(t=>t.id===filterTenant);
+
     document.getElementById('utilitySummary').innerHTML=`
         <div class="util-card electric-received"><div class="util-label">⚡ Total Electricity Received</div><div class="util-value">${formatUGX(totalElectricReceived(selectedTenants))}</div></div>
         <div class="util-card water-received"><div class="util-label">💧 Total Water Received</div><div class="util-value">${formatUGX(totalWaterReceived(selectedTenants))}</div></div>
     `;
+
     const tbody=document.getElementById('utilityTableBody');
     const rows=[];
+
     selectedTenants.forEach(t=>{
-        t.electric.forEach((r,idx)=>{if(r.meter){const prevReading=idx>0?(t.electric[idx-1].reading||0):0;const paid=isReadingPaid(t.electric,idx);rows.push({tenant:t.name,tenantId:t.id,apt:t.apt,type:'Electric',date:r.date,prev:prevReading.toFixed(1),curr:r.reading,usage:r.meter,rate:r.rate||BASE_CHARGES.electricRate,amount:r.debit,status:paid?'Paid':'Pending',index:idx,hasCredit:paid});}});
-        t.water.forEach((r,idx)=>{if(r.meter){const prevReading=idx>0?(t.water[idx-1].reading||0):0;const paid=isReadingPaid(t.water,idx);rows.push({tenant:t.name,tenantId:t.id,apt:t.apt,type:'Water',date:r.date,prev:prevReading.toFixed(1),curr:r.reading,usage:r.meter,rate:r.rate||BASE_CHARGES.waterRate,amount:r.debit,status:paid?'Paid':'Pending',index:idx,hasCredit:paid});}});
+        // ELECTRIC — iterate through ALL records so we can find the running balance
+        if(filterType==='all'||filterType==='electric'){
+            t.electric.forEach((r,idx)=>{
+                if(r.meter){
+                    const prevReading = idx>0 ? (t.electric[idx-1].reading||0) : 0;
+                    const paid = isReadingPaid(t.electric, idx);
+                    const runBal = runningBalanceAt(t.electric, idx);
+                    rows.push({
+                        tenant: t.name, tenantId: t.id, apt: t.apt,
+                        type: 'Electric', date: r.date,
+                        prev: prevReading.toFixed(1), curr: r.reading,
+                        usage: r.meter, rate: r.rate||BASE_CHARGES.electricRate,
+                        amount: r.debit,
+                        status: paid ? 'Paid' : 'Pending',
+                        index: idx,
+                        arrName: 'electric',
+                        runBal: runBal
+                    });
+                }
+            });
+        }
+        // WATER
+        if(filterType==='all'||filterType==='water'){
+            t.water.forEach((r,idx)=>{
+                if(r.meter){
+                    const prevReading = idx>0 ? (t.water[idx-1].reading||0) : 0;
+                    const paid = isReadingPaid(t.water, idx);
+                    const runBal = runningBalanceAt(t.water, idx);
+                    rows.push({
+                        tenant: t.name, tenantId: t.id, apt: t.apt,
+                        type: 'Water', date: r.date,
+                        prev: prevReading.toFixed(1), curr: r.reading,
+                        usage: r.meter, rate: r.rate||BASE_CHARGES.waterRate,
+                        amount: r.debit,
+                        status: paid ? 'Paid' : 'Pending',
+                        index: idx,
+                        arrName: 'water',
+                        runBal: runBal
+                    });
+                }
+            });
+        }
     });
+
+    // Sort by date desc, but keep readings of same tenant/utility in ledger order for proper prev-reading display
     rows.sort((a,b)=>b.date.localeCompare(a.date));
-    if(rows.length===0){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:2rem;">No utility readings found.</td></tr>';return;}
+
+    if(rows.length===0){tbody.innerHTML='<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:2rem;">No utility readings found for the selected filters.</td></tr>';return;}
+
     tbody.innerHTML=rows.map(r=>`
         <tr>
-            <td><strong>${r.tenant}</strong></td><td>${r.apt}</td>
+            <td><strong>${r.tenant}</strong></td>
+            <td>${r.apt}</td>
             <td><span class="badge ${r.type==='Electric'?'electric':'water'}">${r.type}</span></td>
-            <td>${r.date}</td><td>${r.prev}</td><td>${r.curr}</td><td>${r.usage}</td>
-            <td>${formatUGX(r.rate)}</td><td>${formatUGX(r.amount)}</td>
+            <td>${r.date}</td>
+            <td>${r.prev}</td>
+            <td>${r.curr}</td>
+            <td>${r.usage}</td>
+            <td>${formatUGX(r.rate)}</td>
+            <td>${formatUGX(r.amount)}</td>
             <td><span class="badge ${r.status==='Paid'?'paid':'pending'}">${r.status}</span></td>
+            <td style="font-weight:700;color:${r.runBal<=0?'#16a34a':'#dc2626'};">${formatUGX(r.runBal)}</td>
             <td><div class="action-btns">
-                <button class="btn btn-outline btn-sm" onclick="viewUtilityDetail('${r.tenantId}','${r.type}','${r.date}')">View</button>
-                ${can('mark_utility_paid')?`<button class="btn ${r.hasCredit?'btn-warning':'btn-success'} btn-sm" onclick="toggleUtilityPaid('${r.tenantId}','${r.type}',${r.index})">${r.hasCredit?'Mark Pending':'Mark Paid'}</button>`:''}
+                <button class="btn btn-outline btn-sm" onclick="viewUtilityDetail('${r.tenantId}','${r.type}','${r.index}')">View</button>
+                ${can('mark_utility_paid')?`<button class="btn ${r.status==='Paid'?'btn-warning':'btn-success'} btn-sm" onclick="toggleUtilityPaid('${r.tenantId}','${r.type}',${r.index})">${r.status==='Paid'?'Mark Pending':'Mark Paid'}</button>`:''}
             </div></td>
         </tr>
     `).join('');
     document.getElementById('utilityDetailPanel').innerHTML='';
 }
-async function toggleUtilityPaid(tenantId,type,index){
+
+/**
+ * Toggle a utility reading between Paid and Pending.
+ * - Mark Paid: inserts a credit row (RC) immediately AFTER the reading that clears its amount.
+ * - Mark Pending: removes the FIRST credit row that appears after this reading
+ *   but before the next reading.
+ */
+async function toggleUtilityPaid(tenantId, type, index){
     if(!can('mark_utility_paid')){showNotification('Permission denied','warning');return;}
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
-    const arr=type==='Electric'?t.electric:t.water;
-    const reading=arr[index];
-    if(!reading||!reading.meter)return;
-    const paid=isReadingPaid(arr,index);
-    const receiptNo=getNextReceiptNo(type==='Electric'?'RCPT-E':'RCPT-W');
-    if(paid){
-        let nextMeterIdx=arr.length;
-        for(let i=index+1;i<arr.length;i++){if(arr[i].meter){nextMeterIdx=i;break;}}
-        let removed=false;
-        for(let i=index+1;i<nextMeterIdx;i++){if(arr[i].credit>0&&!arr[i].meter){arr.splice(i,1);removed=true;break;}}
-        if(removed)showNotification('Marked as Pending','warning');else showNotification('No matching payment found','warning');
-    }else{
-        arr.splice(index+1,0,{date:reading.date,desc:`Payment – ${reading.desc||'Utility'}`,meter:null,rate:null,debit:0,credit:reading.debit,reading:null,receiptNo});
+    const arr = type==='Electric' ? t.electric : t.water;
+    const reading = arr[index];
+    if(!reading || !reading.meter){showNotification('Invalid reading','warning');return;}
+
+    const isPaid = isReadingPaid(arr, index);
+
+    if(isPaid){
+        // Find the next reading (or end) — remove the first credit row in that range
+        let nextReadingIdx = arr.length;
+        for(let i=index+1;i<arr.length;i++){ if(arr[i].meter){ nextReadingIdx=i; break; } }
+        let removedIdx = -1;
+        for(let i=index+1;i<nextReadingIdx;i++){
+            if(!arr[i].meter && (arr[i].credit||0) > 0){ removedIdx = i; break; }
+        }
+        if(removedIdx===-1){
+            showNotification('No matching payment found for this reading','warning');
+            return;
+        }
+        arr.splice(removedIdx, 1);
+        showNotification('Marked as Pending','warning');
+    } else {
+        // Insert a new credit row immediately after the reading
+        const receiptNo = getNextReceiptNo(type==='Electric'?'RCPT-E':'RCPT-W');
+        const amt = reading.debit || 0;
+        arr.splice(index+1, 0, {
+            date: reading.date,
+            desc: `Payment – ${reading.desc || 'Utility'}`,
+            meter: null, rate: null,
+            debit: 0, credit: amt,
+            reading: null, receiptNo
+        });
         showNotification('Marked as Paid','success');
     }
+
+    // Keep the ledger sorted (stable by date, order matters for balance)
     arr.sort((a,b)=>a.date.localeCompare(b.date));
-    renderUtilityPage();renderDashboard();renderTenantsPage();renderStatementsPage();
+
+    // Persist + refresh every dependent view
     await saveTenantNow(t);
+    renderUtilityPage();
+    renderDashboard();
+    renderTenantsPage();
+    renderStatementsPage();
+    renderReceiptsPage();
 }
-function viewUtilityDetail(tenantId,type,date){
+
+function viewUtilityDetail(tenantId, type, index){
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
     const panel=document.getElementById('utilityDetailPanel');
-    const arr=type==='Electric'?t.electric:t.water;
-    const reading=arr.find(r=>r.date===date&&r.meter);
-    if(!reading){panel.innerHTML='<p style="color:#64748b;padding:1rem 0;">Reading not found.</p>';return;}
-    const eBal=electricBalance(t),wBal=waterBalance(t);
+    const arr = type==='Electric' ? t.electric : t.water;
+    const reading = arr[index];
+    if(!reading || !reading.meter){panel.innerHTML='<p style="color:#64748b;padding:1rem 0;">Reading not found.</p>';return;}
+    const eBal=electricBalance(t), wBal=waterBalance(t);
+    const paid = isReadingPaid(arr, index);
+    const runBal = runningBalanceAt(arr, index);
+
+    // Build the ledger view for this utility
+    const ledgerRows = arr.map((r, i) => {
+        const run = runningBalanceAt(arr, i);
+        const isReading = !!r.meter;
+        const isPayment = (r.credit||0) > 0 && !r.meter;
+        const statusBadge = isReading
+            ? (isReadingPaid(arr, i) ? '<span class="badge paid">Paid</span>' : '<span class="badge pending">Pending</span>')
+            : (isPayment ? '<span class="badge info">Payment</span>' : '—');
+        const meterCell = isReading ? `<span class="meter-info">${r.meter} @ ${r.rate}</span>` : (isPayment ? 'Payment' : '—');
+        return `<tr style="${i===index?'background:#fef9c3;':''}">
+            <td>${r.date}</td>
+            <td>${r.desc || '—'}</td>
+            <td>${meterCell}</td>
+            <td>${r.debit?formatUGX(r.debit):'—'}</td>
+            <td>${r.credit?formatUGX(r.credit):'—'}</td>
+            <td style="font-weight:600;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td>
+            <td>${statusBadge}</td>
+        </tr>`;
+    }).join('');
+
     panel.innerHTML=`
         <div class="detail-panel">
-            <div class="detail-header"><h2>${t.name} <small>Apt ${t.apt} · ${t.mobile}</small></h2><button class="btn btn-outline btn-sm" onclick="document.getElementById('utilityDetailPanel').innerHTML='';">Close</button></div>
+            <div class="detail-header">
+                <h2>${t.name} <small>Apt ${t.apt} · ${t.mobile} · ${type==='Electric'?'⚡ Electricity':'💧 Water'} Ledger</small></h2>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('utilityDetailPanel').innerHTML='';">Close</button>
+            </div>
             <div class="utility-summary">
                 <div class="util-card electric-received"><div class="util-label">⚡ Electricity Balance</div><div class="util-value">${formatUGX(eBal)}</div></div>
                 <div class="util-card water-received"><div class="util-label">💧 Water Balance</div><div class="util-value">${formatUGX(wBal)}</div></div>
-                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Total Utility Due</div><div class="util-value">${formatUGX(eBal+wBal)}</div></div>
+                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Selected Reading Balance</div><div class="util-value">${formatUGX(runBal)}</div></div>
             </div>
-            <h3 style="font-size:.95rem;margin-bottom:1rem;">📋 Reading Details</h3>
-            <table>
+            <h3 style="font-size:.95rem;margin-bottom:.75rem;">📋 Reading Details</h3>
+            <table style="margin-bottom:1.25rem;">
                 <thead><tr><th>Field</th><th>Value</th></tr></thead>
                 <tbody>
                     <tr><td>Utility Type</td><td><span class="badge ${type==='Electric'?'electric':'water'}">${type}</span></td></tr>
                     <tr><td>Date</td><td>${reading.date}</td></tr>
+                    <tr><td>Description</td><td>${reading.desc||'—'}</td></tr>
                     <tr><td>Previous Reading</td><td>${(reading.reading-reading.meter).toFixed(2)}</td></tr>
                     <tr><td>Current Reading</td><td>${reading.reading}</td></tr>
                     <tr><td>Usage</td><td><strong>${reading.meter} units</strong></td></tr>
                     <tr><td>Rate</td><td>${formatUGX(reading.rate)}</td></tr>
                     <tr><td><strong>Total Amount</strong></td><td><strong>${formatUGX(reading.debit)}</strong></td></tr>
+                    <tr><td>Status</td><td>${paid?'<span class="badge paid">Paid</span>':'<span class="badge pending">Pending</span>'}</td></tr>
                 </tbody>
             </table>
+            <h3 style="font-size:.95rem;margin-bottom:.5rem;">📒 Full Ledger (Source of Truth)</h3>
+            <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:.75rem;">
+                <table style="min-width:700px;">
+                    <thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Status</th></tr></thead>
+                    <tbody>${ledgerRows}</tbody>
+                </table>
+            </div>
         </div>`;
 }
 

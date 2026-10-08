@@ -177,6 +177,7 @@ td{padding:.7rem .5rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 .badge.paid{background:#dcfce7;color:#166534}
 .badge.pending{background:#fee2e2;color:#b91c1c}
 .badge.partial{background:#fef9c3;color:#854d0e}
+.badge.cleared{background:#dcfce7;color:#166534}
 .badge.cat-plumbing{background:#dbeafe;color:#1e40af}
 .badge.cat-electric{background:#fef3c7;color:#92400e}
 .badge.cat-general{background:#e0e7ff;color:#3730a3}
@@ -190,6 +191,10 @@ td{padding:.7rem .5rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 .badge.role.accountant{background:#e0e7ff;color:#3730a3}
 .badge.role.cashier{background:#fce7f3;color:#9d174d}
 .action-btns{display:flex;gap:.3rem;flex-wrap:wrap}
+.text-debit{color:#dc2626;font-weight:600}
+.text-credit{color:#16a34a;font-weight:600}
+.text-balance-pos{color:#16a34a;font-weight:700}
+.text-balance-neg{color:#dc2626;font-weight:700}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center;padding:1rem;overflow-y:auto}
 .modal-overlay.active{display:flex}
 .modal{background:#fff;border-radius:1.5rem;padding:1.75rem;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);margin:auto}
@@ -633,7 +638,22 @@ input,select,textarea{font-size:16px}
         <div class="utility-summary" id="utilitySummary"></div>
         <div class="table-card">
             <table>
-                <thead><tr><th>Tenant</th><th>Apt</th><th>Utility</th><th>Date</th><th>Prev</th><th>Current</th><th>Usage</th><th>Rate</th><th>Amount</th><th>Status</th><th>Running Balance</th><th>Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Posting Date</th>
+                        <th>Tenant</th>
+                        <th>Utility</th>
+                        <th>Previous Meter</th>
+                        <th>Current Meter</th>
+                        <th>Total Units</th>
+                        <th>Rate</th>
+                        <th>Total Amount</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                        <th>Running Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
                 <tbody id="utilityTableBody"></tbody>
             </table>
         </div>
@@ -980,6 +1000,30 @@ input,select,textarea{font-size:16px}
     </div>
 </div>
 
+<div class="modal-overlay" id="editUtilityModal">
+    <div class="modal">
+        <h3>Update Utility Row</h3>
+        <form id="editUtilityForm" onsubmit="saveUtilityEdit(event)">
+            <input type="hidden" id="editUtilityTenantId">
+            <input type="hidden" id="editUtilityType">
+            <input type="hidden" id="editUtilityIndex">
+            <div class="form-group"><label>Posting Date</label><input type="date" id="editUtilityDate" required></div>
+            <div class="form-group"><label>Description</label><input type="text" id="editUtilityDesc"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Previous Meter</label><input type="number" step="0.01" id="editUtilityPrev"></div>
+                <div class="form-group"><label>Current Meter</label><input type="number" step="0.01" id="editUtilityCurr"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Rate (UGX/unit)</label><input type="number" step="0.01" id="editUtilityRate"></div>
+                <div class="form-group"><label>Debit (Invoice Amount)</label><input type="number" step="0.01" id="editUtilityDebit" min="0"></div>
+            </div>
+            <div class="form-group"><label>Credit (Payment Amount)</label><input type="number" step="0.01" id="editUtilityCredit" min="0"></div>
+            <div style="font-size:.72rem;color:#64748b;background:#f8fafc;padding:.6rem .75rem;border-radius:.5rem;margin-top:.5rem;">Leave meter fields blank for payment rows. Leave debit/credit at 0 if not applicable. Total amount will be recalculated automatically based on meter readings.</div>
+            <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('editUtilityModal')">Cancel</button><button type="submit" class="btn btn-primary">Update Row</button></div>
+        </form>
+    </div>
+</div>
+
 <div class="modal-overlay" id="printModal">
     <div class="modal">
         <h3>Print Statement</h3>
@@ -1046,12 +1090,12 @@ try {
 // LOCALSTORAGE
 // ============================================================
 const LS_KEYS = {
-    tenants: 'bmr_tenants_v4',
-    properties: 'bmr_properties_v4',
-    units: 'bmr_units_v4',
-    users: 'bmr_users_v4',
-    locations: 'bmr_locations_v4',
-    syncOff: 'bmr_sync_off_v4'
+    tenants: 'bmr_tenants_v7',
+    properties: 'bmr_properties_v7',
+    units: 'bmr_units_v7',
+    users: 'bmr_users_v7',
+    locations: 'bmr_locations_v7',
+    syncOff: 'bmr_sync_off_v7'
 };
 
 function saveLocalCache() {
@@ -1243,69 +1287,73 @@ function can(action) {
     if (!currentUser) return false;
     const role = currentUser.role;
     const perms = {
-        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','mark_utility_paid','view_receipts','manage_properties','view_statements'],
-        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','mark_utility_paid','view_receipts','manage_properties','view_statements'],
-        accountant: ['view_dashboard','view_tenants','edit_tenants','add_payments','view_utility','add_utility','view_expenses','add_expenses','print','mark_utility_paid','view_receipts','view_statements'],
-        cashier: ['view_dashboard','view_tenants','add_payments','view_expenses','print','mark_utility_paid','view_receipts','view_statements'],
+        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','view_receipts','manage_properties','view_statements'],
+        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','view_receipts','manage_properties','view_statements'],
+        accountant: ['view_dashboard','view_tenants','edit_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','print','view_receipts','view_statements'],
+        cashier: ['view_dashboard','view_tenants','add_payments','view_expenses','print','view_receipts','view_statements'],
         user: ['view_dashboard','view_tenants','view_expenses','print','view_receipts','view_statements']
     };
     return (perms[role] || []).includes(action);
 }
 
 // ============================================================
-// SEED TENANTS — Ivan's electricity mirrors Book1111.xlsx exactly
+// SEED TENANTS — utility ledgers exactly match RENTALS .xlsx
+// Ledger array order matters: each row's running balance = prev + debit − credit
+// Invoice rows: { date, desc, meter (units), rate, debit, credit:0, reading (curr meter) }
+// Payment rows: { date, desc, meter:null, rate:null, debit:0, credit, receiptNo }
 // ============================================================
 const TENANTS = [
+    // === IVAN - Apt 1 ===
     { id: 'ivan', name: 'Ivan', apt: 1, mobile: '+256 772 100 001', monthlyRent: 150000, billingDate: 1, electricRate: 1100, locationId: 'loc1', propertyId: 'prop1', unitId: 'u_apt1',
       rent: [
-        { date: '2025-07-16', desc: 'Rent for Jul,Aug,Sept 2025', debit: 450000, credit: 0, invoiceNo: 'INV-001' },
-        { date: '2025-07-27', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 450000, invoiceNo: 'INV-001', receiptNo: 'RCPT-0001' },
-        { date: '2025-10-01', desc: 'Rent for Oct 2025', debit: 150000, credit: 0, invoiceNo: 'INV-002' },
-        { date: '2025-10-25', desc: 'Payment – Oct 2025', debit: 0, credit: 150000, invoiceNo: 'INV-002', receiptNo: 'RCPT-0002' },
-        { date: '2025-11-01', desc: 'Rent for Nov 2025', debit: 150000, credit: 0, invoiceNo: 'INV-003' },
-        { date: '2025-11-28', desc: 'Payment – Nov 2025', debit: 0, credit: 150000, invoiceNo: 'INV-003', receiptNo: 'RCPT-0003' },
-        { date: '2025-12-01', desc: 'Rent for Dec 2025', debit: 150000, credit: 0, invoiceNo: 'INV-004' },
-        { date: '2025-12-08', desc: 'Payment – Dec 2025', debit: 0, credit: 150000, invoiceNo: 'INV-004', receiptNo: 'RCPT-0004' },
-        { date: '2026-01-01', desc: 'Rent for Jan 2026', debit: 150000, credit: 0, invoiceNo: 'INV-005' },
-        { date: '2026-01-16', desc: 'Payment – Jan 2026', debit: 0, credit: 150000, invoiceNo: 'INV-005', receiptNo: 'RCPT-0005' },
-        { date: '2026-02-01', desc: 'Rent for Feb 2026', debit: 150000, credit: 0, invoiceNo: 'INV-006' },
-        { date: '2026-02-20', desc: 'Payment – Feb 2026', debit: 0, credit: 150000, invoiceNo: 'INV-006', receiptNo: 'RCPT-0006' },
-        { date: '2026-03-01', desc: 'Rent for Mar 2026', debit: 150000, credit: 0, invoiceNo: 'INV-007' },
-        { date: '2026-03-21', desc: 'Payment – Mar 2026', debit: 0, credit: 150000, invoiceNo: 'INV-007', receiptNo: 'RCPT-0007' },
-        { date: '2026-04-01', desc: 'Rent for Apr 2026', debit: 150000, credit: 0, invoiceNo: 'INV-008' },
-        { date: '2026-06-21', desc: 'Payment – Apr 2026', debit: 0, credit: 150000, invoiceNo: 'INV-008', receiptNo: 'RCPT-0008' },
-        { date: '2026-05-16', desc: 'Rent for May 2026', debit: 150000, credit: 0, invoiceNo: 'INV-009' },
-        { date: '2026-05-30', desc: 'Payment – May 2026', debit: 0, credit: 150000, invoiceNo: 'INV-009', receiptNo: 'RCPT-0009' },
-        { date: '2026-06-01', desc: 'Rent for June 2026', debit: 150000, credit: 0, invoiceNo: 'INV-010' },
-        { date: '2026-06-15', desc: 'Payment – June 2026', debit: 0, credit: 150000, invoiceNo: 'INV-010', receiptNo: 'RCPT-0010' },
-        { date: '2026-07-01', desc: 'Rent for July 2026', debit: 150000, credit: 0, invoiceNo: 'INV-011' },
-        { date: '2026-07-17', desc: 'Payment – July 2026', debit: 0, credit: 150000, invoiceNo: 'INV-011', receiptNo: 'RCPT-0011' },
-        { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 150000, credit: 0, invoiceNo: 'INV-012' },
-        { date: '2026-08-08', desc: 'Payment – Aug 2026', debit: 0, credit: 150000, invoiceNo: 'INV-012', receiptNo: 'RCPT-0012' },
-        { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 150000, credit: 0, invoiceNo: 'INV-013' },
-        { date: '2026-09-18', desc: 'Payment – Sept 2026', debit: 0, credit: 150000, invoiceNo: 'INV-013', receiptNo: 'RCPT-0013' },
-        { date: '2026-10-01', desc: 'Rent for Oct 2026', debit: 170000, credit: 0, invoiceNo: 'INV-014' }
+        { date: '2025-07-16', desc: 'INV- Rent for Jul,Aug,sept 2025', debit: 450000, credit: 0, invoiceNo: '1154' },
+        { date: '2025-07-27', desc: 'RC- Rent for Jul,Aug,sept 2025', debit: 0, credit: 450000, invoiceNo: '1154', receiptNo: 'RC-001' },
+        { date: '2025-10-01', desc: 'INV- Rent for Oct 2025', debit: 150000, credit: 0, invoiceNo: 'INV-002' },
+        { date: '2025-10-25', desc: 'RC- Rent for Oct 2025', debit: 0, credit: 150000, invoiceNo: '1156', receiptNo: 'RC-002' },
+        { date: '2025-11-01', desc: 'INV- Rent for Nov 2025', debit: 150000, credit: 0, invoiceNo: 'INV-003' },
+        { date: '2025-11-28', desc: 'RC- Rent for Nov2025', debit: 0, credit: 150000, invoiceNo: 'INV-003', receiptNo: 'RC-003' },
+        { date: '2025-12-01', desc: 'INV- Rent for DEC 2025', debit: 150000, credit: 0, invoiceNo: 'INV-004' },
+        { date: '2025-12-08', desc: 'RC- Rent for Dec2025', debit: 0, credit: 150000, invoiceNo: 'INV-004', receiptNo: 'RC-004' },
+        { date: '2026-01-01', desc: 'INV- Rent for Jan 2026', debit: 150000, credit: 0, invoiceNo: 'INV-005' },
+        { date: '2026-01-16', desc: 'RC- Rent for Jan2026', debit: 0, credit: 150000, invoiceNo: 'INV-005', receiptNo: 'RC-005' },
+        { date: '2026-02-01', desc: 'INV- Rent for Feb 2026', debit: 150000, credit: 0, invoiceNo: 'INV-006' },
+        { date: '2026-02-20', desc: 'RC- Rent for Feb 2026', debit: 0, credit: 150000, invoiceNo: 'INV-006', receiptNo: 'RC-006' },
+        { date: '2026-03-01', desc: 'INV- Rent for Mar 2026', debit: 150000, credit: 0, invoiceNo: 'INV-007' },
+        { date: '2026-03-21', desc: 'RC- Rent for Mar 2026', debit: 0, credit: 150000, invoiceNo: 'INV-007', receiptNo: 'RC-007' },
+        { date: '2026-04-01', desc: 'INV- Rent for Apr 2026', debit: 150000, credit: 0, invoiceNo: 'INV-008' },
+        { date: '2026-06-21', desc: 'RC- Rent for Apr 2026', debit: 0, credit: 150000, invoiceNo: 'INV-008', receiptNo: 'RC-008' },
+        { date: '2026-05-16', desc: 'INV- Rent for May 2026', debit: 150000, credit: 0, invoiceNo: 'INV-009' },
+        { date: '2026-05-30', desc: 'RC- Rent for May 2026', debit: 0, credit: 150000, invoiceNo: 'INV-009', receiptNo: 'RC-009' },
+        { date: '2026-06-01', desc: 'INV- Rent for June 2026', debit: 150000, credit: 0, invoiceNo: 'INV-010' },
+        { date: '2026-06-15', desc: 'RC-Rent for June 2026', debit: 0, credit: 150000, invoiceNo: 'INV-010', receiptNo: 'RC-010' },
+        { date: '2026-07-01', desc: 'INV- Rent for July 2026', debit: 150000, credit: 0, invoiceNo: 'INV-011' },
+        { date: '2026-07-17', desc: 'RC-Rent for July 2026', debit: 0, credit: 150000, invoiceNo: 'INV-011', receiptNo: 'RC-011' },
+        { date: '2026-08-01', desc: 'INV- Rent for Aug 2026', debit: 150000, credit: 0, invoiceNo: 'INV-012' },
+        { date: '2026-08-08', desc: 'RC-Rent for Aug 2026', debit: 0, credit: 150000, invoiceNo: 'INV-012', receiptNo: 'RC-012' },
+        { date: '2026-09-01', desc: 'INV- Rent for Sept 2026', debit: 150000, credit: 0, invoiceNo: 'INV-013' },
+        { date: '2026-09-18', desc: 'RC-Rent for Sept 2026', debit: 0, credit: 150000, invoiceNo: 'INV-013', receiptNo: 'RC-013' },
+        { date: '2026-10-01', desc: 'INV- Rent for Oct 2026', debit: 170000, credit: 0, invoiceNo: 'INV-014' }
       ],
       electric: [
-        // === Source: Book1111.xlsx (Ivan Yaka ledger) ===
-        { date: '2025-10-31', desc: 'Inv- Oct 2025',  meter: 7.7,  rate: 1100, debit: 8470,  credit: 0,     reading: 7.7  },
-        { date: '2025-11-30', desc: 'Inv- Nov 2025',  meter: 7.4,  rate: 1100, debit: 8140,  credit: 0,     reading: 15.1 },
-        { date: '2025-12-08', desc: 'RC-oct 2025',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0001' },
-        { date: '2026-01-01', desc: 'Inv- Dec 2025',  meter: 7.1,  rate: 1100, debit: 7810,  credit: 0,     reading: 22.2 },
-        { date: '2026-01-16', desc: 'RC-Dec 2025',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0002' },
-        { date: '2026-02-01', desc: 'Inv- Jan 2026',  meter: 7.7,  rate: 1100, debit: 8470,  credit: 0,     reading: 29.9 },
-        { date: '2026-03-01', desc: 'Inv- Feb 2026',  meter: 7.4,  rate: 1100, debit: 8140,  credit: 0,     reading: 37.3 },
-        { date: '2026-03-21', desc: 'RC-Feb 2026',   meter: null, rate: null, debit: 0,     credit: 20000, reading: null, receiptNo: 'RCPT-E0003' },
-        { date: '2026-04-01', desc: 'Inv- Mar 2026',  meter: 8.6,  rate: 1100, debit: 9460,  credit: 0,     reading: 45.9 },
-        { date: '2026-05-01', desc: 'Inv- Apr 2026',  meter: 8.0,  rate: 1100, debit: 8800,  credit: 0,     reading: 53.9 },
-        { date: '2026-06-30', desc: 'RC-Mar 2026',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0004' },
-        { date: '2026-06-01', desc: 'Inv- May 2026',  meter: 7.6,  rate: 1100, debit: 8360,  credit: 0,     reading: 61.5 },
-        { date: '2026-06-15', desc: 'RC-May 2026',   meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0005' },
-        { date: '2026-07-01', desc: 'Inv- June 2026', meter: 7.0,  rate: 1100, debit: 7700,  credit: 0,     reading: 68.5 },
-        { date: '2026-07-17', desc: 'RC-June 2026',  meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0006' },
-        { date: '2026-08-01', desc: 'Inv- July 2026', meter: 8.1,  rate: 1100, debit: 8910,  credit: 0,     reading: 76.6 },
-        { date: '2026-08-08', desc: 'RC-July 2026',  meter: null, rate: null, debit: 0,     credit: 10000, reading: null, receiptNo: 'RCPT-E0007' },
-        { date: '2026-09-01', desc: 'Inv- Aug 2026',  meter: 8.4,  rate: 1100, debit: 9240,  credit: 0,     reading: 85.0 }
+        { date: '', desc: 'First meter reading', reading: 0, meter: 0, rate: 1100, debit: 0, credit: 0 },
+        { date: '2025-10-31', desc: '', reading: 7.7, meter: 7.7, rate: 1100, debit: 8470, credit: 0 },
+        { date: '2025-11-30', desc: 'Invoice', reading: 15.1, meter: 7.4, rate: 1100, debit: 8140, credit: 0 },
+        { date: '2025-11-08', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-001' },
+        { date: '2026-01-01', desc: 'Invoice', reading: 22.2, meter: 7.1, rate: 1100, debit: 7810, credit: 0 },
+        { date: '2026-01-16', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-002' },
+        { date: '2026-02-01', desc: 'Invoice', reading: 29.9, meter: 7.7, rate: 1100, debit: 8470, credit: 0 },
+        { date: '2026-03-01', desc: 'Invoice', reading: 37.3, meter: 7.4, rate: 1100, debit: 8140, credit: 0 },
+        { date: '2026-03-21', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 20000, receiptNo: 'RC-E-003' },
+        { date: '2026-04-01', desc: 'Invoice', reading: 45.9, meter: 8.6, rate: 1100, debit: 9460, credit: 0 },
+        { date: '2026-05-01', desc: 'Invoice', reading: 53.9, meter: 8.0, rate: 1100, debit: 8800, credit: 0 },
+        { date: '2026-05-30', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-004' },
+        { date: '2026-06-01', desc: 'Invoice', reading: 61.5, meter: 7.6, rate: 1100, debit: 8360, credit: 0 },
+        { date: '2026-06-15', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-005' },
+        { date: '2026-07-01', desc: 'Invoice', reading: 68.5, meter: 7.0, rate: 1100, debit: 7700, credit: 0 },
+        { date: '2026-07-17', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-006' },
+        { date: '2026-08-01', desc: 'Invoice', reading: 76.6, meter: 8.1, rate: 1100, debit: 8910, credit: 0 },
+        { date: '2026-08-08', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-007' },
+        { date: '2026-09-01', desc: 'Invoice', reading: 85.0, meter: 8.4, rate: 1100, debit: 9240, credit: 0 }
       ],
       water: [],
       expenses: [
@@ -1313,115 +1361,117 @@ const TENANTS = [
         { desc: 'Cleaning service', amount: 30000, date: '2026-04-05', category: 'General Maintenance' }
       ]
     },
+    // === BOB - Apt 2 ===
     { id: 'bob', name: 'Bob', apt: 2, mobile: '+256 772 100 002', monthlyRent: 200000, billingDate: 1, electricRate: 1100, locationId: 'loc1', propertyId: 'prop1', unitId: 'u_apt2',
       rent: [
-        { date: '2025-07-01', desc: 'Rent for Jul,Aug,Sept 2025', debit: 600000, credit: 0, invoiceNo: 'INV-101' },
-        { date: '2025-07-01', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 500000, invoiceNo: 'INV-101', receiptNo: 'RCPT-0101' },
-        { date: '2025-08-01', desc: 'Payment – Jul,Aug,Sept 2025', debit: 0, credit: 100000, invoiceNo: 'INV-101', receiptNo: 'RCPT-0102' },
-        { date: '2025-10-01', desc: 'Rent for Oct 2025', debit: 200000, credit: 0, invoiceNo: 'INV-102' },
-        { date: '2025-10-25', desc: 'Payment – Oct 2025', debit: 0, credit: 200000, invoiceNo: 'INV-102', receiptNo: 'RCPT-0103' },
-        { date: '2025-11-01', desc: 'Rent for Nov 2025', debit: 200000, credit: 0, invoiceNo: 'INV-103' },
-        { date: '2025-11-20', desc: 'Payment – Nov 2025', debit: 0, credit: 200000, invoiceNo: 'INV-103', receiptNo: 'RCPT-0104' },
-        { date: '2025-12-01', desc: 'Rent for Dec 2025', debit: 200000, credit: 0, invoiceNo: 'INV-104' },
-        { date: '2025-12-17', desc: 'Payment – Dec 2025', debit: 0, credit: 200000, invoiceNo: 'INV-104', receiptNo: 'RCPT-0105' },
-        { date: '2026-01-01', desc: 'Rent for Jan 2026', debit: 200000, credit: 0, invoiceNo: 'INV-105' },
-        { date: '2026-01-20', desc: 'Payment – Jan 2026', debit: 0, credit: 200000, invoiceNo: 'INV-105', receiptNo: 'RCPT-0106' },
-        { date: '2026-02-01', desc: 'Rent for Feb 2026', debit: 200000, credit: 0, invoiceNo: 'INV-106' },
-        { date: '2026-02-26', desc: 'Payment – Feb 2026', debit: 0, credit: 200000, invoiceNo: 'INV-106', receiptNo: 'RCPT-0107' },
-        { date: '2026-03-01', desc: 'Rent for Mar 2026', debit: 200000, credit: 0, invoiceNo: 'INV-107' },
-        { date: '2026-03-27', desc: 'Payment – Mar 2026', debit: 0, credit: 200000, invoiceNo: 'INV-107', receiptNo: 'RCPT-0108' },
-        { date: '2026-04-01', desc: 'Rent for Apr 2026', debit: 200000, credit: 0, invoiceNo: 'INV-108' },
-        { date: '2026-04-19', desc: 'Payment – Apr 2026', debit: 0, credit: 200000, invoiceNo: 'INV-108', receiptNo: 'RCPT-0109' },
-        { date: '2026-05-01', desc: 'Rent for May 2026', debit: 200000, credit: 0, invoiceNo: 'INV-109' },
-        { date: '2026-05-20', desc: 'Payment – May 2026', debit: 0, credit: 200000, invoiceNo: 'INV-109', receiptNo: 'RCPT-0110' },
-        { date: '2026-06-01', desc: 'Rent for June 2026', debit: 200000, credit: 0, invoiceNo: 'INV-110' },
-        { date: '2026-06-24', desc: 'Payment – June 2026', debit: 0, credit: 200000, invoiceNo: 'INV-110', receiptNo: 'RCPT-0111' },
-        { date: '2026-07-01', desc: 'Rent for July 2026', debit: 200000, credit: 0, invoiceNo: 'INV-111' },
-        { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 200000, credit: 0, invoiceNo: 'INV-112' },
-        { date: '2026-08-15', desc: 'Payment – July 2026', debit: 0, credit: 200000, invoiceNo: 'INV-111', receiptNo: 'RCPT-0112' },
-        { date: '2026-08-15', desc: 'Payment – Aug 2026', debit: 0, credit: 200000, invoiceNo: 'INV-112', receiptNo: 'RCPT-0113' },
-        { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 200000, credit: 0, invoiceNo: 'INV-113' },
-        { date: '2026-09-18', desc: 'Payment – Sept 2026', debit: 0, credit: 200000, invoiceNo: 'INV-113', receiptNo: 'RCPT-0114' },
-        { date: '2026-10-01', desc: 'Rent for Oct 2026', debit: 220000, credit: 0, invoiceNo: 'INV-114' }
+        { date: '2025-07-01', desc: 'INV- Rent for Jul,Aug,sept 2025', debit: 600000, credit: 0, invoiceNo: '1151' },
+        { date: '2025-07-01', desc: 'RC- Rent for Jul,Aug,sept 2025', debit: 0, credit: 500000, invoiceNo: '1151', receiptNo: 'RC-B001' },
+        { date: '2025-08-01', desc: 'RC- Rent for Jul,Aug,sept 2025', debit: 0, credit: 100000, invoiceNo: '1151', receiptNo: 'RC-B002' },
+        { date: '2025-10-01', desc: 'INV- Rent for Oct 2025', debit: 200000, credit: 0, invoiceNo: '1157' },
+        { date: '2025-10-25', desc: 'RC- Rent for Oct 2025', debit: 0, credit: 200000, invoiceNo: '1157', receiptNo: 'RC-B003' },
+        { date: '2025-11-01', desc: 'INV- Rent for Nov 2025', debit: 200000, credit: 0, invoiceNo: 'INV-B004' },
+        { date: '2025-11-20', desc: 'RC- Rent for Nov 2025', debit: 0, credit: 200000, invoiceNo: 'INV-B004', receiptNo: 'RC-B004' },
+        { date: '2025-12-01', desc: 'INV- Rent for DEC 2025', debit: 200000, credit: 0, invoiceNo: 'INV-B005' },
+        { date: '2025-12-17', desc: 'RC- Rent for Dec 2025', debit: 0, credit: 200000, invoiceNo: 'INV-B005', receiptNo: 'RC-B005' },
+        { date: '2026-01-01', desc: 'INV- Rent for Jan 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B006' },
+        { date: '2026-01-20', desc: 'RC- Rent for Jan 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B006', receiptNo: 'RC-B006' },
+        { date: '2026-02-01', desc: 'INV- Rent for Feb 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B007' },
+        { date: '2026-02-26', desc: 'RC-Rent for Feb 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B007', receiptNo: 'RC-B007' },
+        { date: '2026-03-01', desc: 'INV- Rent for Mar 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B008' },
+        { date: '2026-03-27', desc: 'RC-Rent for Mar 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B008', receiptNo: 'RC-B008' },
+        { date: '2026-04-01', desc: 'INV- Rent for Apr 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B009' },
+        { date: '2026-04-19', desc: 'RC-Rent for Apr 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B009', receiptNo: 'RC-B009' },
+        { date: '2026-05-01', desc: 'INV- Rent for May 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B010' },
+        { date: '2026-05-20', desc: 'RC-Rent for May 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B010', receiptNo: 'RC-B010' },
+        { date: '2026-06-01', desc: 'INV- Rent for June 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B011' },
+        { date: '2026-06-24', desc: 'RC-Rent for June 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B011', receiptNo: 'RC-B011' },
+        { date: '2026-07-01', desc: 'INV- Rent for July 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B012' },
+        { date: '2026-08-01', desc: 'INV- Rent for Aug 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B013' },
+        { date: '2026-08-15', desc: 'RC-Rent for July 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B012', receiptNo: 'RC-B012' },
+        { date: '2026-08-15', desc: 'RC-Rent for Aug 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B013', receiptNo: 'RC-B013' },
+        { date: '2026-09-01', desc: 'INV- Rent for Sept 2026', debit: 200000, credit: 0, invoiceNo: 'INV-B014' },
+        { date: '2026-09-18', desc: 'RC-Rent for Sept 2026', debit: 0, credit: 200000, invoiceNo: 'INV-B014', receiptNo: 'RC-B014' },
+        { date: '2026-10-01', desc: 'INV- Rent for Sept 2026', debit: 220000, credit: 0, invoiceNo: 'INV-B015' }
       ],
       electric: [
-        { date: '2025-10-31', desc: 'Oct 2025', meter: 8.2, rate: 1100, debit: 9020, credit: 0, reading: 8.2 },
-        { date: '2025-11-20', desc: 'Payment – Oct 2025', meter: null, rate: null, debit: 0, credit: 9020, reading: null, receiptNo: 'RCPT-E0101' },
-        { date: '2025-11-30', desc: 'Nov 2025', meter: 7.8, rate: 1100, debit: 8580, credit: 0, reading: 16.0 },
-        { date: '2026-01-01', desc: 'Dec 2025', meter: 11.8, rate: 1100, debit: 12980, credit: 0, reading: 27.8 },
-        { date: '2026-01-20', desc: 'Payment – Jan 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null, receiptNo: 'RCPT-E0102' },
-        { date: '2026-02-01', desc: 'Jan 2026', meter: 10.1, rate: 1100, debit: 11110, credit: 0, reading: 37.9 },
-        { date: '2026-03-01', desc: 'Feb 2026', meter: 10.5, rate: 1100, debit: 11550, credit: 0, reading: 48.4 },
-        { date: '2026-03-27', desc: 'Payment – Feb 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null, receiptNo: 'RCPT-E0103' },
-        { date: '2026-04-01', desc: 'Mar 2026', meter: 8.9, rate: 1100, debit: 9790, credit: 0, reading: 57.3 },
-        { date: '2026-04-19', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null, receiptNo: 'RCPT-E0104' },
-        { date: '2026-05-01', desc: 'Apr 2026', meter: 8.5, rate: 1100, debit: 9350, credit: 0, reading: 65.8 },
-        { date: '2026-06-01', desc: 'May 2026', meter: 7.7, rate: 1100, debit: 8470, credit: 0, reading: 73.5 },
-        { date: '2026-06-24', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0105' },
-        { date: '2026-07-01', desc: 'June 2026', meter: 8.3, rate: 1100, debit: 9130, credit: 0, reading: 81.8 },
-        { date: '2026-08-01', desc: 'July 2026', meter: 8.1, rate: 1100, debit: 8910, credit: 0, reading: 89.9 },
-        { date: '2026-09-01', desc: 'Aug 2026', meter: 10.2, rate: 1100, debit: 11220, credit: 0, reading: 100.1 },
-        { date: '2026-09-18', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 30000, reading: null, receiptNo: 'RCPT-E0106' }
+        { date: '', desc: 'First meter reading', reading: 0, meter: 0, rate: 1100, debit: 0, credit: 0 },
+        { date: '2025-10-31', desc: 'Invoice', reading: 8.2, meter: 8.2, rate: 1100, debit: 9020, credit: 0 },
+        { date: '2025-11-20', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 9020, receiptNo: 'RC-E-B01' },
+        { date: '2025-11-30', desc: 'Invoice', reading: 16.0, meter: 7.8, rate: 1100, debit: 8580, credit: 0 },
+        { date: '2026-01-01', desc: 'Invoice', reading: 27.8, meter: 11.8, rate: 1100, debit: 12980, credit: 0 },
+        { date: '2026-01-20', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 20000, receiptNo: 'RC-E-B02' },
+        { date: '2026-02-01', desc: 'Invoice', reading: 37.9, meter: 10.1, rate: 1100, debit: 11110, credit: 0 },
+        { date: '2026-03-01', desc: 'Invoice', reading: 48.4, meter: 10.5, rate: 1100, debit: 11550, credit: 0 },
+        { date: '2026-03-27', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 20000, receiptNo: 'RC-E-B03' },
+        { date: '2026-04-01', desc: 'Invoice', reading: 57.3, meter: 8.9, rate: 1100, debit: 9790, credit: 0 },
+        { date: '2026-04-19', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 20000, receiptNo: 'RC-E-B04' },
+        { date: '2026-05-01', desc: 'Invoice', reading: 65.8, meter: 8.5, rate: 1100, debit: 9350, credit: 0 },
+        { date: '2026-06-01', desc: 'Invoice', reading: 73.5, meter: 7.7, rate: 1100, debit: 8470, credit: 0 },
+        { date: '2026-06-24', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-B05' },
+        { date: '2026-07-01', desc: 'Invoice', reading: 81.8, meter: 8.3, rate: 1100, debit: 9130, credit: 0 },
+        { date: '2026-08-01', desc: 'Invoice', reading: 89.9, meter: 8.1, rate: 1100, debit: 8910, credit: 0 },
+        { date: '2026-09-01', desc: 'Invoice', reading: 100.1, meter: 10.2, rate: 1100, debit: 11220, credit: 0 },
+        { date: '2026-09-18', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 30000, receiptNo: 'RC-E-B06' }
       ],
       water: [],
       expenses: [{ desc: 'Plumbing repair', amount: 80000, date: '2026-03-15', category: 'Plumbing' }]
     },
+    // === PETER - Apt 3 ===
     { id: 'peter', name: 'Peter', apt: 3, mobile: '+256 772 100 003', monthlyRent: 300000, billingDate: 1, electricRate: 1100, locationId: 'loc1', propertyId: 'prop1', unitId: 'u_apt3',
       rent: [
-        { date: '2025-07-01', desc: 'Rent for Jul 2025', debit: 350000, credit: 0, invoiceNo: 'INV-201' },
-        { date: '2025-07-01', desc: 'Payment – Jul 2025', debit: 0, credit: 350000, invoiceNo: 'INV-201', receiptNo: 'RCPT-0201' },
-        { date: '2025-08-01', desc: 'Rent for Aug,Sept 2025', debit: 600000, credit: 0, invoiceNo: 'INV-202' },
-        { date: '2025-08-01', desc: 'Payment – Aug,Sept 2025', debit: 0, credit: 600000, invoiceNo: 'INV-202', receiptNo: 'RCPT-0202' },
-        { date: '2025-10-01', desc: 'Rent for Oct,Nov 2025', debit: 600000, credit: 0, invoiceNo: 'INV-203' },
-        { date: '2025-10-01', desc: 'Payment – Oct,Nov 2025', debit: 0, credit: 600000, invoiceNo: 'INV-203', receiptNo: 'RCPT-0203' },
-        { date: '2025-12-01', desc: 'Rent for Dec 2025', debit: 300000, credit: 0, invoiceNo: 'INV-204' },
-        { date: '2025-12-03', desc: 'Payment – Dec 2025', debit: 0, credit: 300000, invoiceNo: 'INV-204', receiptNo: 'RCPT-0204' },
-        { date: '2026-01-01', desc: 'Rent for Jan 2026', debit: 300000, credit: 0, invoiceNo: 'INV-205' },
-        { date: '2026-01-01', desc: 'Payment – Jan 2026', debit: 0, credit: 300000, invoiceNo: 'INV-205', receiptNo: 'RCPT-0205' },
-        { date: '2026-02-01', desc: 'Rent for Feb 2026', debit: 300000, credit: 0, invoiceNo: 'INV-206' },
-        { date: '2026-02-01', desc: 'Payment – Feb 2026', debit: 0, credit: 300000, invoiceNo: 'INV-206', receiptNo: 'RCPT-0206' },
-        { date: '2026-03-01', desc: 'Rent for Mar 2026', debit: 300000, credit: 0, invoiceNo: 'INV-207' },
-        { date: '2026-03-01', desc: 'Payment – Mar 2026', debit: 0, credit: 300000, invoiceNo: 'INV-207', receiptNo: 'RCPT-0207' },
-        { date: '2026-04-01', desc: 'Rent for Apr 2026', debit: 300000, credit: 0, invoiceNo: 'INV-208' },
-        { date: '2026-04-01', desc: 'Payment – Apr 2026', debit: 0, credit: 300000, invoiceNo: 'INV-208', receiptNo: 'RCPT-0208' },
-        { date: '2026-05-01', desc: 'Rent for May 2026', debit: 300000, credit: 0, invoiceNo: 'INV-209' },
-        { date: '2026-05-02', desc: 'Payment – May 2026', debit: 0, credit: 300000, invoiceNo: 'INV-209', receiptNo: 'RCPT-0209' },
-        { date: '2026-06-01', desc: 'Rent for June 2026', debit: 300000, credit: 0, invoiceNo: 'INV-210' },
-        { date: '2026-06-01', desc: 'Payment – June 2026', debit: 0, credit: 300000, invoiceNo: 'INV-210', receiptNo: 'RCPT-0210' },
-        { date: '2026-07-01', desc: 'Rent for July 2026', debit: 300000, credit: 0, invoiceNo: 'INV-211' },
-        { date: '2026-07-03', desc: 'Payment – July 2026', debit: 0, credit: 300000, invoiceNo: 'INV-211', receiptNo: 'RCPT-0211' },
-        { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 300000, credit: 0, invoiceNo: 'INV-212' },
-        { date: '2026-08-01', desc: 'Payment – Aug 2026', debit: 0, credit: 300000, invoiceNo: 'INV-212', receiptNo: 'RCPT-0212' },
-        { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 300000, credit: 0, invoiceNo: 'INV-213' },
-        { date: '2026-09-01', desc: 'Payment – Sept 2026', debit: 0, credit: 300000, invoiceNo: 'INV-213', receiptNo: 'RCPT-0213' },
-        { date: '2026-10-01', desc: 'Rent for Oct 2026', debit: 380000, credit: 0, invoiceNo: 'INV-214' }
+        { date: '2025-07-01', desc: 'INV- Rent for Jul 2025', debit: 350000, credit: 0, invoiceNo: '1153' },
+        { date: '2025-07-01', desc: 'RC- Rent for Jul 2025', debit: 0, credit: 350000, invoiceNo: '1153', receiptNo: 'RC-P001' },
+        { date: '2025-08-01', desc: 'INV- Rent for Aug,Sept 2025', debit: 600000, credit: 0, invoiceNo: 'INV-P002' },
+        { date: '2025-08-01', desc: 'RC- Rent for Aug,sept 2025', debit: 0, credit: 600000, invoiceNo: 'INV-P002', receiptNo: 'RC-P002' },
+        { date: '2025-10-01', desc: 'INV- Rent for Oct,Nov 2025', debit: 600000, credit: 0, invoiceNo: 'INV-P003' },
+        { date: '2025-10-01', desc: 'RC- Rent for Oct,Nov 2025', debit: 0, credit: 600000, invoiceNo: 'INV-P003', receiptNo: 'RC-P003' },
+        { date: '2025-12-01', desc: 'INV- Rent for Dec 2025', debit: 300000, credit: 0, invoiceNo: 'INV-P004' },
+        { date: '2025-12-03', desc: 'RC- Rent for Dec 2025', debit: 0, credit: 300000, invoiceNo: 'INV-P004', receiptNo: 'RC-P004' },
+        { date: '2026-01-01', desc: 'INV- Rent for Jan 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P005' },
+        { date: '2026-01-01', desc: 'RC- Rent for Jan 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P005', receiptNo: 'RC-P005' },
+        { date: '2026-02-01', desc: 'INV- Rent for Feb 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P006' },
+        { date: '2026-02-01', desc: 'RC- Rent for Feb 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P006', receiptNo: 'RC-P006' },
+        { date: '2026-03-01', desc: 'INV- Rent for Mar 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P007' },
+        { date: '2026-03-01', desc: 'RC- Rent for Mar 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P007', receiptNo: 'RC-P007' },
+        { date: '2026-04-01', desc: 'INV- Rent for Apr 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P008' },
+        { date: '2026-04-01', desc: 'RC- Rent for Apr 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P008', receiptNo: 'RC-P008' },
+        { date: '2026-05-01', desc: 'INV- Rent for May 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P009' },
+        { date: '2026-05-02', desc: 'RC- Rent for May 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P009', receiptNo: 'RC-P009' },
+        { date: '2026-06-01', desc: 'INV- Rent for June 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P010' },
+        { date: '2026-06-01', desc: 'RC- Rent for June 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P010', receiptNo: 'RC-P010' },
+        { date: '2026-07-01', desc: 'INV- Rent for July 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P011' },
+        { date: '2026-07-03', desc: 'RC- Rent for July 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P011', receiptNo: 'RC-P011' },
+        { date: '2026-08-01', desc: 'INV- Rent for Aug 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P012' },
+        { date: '2026-08-01', desc: 'RC- Rent for Aug 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P012', receiptNo: 'RC-P012' },
+        { date: '2026-09-01', desc: 'INV- Rent for Sept 2026', debit: 300000, credit: 0, invoiceNo: 'INV-P013' },
+        { date: '2026-09-01', desc: 'RC- Rent for Sept 2026', debit: 0, credit: 300000, invoiceNo: 'INV-P013', receiptNo: 'RC-P013' },
+        { date: '2026-10-01', desc: 'INV- Rent for Sept 2026', debit: 380000, credit: 0, invoiceNo: 'INV-P014' },
+        { date: '2026-10-01', desc: 'RC- Rent for Oct 2026', debit: 0, credit: 380000, invoiceNo: 'INV-P014', receiptNo: 'RC-P014' }
       ],
       electric: [
-        { date: '2025-10-31', desc: 'Oct 2025', meter: 41.6, rate: 1100, debit: 45760, credit: 0, reading: 41.6 },
-        { date: '2025-11-03', desc: 'Payment – Oct 2025', meter: null, rate: null, debit: 0, credit: 45760, reading: null, receiptNo: 'RCPT-E0201' },
-        { date: '2025-11-30', desc: 'Nov 2025', meter: 39.3, rate: 1100, debit: 43230, credit: 0, reading: 80.9 },
-        { date: '2025-12-10', desc: 'Payment – Nov 2025', meter: null, rate: null, debit: 0, credit: 50000, reading: null, receiptNo: 'RCPT-E0202' },
-        { date: '2026-01-01', desc: 'Dec 2025', meter: 34, rate: 1100, debit: 37400, credit: 0, reading: 114.9 },
-        { date: '2026-01-02', desc: 'Payment – Dec 2025', meter: null, rate: null, debit: 0, credit: 30000, reading: null, receiptNo: 'RCPT-E0203' },
-        { date: '2026-02-01', desc: 'Jan 2026', meter: 45.7, rate: 1100, debit: 50270, credit: 0, reading: 160.6 },
-        { date: '2026-03-01', desc: 'Payment – Jan 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null, receiptNo: 'RCPT-E0204' },
-        { date: '2026-03-01', desc: 'Feb 2026', meter: 52.4, rate: 1100, debit: 57640, credit: 0, reading: 213 },
-        { date: '2026-03-01', desc: 'Payment – Feb 2026', meter: null, rate: null, debit: 0, credit: 60000, reading: null, receiptNo: 'RCPT-E0205' },
-        { date: '2026-04-01', desc: 'Mar 2026', meter: 58, rate: 1100, debit: 63800, credit: 0, reading: 271 },
-        { date: '2026-04-01', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null, receiptNo: 'RCPT-E0206' },
-        { date: '2026-04-07', desc: 'Payment – Mar 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null, receiptNo: 'RCPT-E0207' },
-        { date: '2026-05-01', desc: 'Apr 2026', meter: 68.4, rate: 1100, debit: 75240, credit: 0, reading: 339.4 },
-        { date: '2026-05-02', desc: 'Payment – Apr 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0208' },
-        { date: '2026-05-02', desc: 'Payment – Apr 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null, receiptNo: 'RCPT-E0209' },
-        { date: '2026-06-01', desc: 'May 2026', meter: 59.6, rate: 1100, debit: 65560, credit: 0, reading: 399 },
-        { date: '2026-06-11', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 70000, reading: null, receiptNo: 'RCPT-E0210' },
-        { date: '2026-07-01', desc: 'June 2026', meter: 64.2, rate: 1100, debit: 70620, credit: 0, reading: 463.2 },
-        { date: '2026-07-03', desc: 'Payment – June 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null, receiptNo: 'RCPT-E0211' },
-        { date: '2026-08-01', desc: 'July 2026', meter: 84.3, rate: 1100, debit: 92730, credit: 0, reading: 547.5 },
-        { date: '2026-08-01', desc: 'Payment – July 2026', meter: null, rate: null, debit: 0, credit: 50000, reading: null, receiptNo: 'RCPT-E0212' },
-        { date: '2026-08-26', desc: 'Payment – July 2026', meter: null, rate: null, debit: 0, credit: 100000, reading: null, receiptNo: 'RCPT-E0213' },
-        { date: '2026-09-01', desc: 'Aug 2026', meter: 94, rate: 1100, debit: 103400, credit: 0, reading: 641.5 },
-        { date: '2026-09-17', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 60000, reading: null, receiptNo: 'RCPT-E0214' }
+        { date: '', desc: 'First meter reading', reading: 0, meter: 0, rate: 1100, debit: 0, credit: 0 },
+        { date: '2025-10-31', desc: 'Invoice', reading: 41.6, meter: 41.6, rate: 1100, debit: 45760, credit: 0 },
+        { date: '2025-11-03', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 45760, receiptNo: 'RC-E-P01' },
+        { date: '2025-11-30', desc: 'Invoice', reading: 80.9, meter: 39.3, rate: 1100, debit: 43230, credit: 0 },
+        { date: '2025-12-10', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 50000, receiptNo: 'RC-E-P02' },
+        { date: '2026-01-01', desc: 'Invoice', reading: 114.9, meter: 34, rate: 1100, debit: 37400, credit: 0 },
+        { date: '2026-01-02', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 30000, receiptNo: 'RC-E-P03' },
+        { date: '2026-02-01', desc: 'Invoice', reading: 160.6, meter: 45.7, rate: 1100, debit: 50270, credit: 0 },
+        { date: '2026-03-01', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 50000, receiptNo: 'RC-E-P04' },
+        { date: '2026-03-01', desc: 'Invoice', reading: 213, meter: 52.4, rate: 1100, debit: 57640, credit: 0 },
+        { date: '2026-03-01', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 60000, receiptNo: 'RC-E-P05' },
+        { date: '2026-04-01', desc: 'Invoice', reading: 271, meter: 58, rate: 1100, debit: 63800, credit: 0 },
+        { date: '2026-04-07', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 70000, receiptNo: 'RC-E-P06' },
+        { date: '2026-05-01', desc: 'Invoice', reading: 339.4, meter: 68.4, rate: 1100, debit: 75240, credit: 0 },
+        { date: '2026-05-02', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 60000, receiptNo: 'RC-E-P07' },
+        { date: '2026-06-01', desc: 'Invoice', reading: 399, meter: 59.6, rate: 1100, debit: 65560, credit: 0 },
+        { date: '2026-06-11', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 70000, receiptNo: 'RC-E-P08' },
+        { date: '2026-07-01', desc: 'Invoice', reading: 463.2, meter: 64.2, rate: 1100, debit: 70620, credit: 0 },
+        { date: '2026-07-03', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 50000, receiptNo: 'RC-E-P09' },
+        { date: '2026-08-01', desc: 'Invoice', reading: 547.5, meter: 84.3, rate: 1100, debit: 92730, credit: 0 },
+        { date: '2026-08-26', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 150000, receiptNo: 'RC-E-P10' },
+        { date: '2026-09-01', desc: 'Invoice', reading: 641.5, meter: 94, rate: 1100, debit: 103400, credit: 0 },
+        { date: '2026-09-17', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 60000, receiptNo: 'RC-E-P11' }
       ],
       water: [],
       expenses: [
@@ -1429,47 +1479,49 @@ const TENANTS = [
         { desc: 'Window replacement', amount: 95000, date: '2026-05-12', category: 'General Maintenance' }
       ]
     },
+    // === VITUS - Apt 4 ===
     { id: 'vitus', name: 'Vitus', apt: 4, mobile: '+256 772 100 004', monthlyRent: 250000, billingDate: 1, electricRate: 1100, locationId: 'loc1', propertyId: 'prop1', unitId: 'u_apt4',
       rent: [
-        { date: '2026-04-10', desc: 'Rent for Apr,May 2026', debit: 500000, credit: 0, invoiceNo: 'INV-301' },
-        { date: '2026-04-10', desc: 'Payment – Apr,May 2026', debit: 0, credit: 500000, invoiceNo: 'INV-301', receiptNo: 'RCPT-0301' },
-        { date: '2026-05-10', desc: 'Rent for June 2026', debit: 250000, credit: 0, invoiceNo: 'INV-302' },
-        { date: '2026-05-20', desc: 'Payment – June 2026', debit: 0, credit: 250000, invoiceNo: 'INV-302', receiptNo: 'RCPT-0302' },
-        { date: '2026-05-20', desc: 'Rent for July 2026', debit: 250000, credit: 0, invoiceNo: 'INV-303' },
-        { date: '2026-05-20', desc: 'Payment – July 2026', debit: 0, credit: 50000, invoiceNo: 'INV-303', receiptNo: 'RCPT-0303' },
-        { date: '2026-07-04', desc: 'Payment – July 2026', debit: 0, credit: 200000, invoiceNo: 'INV-303', receiptNo: 'RCPT-0304' },
-        { date: '2026-08-01', desc: 'Rent for Aug 2026', debit: 250000, credit: 0, invoiceNo: 'INV-304' },
-        { date: '2026-09-01', desc: 'Rent for Sept 2026', debit: 250000, credit: 0, invoiceNo: 'INV-305' },
-        { date: '2026-09-01', desc: 'Payment – Aug 2026', debit: 0, credit: 250000, invoiceNo: 'INV-304', receiptNo: 'RCPT-0305' },
-        { date: '2026-09-01', desc: 'Rent for Oct 2026', debit: 270000, credit: 0, invoiceNo: 'INV-306' }
+        { date: '2026-04-10', desc: 'INV- Rent for Apr,May 2026', debit: 500000, credit: 0, invoiceNo: 'INV-V001' },
+        { date: '2026-04-10', desc: 'RC- Rent for Apr,May 2026', debit: 0, credit: 500000, invoiceNo: 'INV-V001', receiptNo: 'RC-V001' },
+        { date: '2026-05-10', desc: 'INV- Rent for June 2026', debit: 250000, credit: 0, invoiceNo: 'INV-V002' },
+        { date: '2026-05-20', desc: 'RC- Rent for June 2026', debit: 0, credit: 250000, invoiceNo: 'INV-V002', receiptNo: 'RC-V002' },
+        { date: '2026-05-20', desc: 'INV- Rent for July 2026', debit: 250000, credit: 0, invoiceNo: 'INV-V003' },
+        { date: '2026-05-20', desc: 'RC- Rent for July 2026', debit: 0, credit: 50000, invoiceNo: 'INV-V003', receiptNo: 'RC-V003' },
+        { date: '2026-07-04', desc: 'RC- Rent for July 2026', debit: 0, credit: 200000, invoiceNo: 'INV-V003', receiptNo: 'RC-V004' },
+        { date: '2026-08-01', desc: 'INV- Rent for Aug 2026', debit: 250000, credit: 0, invoiceNo: 'INV-V004' },
+        { date: '2026-09-01', desc: 'INV- Rent for Sept 2026', debit: 250000, credit: 0, invoiceNo: 'INV-V005' },
+        { date: '2026-09-01', desc: 'RC- Rent for Aug 2026', debit: 0, credit: 250000, invoiceNo: 'INV-V004', receiptNo: 'RC-V005' },
+        { date: '2026-09-01', desc: 'INV- Rent for Oct 2026', debit: 270000, credit: 0, invoiceNo: 'INV-V006' }
       ],
       electric: [
-        { date: '2026-04-11', desc: 'First meter reading', meter: null, rate: null, debit: 0, credit: 0, reading: 114.3 },
-        { date: '2026-05-01', desc: 'Apr 2026', meter: 6.1, rate: 1100, debit: 6710, credit: 0, reading: 120.4 },
-        { date: '2026-06-01', desc: 'May 2026', meter: 8.9, rate: 1100, debit: 9790, credit: 0, reading: 129.3 },
-        { date: '2026-06-22', desc: 'Payment – May 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null, receiptNo: 'RCPT-E0301' },
-        { date: '2026-07-01', desc: 'June 2026', meter: 8.2, rate: 1100, debit: 9020, credit: 0, reading: 137.5 },
-        { date: '2026-08-01', desc: 'July 2026', meter: 9.2, rate: 1100, debit: 10120, credit: 0, reading: 146.7 },
-        { date: '2026-09-01', desc: 'Aug 2026', meter: 10.4, rate: 1100, debit: 11440, credit: 0, reading: 157.1 },
-        { date: '2026-09-01', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 20000, reading: null, receiptNo: 'RCPT-E0302' }
+        { date: '2026-04-11', desc: 'First meter reading', reading: 114.3, meter: 0, rate: 1100, debit: 0, credit: 0 },
+        { date: '2026-05-01', desc: 'Inv- Apr 2026', reading: 120.4, meter: 6.1, rate: 1100, debit: 6710, credit: 0 },
+        { date: '2026-06-01', desc: 'Inv- May 2026', reading: 129.3, meter: 8.9, rate: 1100, debit: 9790, credit: 0 },
+        { date: '2026-06-22', desc: 'RC- May 2026', reading: null, meter: null, rate: null, debit: 0, credit: 20000, receiptNo: 'RC-E-V01' },
+        { date: '2026-07-01', desc: 'Inv- June 2026', reading: 137.5, meter: 8.2, rate: 1100, debit: 9020, credit: 0 },
+        { date: '2026-08-01', desc: 'Inv- July 2026', reading: 146.7, meter: 9.2, rate: 1100, debit: 10120, credit: 0 },
+        { date: '2026-09-01', desc: 'Inv- Aug 2026', reading: 157.1, meter: 10.4, rate: 1100, debit: 11440, credit: 0 },
+        { date: '2026-09-01', desc: 'RC- Aug 2026', reading: null, meter: null, rate: null, debit: 0, credit: 20000, receiptNo: 'RC-E-V02' }
       ],
       water: [],
       expenses: [{ desc: 'Roof repair', amount: 150000, date: '2026-07-01', category: 'General Maintenance' }]
     },
+    // === JACKSON - Apt 5 ===
     { id: 'jackson', name: 'Jackson', apt: 5, mobile: '+256 772 100 005', monthlyRent: 300000, billingDate: 10, electricRate: 1100, locationId: 'loc1', propertyId: 'prop1', unitId: 'u_apt5',
       rent: [
-        { date: '2026-08-10', desc: 'Rent for Aug,Sept,Oct 2026', debit: 900000, credit: 0, invoiceNo: 'INV-401' },
-        { date: '2026-08-10', desc: 'Payment – Aug,Sept,Oct 2026', debit: 0, credit: 900000, invoiceNo: 'INV-401', receiptNo: 'RCPT-0401' }
+        { date: '2026-08-10', desc: 'INV- Rent for Aug,Sept,Oct 2026', debit: 900000, credit: 0, invoiceNo: 'INV-J001' },
+        { date: '2026-08-10', desc: 'RC- Rent for Aug,Sept,Oct 2026', debit: 0, credit: 900000, invoiceNo: 'INV-J001', receiptNo: 'RC-J001' }
       ],
       electric: [
-        { date: '2026-08-10', desc: 'First meter reading', meter: null, rate: null, debit: 0, credit: 0, reading: 12.4 },
-        { date: '2026-09-01', desc: 'Aug 2026', meter: 8.2, rate: 1100, debit: 9020, credit: 0, reading: 20.6 },
-        { date: '2026-09-01', desc: 'Payment – Aug 2026', meter: null, rate: null, debit: 0, credit: 10000, reading: null, receiptNo: 'RCPT-E0401' },
-        { date: '2026-10-01', desc: 'Sept 2026', meter: 18.4, rate: 1100, debit: 20240, credit: 0, reading: 39.0 }
+        { date: '2026-08-10', desc: 'First meter reading', reading: 12.4, meter: 0, rate: 1100, debit: 0, credit: 0 },
+        { date: '2026-09-01', desc: 'Invoice', reading: 20.6, meter: 8.2, rate: 1100, debit: 9020, credit: 0 },
+        { date: '2026-09-01', desc: 'Receipt', reading: null, meter: null, rate: null, debit: 0, credit: 10000, receiptNo: 'RC-E-J01' },
+        { date: '2026-10-01', desc: 'Invoice', reading: 39.0, meter: 18.4, rate: 1100, debit: 20240, credit: 0 }
       ],
       water: [
-        { date: '2026-08-10', desc: 'First meter reading', meter: null, rate: null, debit: 0, credit: 0, reading: 1 },
-        { date: '2026-10-01', desc: 'Meter-2 @4433+75%+1500+18%', meter: 2, rate: 4433, debit: 20076, credit: 0, reading: 3 }
+        { date: '2026-08-10', desc: 'First meter reading', reading: 1, meter: 0, rate: 4433, debit: 0, credit: 0 },
+        { date: '2026-10-01', desc: 'Invoice', reading: 3, meter: 2, rate: 4433, debit: 20078.29, credit: 0 }
       ],
       expenses: []
     }
@@ -1478,7 +1530,7 @@ const TENANTS = [
 // ============================================================
 // HELPERS
 // ============================================================
-function formatUGX(a){return 'UGX '+Number(a||0).toLocaleString('en-UG');}
+function formatUGX(a){return 'UGX '+Number(a||0).toLocaleString('en-UG',{maximumFractionDigits:2});}
 function ordinal(n){const num=parseInt(n);if(isNaN(num))return n;const j=num%10,k=num%100;if(j===1&&k!==11)return num+'st';if(j===2&&k!==12)return num+'nd';if(j===3&&k!==13)return num+'rd';return num+'th';}
 function utilityBalance(a){return (a||[]).reduce((s,r)=>s+(r.debit||0)-(r.credit||0),0);}
 function rentBalance(t){return utilityBalance(t.rent);}
@@ -1492,41 +1544,34 @@ function totalWaterReceived(l){return (l||TENANTS).reduce((s,t)=>s+(t.water||[])
 function totalExpensesReceived(l){return (l||TENANTS).reduce((s,t)=>s+totalExpenses(t),0);}
 
 /**
- * Determines if a reading is fully paid.
- * A reading at index i is considered PAID if the running balance
- * immediately BEFORE the NEXT reading is <= 0.
- *
- * This properly accounts for payments (credits) that appear AFTER
- * this reading but BEFORE the next reading.
+ * Compute the running balance at row i (inclusive).
+ * Running Balance(i) = Running Balance(i-1) + Debit(i) - Credit(i)
  */
-function isReadingPaid(arr, i) {
-    if (!arr || i < 0 || i >= arr.length) return false;
-    const reading = arr[i];
-    if (!reading || !reading.meter) return false;
-
-    // Find the next reading index (or end of array)
-    let nextReadingIdx = arr.length;
-    for (let j = i + 1; j < arr.length; j++) {
-        if (arr[j] && arr[j].meter) { nextReadingIdx = j; break; }
-    }
-
-    // Sum running balance up to (but not including) the next reading
-    let balance = 0;
-    for (let k = 0; k < nextReadingIdx; k++) {
-        balance += (arr[k].debit || 0) - (arr[k].credit || 0);
-    }
-    return balance <= 0;
-}
-
-/**
- * Returns the running balance at a given index (inclusive).
- */
-function runningBalanceAt(arr, i) {
+function runningBalanceAt(arr, i){
     let bal = 0;
     for (let k = 0; k <= i && k < arr.length; k++) {
         bal += (arr[k].debit || 0) - (arr[k].credit || 0);
     }
     return bal;
+}
+
+/**
+ * Compute the previous meter reading for a row at index i.
+ * Returns the most recent prior `reading` value, or 0 if none.
+ */
+function getPreviousReading(arr, i){
+    for (let k = i - 1; k >= 0; k--) {
+        if (arr[k] && arr[k].reading !== null && arr[k].reading !== undefined && arr[k].reading !== 0) {
+            return arr[k].reading;
+        }
+    }
+    // fall back to first reading row value (even if 0) — for opening reading
+    for (let k = 0; k < i; k++) {
+        if (arr[k] && arr[k].reading !== null && arr[k].reading !== undefined) {
+            return arr[k].reading;
+        }
+    }
+    return 0;
 }
 
 function getVisibleTenants(){if(!currentUser)return [];if(currentUser.role==='admin')return TENANTS;return TENANTS.filter(t=>t.locationId===currentUser.locationId);}
@@ -1541,21 +1586,17 @@ function getNextInvoiceNo(t){const n=t.rent.filter(r=>r.invoiceNo).map(r=>{const
 function getNextReceiptNo(prefix){const all=[];TENANTS.forEach(t=>{t.rent.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.electric.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.water.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});});const n=all.map(r=>{const m=r.match(/\d+/);return m?parseInt(m[0]):0;});const mx=n.length?Math.max(...n):0;return (prefix||'RCPT-')+String(mx+1).padStart(4,'0');}
 function showNotification(msg,type='success'){const n=document.getElementById('notification');n.textContent=msg;n.className='notification '+type+' show';setTimeout(()=>n.classList.remove('show'),3000);}
 
-/**
- * closeModal — properly hides the overlay and releases UI state
- * so dropdowns don't get "stuck" after a modal interaction.
- */
+// MODAL HELPERS — force reflow to release stuck UI state
 function closeModal(id){
     const o=document.getElementById(id);
     if(!o)return;
     o.classList.remove('active');
     o.style.display='none';
-    // Force reflow so browser releases any stuck input focus/state
     void o.offsetHeight;
     setTimeout(()=>{o.style.display='';},60);
 }
 function openModal(id){const o=document.getElementById(id);if(!o)return;o.style.display='flex';o.classList.add('active');}
-function getLastMeterReading(t,type){const arr=type==='electric'?t.electric:t.water;const r=arr.filter(x=>x.reading!==null&&x.reading!==undefined).map(x=>x.reading);return r.length?r[r.length-1]:0;}
+function getLastMeterReading(t,type){const arr=type==='electric'?t.electric:t.water;for(let k=arr.length-1;k>=0;k--){if(arr[k].reading!==null&&arr[k].reading!==undefined&&arr[k].reading!==0)return arr[k].reading;}return 0;}
 function resetLoginButton(){const b=document.getElementById('loginBtn');if(b){b.textContent='Sign In';b.disabled=false;}}
 function getForwardMonths(count){const m=[];const now=new Date();for(let i=0;i<count;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);m.push({year:d.getFullYear(),month:d.getMonth()+1,label:d.toLocaleString('en',{month:'short',year:'numeric'})});}return m;}
 function hasInvoiceForMonth(t,y,mo){const n=new Date(y,mo-1,1).toLocaleString('en',{month:'long'});return t.rent.some(r=>r.debit>0&&r.desc.includes(n)&&r.desc.includes(String(y)));}
@@ -1576,26 +1617,21 @@ function generateAutoInvoices(){
     const currentYear=now.getFullYear();
     const currentMonth=now.getMonth()+1;
     const currentDay=now.getDate();
-
     const longMonthName=now.toLocaleString('en',{month:'long'});
     const shortMonthName=now.toLocaleString('en',{month:'short'});
     const yearStr=String(currentYear);
     const monthStr=String(currentMonth).padStart(2,'0');
-
     const lastDay=new Date(currentYear,currentMonth,0).getDate();
     const monthStartISO=`${yearStr}-${monthStr}-01`;
     const monthEndISO=`${yearStr}-${monthStr}-${String(lastDay).padStart(2,'0')}`;
-
     TENANTS.forEach(t=>{
         if(currentDay<t.billingDate)return;
-
         const hasInvoiceThisMonth=t.rent.some(r=>{
             if(!r.debit||r.debit<=0)return false;
             if(!r.date)return false;
             return r.date>=monthStartISO&&r.date<=monthEndISO;
         });
         if(hasInvoiceThisMonth)return;
-
         const hasInvoiceByDesc=t.rent.some(r=>{
             if(!r.debit||r.debit<=0)return false;
             const d=(r.desc||'').toLowerCase();
@@ -1603,14 +1639,12 @@ function generateAutoInvoices(){
             return (d.includes(lm)&&d.includes(yearStr))||(d.includes(sm)&&d.includes(yearStr));
         });
         if(hasInvoiceByDesc)return;
-
         const totalCredits=t.rent.reduce((s,r)=>s+(r.credit||0),0);
         const totalDebits=t.rent.reduce((s,r)=>s+(r.debit||0),0);
         if(totalCredits>totalDebits)return;
-
         t.rent.push({
             date:`${yearStr}-${monthStr}-${String(t.billingDate).padStart(2,'0')}`,
-            desc:`Rent for ${shortMonthName} ${yearStr}`,
+            desc:`INV- Rent for ${shortMonthName} ${yearStr}`,
             debit:t.monthlyRent,
             credit:0,
             invoiceNo:getNextInvoiceNo(t)
@@ -1923,9 +1957,11 @@ function openInlineTenant(tenantId){
     const rBal=rentBalance(t),eBal=electricBalance(t),wBal=waterBalance(t),totalDue=rBal+eBal+wBal;
     document.getElementById('inlineTenantName').textContent=t.name;
     document.getElementById('inlineTenantMeta').textContent=`${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile} · Rent ${formatUGX(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}`;
-    const rentRows=t.rent.map((r,idx)=>{const run=t.rent.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join('');
-    const elecRows=t.electric.map((r,idx)=>{const run=t.electric.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join('');
-    const waterRows=t.water.length?t.water.map((r,idx)=>{const run=t.water.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join(''):'<tr><td colspan="6" style="padding:.75rem;color:#94a3b8;text-align:center;font-size:.82rem;">No water records</td></tr>';
+
+    const rentRows=t.rent.map((r,idx)=>{const run=t.rent.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join('');
+    const elecRows=t.electric.map((r,idx)=>{const run=t.electric.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter!==null&&r.meter!==undefined?r.meter:'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join('');
+    const waterRows=t.water.length?t.water.map((r,idx)=>{const run=t.water.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter!==null&&r.meter!==undefined?r.meter:'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join(''):'<tr><td colspan="6" style="padding:.75rem;color:#94a3b8;text-align:center;font-size:.82rem;">No water records</td></tr>';
+
     document.getElementById('inlineTenantBody').innerHTML=`
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem;">
             <div style="background:#fee2e2;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#991b1b;font-weight:700;">Rent Balance</div><div style="font-size:.95rem;font-weight:800;color:${rBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(rBal)}</div></div>
@@ -2218,15 +2254,14 @@ function viewTenant(id){
             </div>
             <div id="tab-rent" class="tab-content">
                 <table>
-                    <thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody>${t.rent.map((r,idx)=>{const run=t.rent.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);const isPayment=r.credit>0;return `<tr>
+                    <thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Actions</th></tr></thead>
+                    <tbody>${t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);const isPayment=r.credit>0;return `<tr>
                         <td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td>
-                        <td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td>
-                        <td>${formatUGX(run)}</td>
-                        <td><span class="badge ${run<=0?'paid':'pending'}">${run<=0?'Cleared':'Pending'}</span></td>
+                        <td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td>
+                        <td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td>
                         <td><div class="action-btns">
                             ${isPayment?`<button class="btn btn-success btn-sm" onclick="printReceipt('${t.id}','rent',${idx})">🧾 Receipt</button>`:''}
-                            ${canEditRent?`<button class="btn btn-warning btn-sm" onclick="openEditRentModal('${t.id}',${idx})">Edit</button>`:''}
+                            ${canEditRent?`<button class="btn btn-warning btn-sm" onclick="openEditRentModal('${t.id}',${idx})">Update</button>`:''}
                             ${canEditRent?`<button class="btn btn-danger btn-sm" onclick="deleteRentTransaction('${t.id}',${idx})">Del</button>`:''}
                         </div></td>
                     </tr>`;}).join('')}</tbody>
@@ -2234,18 +2269,62 @@ function viewTenant(id){
             </div>
             <div id="tab-electric" class="tab-content hidden">
                 <table>
-                    <thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Receipt</th></tr></thead>
-                    <tbody>${t.electric.map((r,idx)=>{const run=t.electric.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);const mi=r.meter?`${r.meter} @ ${r.rate}`:(r.credit?'Payment':'—');const isPayment=r.credit>0;return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td><span class="meter-info">${mi}</span></td>
-                        <td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td>
-                        <td>${isPayment?`<button class="btn btn-success btn-sm" onclick="printReceipt('${t.id}','electric',${idx})">🧾</button>`:'—'}</td></tr>`;}).join('')}</tbody>
+                    <thead><tr><th>Posting Date</th><th>Description</th><th>Previous Meter</th><th>Current Meter</th><th>Total Units</th><th>Rate</th><th>Total Amount</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Actions</th></tr></thead>
+                    <tbody>${t.electric.map((r,idx)=>{
+                        const prev = getPreviousReading(t.electric, idx);
+                        const isReading = r.meter !== null && r.meter !== undefined && r.meter !== 0;
+                        const curr = isReading ? r.reading : '—';
+                        const units = isReading ? r.meter : '—';
+                        const rate = isReading ? r.rate : '—';
+                        const totalAmt = isReading ? (r.debit||0) : 0;
+                        const run = runningBalanceAt(t.electric, idx);
+                        return `<tr>
+                            <td>${r.date||'—'}</td>
+                            <td>${r.desc||'—'}</td>
+                            <td>${isReading ? prev : '—'}</td>
+                            <td>${curr}</td>
+                            <td>${units}</td>
+                            <td>${rate!=='—'?formatUGX(rate):'—'}</td>
+                            <td>${totalAmt?formatUGX(totalAmt):'—'}</td>
+                            <td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td>
+                            <td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td>
+                            <td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td>
+                            <td><div class="action-btns">
+                                ${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${t.id}','electric',${idx})">Update</button>`:''}
+                                ${can('delete_utility')?`<button class="btn btn-danger btn-sm" onclick="deleteUtilityRow('${t.id}','electric',${idx})">Del</button>`:''}
+                            </div></td>
+                        </tr>`;
+                    }).join('')}</tbody>
                 </table>
             </div>
             <div id="tab-water" class="tab-content hidden">
                 ${t.water.length?`<table>
-                    <thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Receipt</th></tr></thead>
-                    <tbody>${t.water.map((r,idx)=>{const run=t.water.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);const mi=r.meter?`${r.meter} units`:(r.credit?'Payment':'—');const isPayment=r.credit>0;return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td><span class="meter-info">${mi}</span></td>
-                        <td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td>
-                        <td>${isPayment?`<button class="btn btn-success btn-sm" onclick="printReceipt('${t.id}','water',${idx})">🧾</button>`:'—'}</td></tr>`;}).join('')}</tbody>
+                    <thead><tr><th>Posting Date</th><th>Description</th><th>Previous Meter</th><th>Current Meter</th><th>Total Units</th><th>Rate</th><th>Total Amount</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Actions</th></tr></thead>
+                    <tbody>${t.water.map((r,idx)=>{
+                        const prev = getPreviousReading(t.water, idx);
+                        const isReading = r.meter !== null && r.meter !== undefined && r.meter !== 0;
+                        const curr = isReading ? r.reading : '—';
+                        const units = isReading ? r.meter : '—';
+                        const rate = isReading ? r.rate : '—';
+                        const totalAmt = isReading ? (r.debit||0) : 0;
+                        const run = runningBalanceAt(t.water, idx);
+                        return `<tr>
+                            <td>${r.date||'—'}</td>
+                            <td>${r.desc||'—'}</td>
+                            <td>${isReading ? prev : '—'}</td>
+                            <td>${curr}</td>
+                            <td>${units}</td>
+                            <td>${rate!=='—'?formatUGX(rate):'—'}</td>
+                            <td>${totalAmt?formatUGX(totalAmt):'—'}</td>
+                            <td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td>
+                            <td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td>
+                            <td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td>
+                            <td><div class="action-btns">
+                                ${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${t.id}','water',${idx})">Update</button>`:''}
+                                ${can('delete_utility')?`<button class="btn btn-danger btn-sm" onclick="deleteUtilityRow('${t.id}','water',${idx})">Del</button>`:''}
+                            </div></td>
+                        </tr>`;
+                    }).join('')}</tbody>
                 </table>`:'<p style="color:#64748b;padding:1rem 0;">No water records.</p>'}
             </div>
         </div>`;
@@ -2383,7 +2462,7 @@ async function generateAdvanceInvoice(tenantId,monthsCount){
     for(let i=0;i<monthsCount&&i<months.length;i++){
         const m=months[i];
         if(hasInvoiceForMonth(t,m.year,m.month))continue;
-        const desc=`Rent for ${m.label}`;
+        const desc=`INV- Rent for ${m.label}`;
         const invDate=`${m.year}-${String(m.month).padStart(2,'0')}-01`;
         t.rent.push({date:invDate,desc,debit:t.monthlyRent,credit:0,invoiceNo:getNextInvoiceNo(t)});
         addedCount++;
@@ -2628,14 +2707,14 @@ async function saveAdvanceRent(e){
         if(!hasInvoiceForMonth(t,m.year,m.month)){
             const label=new Date(m.year,m.month-1,1).toLocaleString('en',{month:'long',year:'numeric'});
             const invNo=getNextInvoiceNo(t);
-            t.rent.push({date:`${m.year}-${String(m.month).padStart(2,'0')}-01`,desc:`Rent for ${label}`,debit:t.monthlyRent,credit:0,invoiceNo:invNo});
+            t.rent.push({date:`${m.year}-${String(m.month).padStart(2,'0')}-01`,desc:`INV- Rent for ${label}`,debit:t.monthlyRent,credit:0,invoiceNo:invNo});
             invoiceNums.push(invNo);
         }
         totalAmount+=t.monthlyRent;
     }
     const monthLabels=selectedAdvanceMonths.map(m=>new Date(m.year,m.month-1,1).toLocaleString('en',{month:'short',year:'numeric'})).join(', ');
-    const receiptNo=getNextReceiptNo('RCPT-');
-    t.rent.push({date:payDate,desc:notes||`Advance rent payment – ${monthLabels}`,debit:0,credit:totalAmount,invoiceNo:invoiceNums.length?invoiceNums[0]:null,receiptNo,advanceMonths:monthLabels});
+    const receiptNo=getNextReceiptNo('RC-');
+    t.rent.push({date:payDate,desc:notes||`RC-Advance rent payment – ${monthLabels}`,debit:0,credit:totalAmount,invoiceNo:invoiceNums.length?invoiceNums[0]:null,receiptNo,advanceMonths:monthLabels});
     t.rent.sort((a,b)=>a.date.localeCompare(b.date));
     await saveTenantNow(t);
     showNotification(`Advance payment of ${formatUGX(totalAmount)} recorded (${selectedAdvanceMonths.length} months)`,'success');
@@ -2680,9 +2759,9 @@ function loadPendingInvoices(){
         t.rent.forEach(r=>{const key=r.invoiceNo||'No Invoice';if(!groups[key])groups[key]={debit:0,credit:0,desc:r.desc};groups[key].debit+=(r.debit||0);groups[key].credit+=(r.credit||0);});
         Object.entries(groups).forEach(([inv,g])=>{const bal=g.debit-g.credit;if(bal>0)sel.innerHTML+=`<option value="${inv}">${inv} – ${g.desc} – Due ${formatUGX(bal)}</option>`;});
     }else if(type==='electric'){
-        t.electric.forEach((r,idx)=>{if(r.debit>0&&r.meter){const run=t.electric.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);if(run>0)sel.innerHTML+=`<option value="elec_${idx}">${r.date} – Meter ${r.meter} – ${formatUGX(r.debit)}</option>`;}});
+        t.electric.forEach((r,idx)=>{if(r.debit>0&&r.meter){const bal = runningBalanceAt(t.electric,idx);if(bal>0)sel.innerHTML+=`<option value="elec_${idx}">${r.date} – Meter ${r.reading} – Due ${formatUGX(bal)}</option>`;}});
     }else if(type==='water'){
-        t.water.forEach((r,idx)=>{if(r.debit>0){const run=t.water.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);if(run>0)sel.innerHTML+=`<option value="water_${idx}">${r.date} – ${r.desc} – ${formatUGX(r.debit)}</option>`;}});
+        t.water.forEach((r,idx)=>{if(r.debit>0&&r.meter){const bal = runningBalanceAt(t.water,idx);if(bal>0)sel.innerHTML+=`<option value="water_${idx}">${r.date} – Meter ${r.reading} – Due ${formatUGX(bal)}</option>`;}});
     }
 }
 async function savePayment(e){
@@ -2697,20 +2776,40 @@ async function savePayment(e){
     if(!tenantId||!invoice||!amount){showNotification('Please fill all required fields','warning');return;}
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
-    const receiptNo=getNextReceiptNo(type==='electric'?'RCPT-E':(type==='water'?'RCPT-W':'RCPT-'));
+    const receiptNo=getNextReceiptNo(type==='electric'?'RCPT-E':(type==='water'?'RCPT-W':'RC-'));
     let paymentIndex=-1;
     if(type==='rent'){
-        t.rent.push({date,desc:notes||`Payment – ${invoice}`,debit:0,credit:amount,invoiceNo:invoice,receiptNo});
+        t.rent.push({date,desc:notes||`RC-Payment – ${invoice}`,debit:0,credit:amount,invoiceNo:invoice,receiptNo});
         t.rent.sort((a,b)=>a.date.localeCompare(b.date));
         paymentIndex=t.rent.findIndex(r=>r.receiptNo===receiptNo);
     }else if(type==='electric'){
-        t.electric.push({date,desc:notes||`Payment – ${invoice}`,meter:null,rate:null,debit:0,credit:amount,reading:null,receiptNo});
-        t.electric.sort((a,b)=>a.date.localeCompare(b.date));
-        paymentIndex=t.electric.findIndex(r=>r.receiptNo===receiptNo);
+        const invMatch = invoice.match(/^elec_(\d+)$/);
+        const invIdx = invMatch ? parseInt(invMatch[1]) : -1;
+        const payment = { date, desc: notes || `RC-Payment`, meter: null, rate: null, debit: 0, credit: amount, reading: null, receiptNo };
+        if (invIdx >= 0) {
+            let nextReadingIdx = t.electric.length;
+            for (let k = invIdx + 1; k < t.electric.length; k++) {
+                if (t.electric[k].meter !== null && t.electric[k].meter !== undefined && t.electric[k].meter !== 0) { nextReadingIdx = k; break; }
+            }
+            t.electric.splice(nextReadingIdx, 0, payment);
+        } else {
+            t.electric.push(payment);
+        }
+        paymentIndex = t.electric.findIndex(r => r.receiptNo === receiptNo);
     }else if(type==='water'){
-        t.water.push({date,desc:notes||`Payment – ${invoice}`,meter:null,rate:null,debit:0,credit:amount,reading:null,receiptNo});
-        t.water.sort((a,b)=>a.date.localeCompare(b.date));
-        paymentIndex=t.water.findIndex(r=>r.receiptNo===receiptNo);
+        const invMatch = invoice.match(/^water_(\d+)$/);
+        const invIdx = invMatch ? parseInt(invMatch[1]) : -1;
+        const payment = { date, desc: notes || `RC-Payment`, meter: null, rate: null, debit: 0, credit: amount, reading: null, receiptNo };
+        if (invIdx >= 0) {
+            let nextReadingIdx = t.water.length;
+            for (let k = invIdx + 1; k < t.water.length; k++) {
+                if (t.water[k].meter !== null && t.water[k].meter !== undefined && t.water[k].meter !== 0) { nextReadingIdx = k; break; }
+            }
+            t.water.splice(nextReadingIdx, 0, payment);
+        } else {
+            t.water.push(payment);
+        }
+        paymentIndex = t.water.findIndex(r => r.receiptNo === receiptNo);
     }
     showNotification(`Payment of ${formatUGX(amount)} recorded`);
     closeModal('paymentModal');
@@ -2755,7 +2854,7 @@ function printReceipt(tenantId,type,idx){
     const arr=type==='rent'?t.rent:(type==='electric'?t.electric:t.water);
     const payment=arr[idx];
     if(!payment){showNotification('Payment not found','warning');return;}
-    const receiptNo=payment.receiptNo||'RCPT-'+Date.now().toString().slice(-6);
+    const receiptNo=payment.receiptNo||'RC-'+Date.now().toString().slice(-6);
     const typeLabel=type==='rent'?'Rent':(type==='electric'?'Electricity (Yaka)':'Water (NWSC)');
     const amountWords=numberToWords(payment.credit);
     const unit=getTenantUnit(t);
@@ -2765,7 +2864,7 @@ function printReceipt(tenantId,type,idx){
     <div class="receipt">
         <div class="header">
             <div class="logo-area"><div class="logo-icon">B</div><div><div class="company">Bright <span>Mesh</span> Rentals</div><div class="company-sub">Property Management · Malukhu, Mbale</div></div></div>
-            <div class="receipt-meta"><div class="receipt-no">${receiptNo}</div><div class="date">${new Date(payment.date).toLocaleDateString('en-UG',{year:'numeric',month:'long',day:'numeric'})}</div></div>
+            <div class="receipt-meta"><div class="receipt-no">${receiptNo}</div><div class="date">${new Date(payment.date||todayStr).toLocaleDateString('en-UG',{year:'numeric',month:'long',day:'numeric'})}</div></div>
         </div>
         <div class="title">PAYMENT RECEIPT</div>
         <div class="grid-2 section">
@@ -2778,7 +2877,7 @@ function printReceipt(tenantId,type,idx){
             ${payment.invoiceNo?`<tr><td>Invoice Reference</td><td>${payment.invoiceNo}</td></tr>`:''}
             ${payment.advanceMonths?`<tr><td>Months Covered</td><td>${payment.advanceMonths}</td></tr>`:''}
             <tr><td>Payment Method</td><td>Cash / Mobile Money</td></tr>
-            <tr><td>Date</td><td>${payment.date}</td></tr>
+            <tr><td>Date</td><td>${payment.date||todayStr}</td></tr>
             <tr><td>Balance After Payment</td><td>${formatUGX(utilityBalance(arr))}</td></tr>
         </table>
         <div class="paid-stamp"><span>PAID ✓</span></div>
@@ -2816,88 +2915,104 @@ function numberToWords(num){
 }
 
 // ============================================================
-// UTILITY PAGE — fully inter-linked with tenant ledger
+// UTILITY PAGE — ledger format matching RENTALS .xlsx
+// Columns: Posting Date | Tenant | Utility | Prev Meter | Curr Meter | Units |
+//          Rate | Total Amount | Debit (red) | Credit (green) | Running Balance (colored) | Actions
 // ============================================================
 function renderUtilityPage(){
     const filterTenant=document.getElementById('utilityFilterTenant').value;
     const filterType=document.getElementById('utilityFilterType')?.value||'all';
     const allVisible=getVisibleTenants();
-    let selectedTenants=filterTenant==='all'?allVisible:allVisible.filter(t=>t.id===filterTenant);
+    const selectedTenants=filterTenant==='all'?allVisible:allVisible.filter(t=>t.id===filterTenant);
 
+    // Summary — total debit and total credit
+    let elecDebit=0, elecCredit=0, waterDebit=0, waterCredit=0;
+    selectedTenants.forEach(t=>{
+        if(filterType==='all'||filterType==='electric'){
+            t.electric.forEach(r=>{ elecDebit += (r.debit||0); elecCredit += (r.credit||0); });
+        }
+        if(filterType==='all'||filterType==='water'){
+            t.water.forEach(r=>{ waterDebit += (r.debit||0); waterCredit += (r.credit||0); });
+        }
+    });
     document.getElementById('utilitySummary').innerHTML=`
-        <div class="util-card electric-received"><div class="util-label">⚡ Total Electricity Received</div><div class="util-value">${formatUGX(totalElectricReceived(selectedTenants))}</div></div>
-        <div class="util-card water-received"><div class="util-label">💧 Total Water Received</div><div class="util-value">${formatUGX(totalWaterReceived(selectedTenants))}</div></div>
+        <div class="util-card electric-received"><div class="util-label">⚡ Electricity</div><div class="util-value">${formatUGX(elecDebit)}</div><div class="exp-sub">Paid: ${formatUGX(elecCredit)} · Balance: <strong>${formatUGX(elecDebit-elecCredit)}</strong></div></div>
+        <div class="util-card water-received"><div class="util-label">💧 Water</div><div class="util-value">${formatUGX(waterDebit)}</div><div class="exp-sub">Paid: ${formatUGX(waterCredit)} · Balance: <strong>${formatUGX(waterDebit-waterCredit)}</strong></div></div>
     `;
 
+    // Build rows — one row per ledger entry (invoice OR payment), sorted by tenant then by date
     const tbody=document.getElementById('utilityTableBody');
     const rows=[];
 
     selectedTenants.forEach(t=>{
-        // ELECTRIC — iterate through ALL records so we can find the running balance
         if(filterType==='all'||filterType==='electric'){
             t.electric.forEach((r,idx)=>{
-                if(r.meter){
-                    const prevReading = idx>0 ? (t.electric[idx-1].reading||0) : 0;
-                    const paid = isReadingPaid(t.electric, idx);
-                    const runBal = runningBalanceAt(t.electric, idx);
-                    rows.push({
-                        tenant: t.name, tenantId: t.id, apt: t.apt,
-                        type: 'Electric', date: r.date,
-                        prev: prevReading.toFixed(1), curr: r.reading,
-                        usage: r.meter, rate: r.rate||BASE_CHARGES.electricRate,
-                        amount: r.debit,
-                        status: paid ? 'Paid' : 'Pending',
-                        index: idx,
-                        arrName: 'electric',
-                        runBal: runBal
-                    });
-                }
+                const run = runningBalanceAt(t.electric, idx);
+                const isReading = r.meter !== null && r.meter !== undefined && r.meter !== 0;
+                const prev = isReading ? getPreviousReading(t.electric, idx) : null;
+                const curr = isReading ? r.reading : null;
+                const units = isReading ? r.meter : null;
+                const rate = isReading ? r.rate : null;
+                const totalAmt = isReading ? (r.debit || 0) : null;
+                rows.push({
+                    tenant: t.name, tenantId: t.id, apt: t.apt,
+                    type: 'Electric',
+                    date: r.date || '—', desc: r.desc || '—',
+                    prev, curr, units, rate, totalAmt,
+                    debit: r.debit || 0, credit: r.credit || 0,
+                    runBal: run,
+                    idx, arrName: 'electric'
+                });
             });
         }
-        // WATER
         if(filterType==='all'||filterType==='water'){
             t.water.forEach((r,idx)=>{
-                if(r.meter){
-                    const prevReading = idx>0 ? (t.water[idx-1].reading||0) : 0;
-                    const paid = isReadingPaid(t.water, idx);
-                    const runBal = runningBalanceAt(t.water, idx);
-                    rows.push({
-                        tenant: t.name, tenantId: t.id, apt: t.apt,
-                        type: 'Water', date: r.date,
-                        prev: prevReading.toFixed(1), curr: r.reading,
-                        usage: r.meter, rate: r.rate||BASE_CHARGES.waterRate,
-                        amount: r.debit,
-                        status: paid ? 'Paid' : 'Pending',
-                        index: idx,
-                        arrName: 'water',
-                        runBal: runBal
-                    });
-                }
+                const run = runningBalanceAt(t.water, idx);
+                const isReading = r.meter !== null && r.meter !== undefined && r.meter !== 0;
+                const prev = isReading ? getPreviousReading(t.water, idx) : null;
+                const curr = isReading ? r.reading : null;
+                const units = isReading ? r.meter : null;
+                const rate = isReading ? r.rate : null;
+                const totalAmt = isReading ? (r.debit || 0) : null;
+                rows.push({
+                    tenant: t.name, tenantId: t.id, apt: t.apt,
+                    type: 'Water',
+                    date: r.date || '—', desc: r.desc || '—',
+                    prev, curr, units, rate, totalAmt,
+                    debit: r.debit || 0, credit: r.credit || 0,
+                    runBal: run,
+                    idx, arrName: 'water'
+                });
             });
         }
     });
 
-    // Sort by date desc, but keep readings of same tenant/utility in ledger order for proper prev-reading display
-    rows.sort((a,b)=>b.date.localeCompare(a.date));
+    rows.sort((a,b)=>{
+        // Keep tenant grouping, and within a tenant keep ledger order
+        const t = a.tenant.localeCompare(b.tenant);
+        if(t!==0) return t;
+        return a.idx - b.idx;
+    });
 
-    if(rows.length===0){tbody.innerHTML='<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:2rem;">No utility readings found for the selected filters.</td></tr>';return;}
+    if(rows.length===0){tbody.innerHTML='<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:2rem;">No utility records found for the selected filters.</td></tr>';return;}
 
     tbody.innerHTML=rows.map(r=>`
         <tr>
-            <td><strong>${r.tenant}</strong></td>
-            <td>${r.apt}</td>
-            <td><span class="badge ${r.type==='Electric'?'electric':'water'}">${r.type}</span></td>
             <td>${r.date}</td>
-            <td>${r.prev}</td>
-            <td>${r.curr}</td>
-            <td>${r.usage}</td>
-            <td>${formatUGX(r.rate)}</td>
-            <td>${formatUGX(r.amount)}</td>
-            <td><span class="badge ${r.status==='Paid'?'paid':'pending'}">${r.status}</span></td>
-            <td style="font-weight:700;color:${r.runBal<=0?'#16a34a':'#dc2626'};">${formatUGX(r.runBal)}</td>
+            <td><strong>${r.tenant}</strong> <span style="color:#94a3b8;font-size:.75rem;">(Apt ${r.apt})</span></td>
+            <td><span class="badge ${r.type==='Electric'?'electric':'water'}">${r.type}</span></td>
+            <td>${r.prev !== null && r.prev !== undefined ? r.prev : '—'}</td>
+            <td>${r.curr !== null && r.curr !== undefined ? r.curr : '—'}</td>
+            <td>${r.units !== null && r.units !== undefined ? r.units : '—'}</td>
+            <td>${r.rate ? formatUGX(r.rate) : '—'}</td>
+            <td>${r.totalAmt !== null ? formatUGX(r.totalAmt) : '—'}</td>
+            <td class="text-debit">${r.debit ? formatUGX(r.debit) : '—'}</td>
+            <td class="text-credit">${r.credit ? formatUGX(r.credit) : '—'}</td>
+            <td class="${r.runBal < 0 ? 'text-balance-neg' : 'text-balance-pos'}">${formatUGX(r.runBal)}</td>
             <td><div class="action-btns">
-                <button class="btn btn-outline btn-sm" onclick="viewUtilityDetail('${r.tenantId}','${r.type}','${r.index}')">View</button>
-                ${can('mark_utility_paid')?`<button class="btn ${r.status==='Paid'?'btn-warning':'btn-success'} btn-sm" onclick="toggleUtilityPaid('${r.tenantId}','${r.type}',${r.index})">${r.status==='Paid'?'Mark Pending':'Mark Paid'}</button>`:''}
+                <button class="btn btn-outline btn-sm" onclick="viewUtilityRow('${r.tenantId}','${r.type}',${r.idx})">View</button>
+                ${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${r.tenantId}','${r.type}',${r.idx})">Update</button>`:''}
+                ${can('delete_utility')?`<button class="btn btn-danger btn-sm" onclick="deleteUtilityRow('${r.tenantId}','${r.type}',${r.idx})">Delete</button>`:''}
             </div></td>
         </tr>
     `).join('');
@@ -2905,89 +3020,151 @@ function renderUtilityPage(){
 }
 
 /**
- * Toggle a utility reading between Paid and Pending.
- * - Mark Paid: inserts a credit row (RC) immediately AFTER the reading that clears its amount.
- * - Mark Pending: removes the FIRST credit row that appears after this reading
- *   but before the next reading.
+ * Delete any utility ledger row (invoice or payment).
+ * Updates both Utility tab and Tenant detail.
  */
-async function toggleUtilityPaid(tenantId, type, index){
-    if(!can('mark_utility_paid')){showNotification('Permission denied','warning');return;}
+async function deleteUtilityRow(tenantId, type, index){
+    if(!can('delete_utility')){showNotification('Permission denied','warning');return;}
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
     const arr = type==='Electric' ? t.electric : t.water;
-    const reading = arr[index];
-    if(!reading || !reading.meter){showNotification('Invalid reading','warning');return;}
-
-    const isPaid = isReadingPaid(arr, index);
-
-    if(isPaid){
-        // Find the next reading (or end) — remove the first credit row in that range
-        let nextReadingIdx = arr.length;
-        for(let i=index+1;i<arr.length;i++){ if(arr[i].meter){ nextReadingIdx=i; break; } }
-        let removedIdx = -1;
-        for(let i=index+1;i<nextReadingIdx;i++){
-            if(!arr[i].meter && (arr[i].credit||0) > 0){ removedIdx = i; break; }
-        }
-        if(removedIdx===-1){
-            showNotification('No matching payment found for this reading','warning');
-            return;
-        }
-        arr.splice(removedIdx, 1);
-        showNotification('Marked as Pending','warning');
-    } else {
-        // Insert a new credit row immediately after the reading
-        const receiptNo = getNextReceiptNo(type==='Electric'?'RCPT-E':'RCPT-W');
-        const amt = reading.debit || 0;
-        arr.splice(index+1, 0, {
-            date: reading.date,
-            desc: `Payment – ${reading.desc || 'Utility'}`,
-            meter: null, rate: null,
-            debit: 0, credit: amt,
-            reading: null, receiptNo
-        });
-        showNotification('Marked as Paid','success');
-    }
-
-    // Keep the ledger sorted (stable by date, order matters for balance)
-    arr.sort((a,b)=>a.date.localeCompare(b.date));
-
-    // Persist + refresh every dependent view
+    if(index<0 || index>=arr.length){showNotification('Invalid row','warning');return;}
+    const row = arr[index];
+    const label = row.meter !== null && row.meter !== undefined && row.meter !== 0
+        ? `reading ${row.reading} (${row.meter} units @ ${formatUGX(row.rate)})`
+        : `payment ${formatUGX(row.credit||0)}`;
+    if(!confirm(`Delete this ${type} ${label}?\n\nDate: ${row.date||'—'}`)) return;
+    arr.splice(index,1);
     await saveTenantNow(t);
-    renderUtilityPage();
-    renderDashboard();
-    renderTenantsPage();
-    renderStatementsPage();
-    renderReceiptsPage();
+    showNotification(`${type} row deleted`,'warning');
+    renderUtilityPage();renderDashboard();renderTenantsPage();renderStatementsPage();renderReceiptsPage();
 }
 
-function viewUtilityDetail(tenantId, type, index){
+/**
+ * Open the Update modal for a utility ledger row.
+ */
+function openEditUtilityModal(tenantId, type, index){
+    if(!can('add_utility')){showNotification('Permission denied','warning');return;}
+    const t=TENANTS.find(x=>x.id===tenantId);
+    if(!t)return;
+    const arr = type==='Electric' ? t.electric : t.water;
+    if(index<0 || index>=arr.length){showNotification('Invalid row','warning');return;}
+    const r = arr[index];
+    document.getElementById('editUtilityTenantId').value = tenantId;
+    document.getElementById('editUtilityType').value = type;
+    document.getElementById('editUtilityIndex').value = index;
+    document.getElementById('editUtilityDate').value = r.date || '';
+    document.getElementById('editUtilityDesc').value = r.desc || '';
+    document.getElementById('editUtilityPrev').value = getPreviousReading(arr, index);
+    document.getElementById('editUtilityCurr').value = (r.reading !== null && r.reading !== undefined) ? r.reading : '';
+    document.getElementById('editUtilityRate').value = r.rate || (type==='Electric'?BASE_CHARGES.electricRate:BASE_CHARGES.waterRate);
+    document.getElementById('editUtilityDebit').value = r.debit || 0;
+    document.getElementById('editUtilityCredit').value = r.credit || 0;
+    openModal('editUtilityModal');
+}
+
+async function saveUtilityEdit(e){
+    e.preventDefault();
+    if(!can('add_utility')){showNotification('Permission denied','warning');return;}
+    const tenantId = document.getElementById('editUtilityTenantId').value;
+    const type = document.getElementById('editUtilityType').value;
+    const index = parseInt(document.getElementById('editUtilityIndex').value);
+    const t=TENANTS.find(x=>x.id===tenantId);
+    if(!t)return;
+    const arr = type==='Electric' ? t.electric : t.water;
+    if(index<0 || index>=arr.length){showNotification('Invalid row','warning');return;}
+    const existing = arr[index];
+    const date = document.getElementById('editUtilityDate').value;
+    const desc = document.getElementById('editUtilityDesc').value.trim();
+    const prevStr = document.getElementById('editUtilityPrev').value;
+    const currStr = document.getElementById('editUtilityCurr').value;
+    const rateStr = document.getElementById('editUtilityRate').value;
+    const debitStr = document.getElementById('editUtilityDebit').value;
+    const creditStr = document.getElementById('editUtilityCredit').value;
+    const prev = parseFloat(prevStr);
+    const curr = parseFloat(currStr);
+    const rate = parseFloat(rateStr) || (type==='Electric'?BASE_CHARGES.electricRate:BASE_CHARGES.waterRate);
+    const debitIn = parseFloat(debitStr) || 0;
+    const creditIn = parseFloat(creditStr) || 0;
+
+    // Determine if this is a reading row or a payment row:
+    // If curr is a number AND prev is a number AND curr >= prev, treat as reading row.
+    let isReading = !isNaN(curr) && !isNaN(prev) && curr > 0;
+    let units = null, reading = null, newDebit = debitIn, newCredit = creditIn;
+    if(isReading){
+        units = Math.max(0, +(curr - prev).toFixed(4));
+        reading = curr;
+        if(type==='Electric'){
+            newDebit = units * rate;
+        } else {
+            // Water formula from Excel: (units × 4433 × 1.75 + 1500) × 1.18
+            newDebit = ((units * rate) * (1 + BASE_CHARGES.seweragePercent/100) + BASE_CHARGES.serviceCharge) * (1 + BASE_CHARGES.vatPercent/100);
+        }
+        newCredit = 0;
+    } else {
+        // Payment row
+        isReading = false;
+        units = null;
+        reading = null;
+        newDebit = 0;
+        // If credit was already given, keep it; otherwise sum of prev debit
+        newCredit = creditIn || existing.credit || 0;
+    }
+
+    // Preserve opening "first meter reading" special case if the row was flagged that way
+    const isFirstReading = (existing && existing.desc === 'First meter reading');
+
+    if(isFirstReading && isReading){
+        // Opening reading: units = 0, debit = 0
+        units = 0;
+        newDebit = 0;
+        newCredit = 0;
+    }
+
+    arr[index] = {
+        date: date || '',
+        desc: desc || (isReading ? (type==='Electric'?'Invoice':'Invoice') : 'Receipt'),
+        reading: reading,
+        meter: units,
+        rate: isReading ? rate : null,
+        debit: newDebit,
+        credit: newCredit,
+        receiptNo: existing.receiptNo || (newCredit>0 ? getNextReceiptNo(type==='Electric'?'RCPT-E':'RCPT-W') : null)
+    };
+
+    await saveTenantNow(t);
+    showNotification('Utility row updated');
+    closeModal('editUtilityModal');
+    renderUtilityPage();renderDashboard();renderTenantsPage();renderStatementsPage();renderReceiptsPage();
+}
+
+function viewUtilityRow(tenantId, type, index){
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
     const panel=document.getElementById('utilityDetailPanel');
     const arr = type==='Electric' ? t.electric : t.water;
-    const reading = arr[index];
-    if(!reading || !reading.meter){panel.innerHTML='<p style="color:#64748b;padding:1rem 0;">Reading not found.</p>';return;}
-    const eBal=electricBalance(t), wBal=waterBalance(t);
-    const paid = isReadingPaid(arr, index);
+    if(index<0 || index>=arr.length){panel.innerHTML='<p style="color:#64748b;padding:1rem 0;">Row not found.</p>';return;}
+    const r = arr[index];
+    const prev = getPreviousReading(arr, index);
+    const isReading = r.meter !== null && r.meter !== undefined && r.meter !== 0;
     const runBal = runningBalanceAt(arr, index);
+    const eBal=electricBalance(t), wBal=waterBalance(t);
 
-    // Build the ledger view for this utility
-    const ledgerRows = arr.map((r, i) => {
+    const ledgerRows = arr.map((row, i) => {
+        const p = getPreviousReading(arr, i);
+        const isR = row.meter !== null && row.meter !== undefined && row.meter !== 0;
         const run = runningBalanceAt(arr, i);
-        const isReading = !!r.meter;
-        const isPayment = (r.credit||0) > 0 && !r.meter;
-        const statusBadge = isReading
-            ? (isReadingPaid(arr, i) ? '<span class="badge paid">Paid</span>' : '<span class="badge pending">Pending</span>')
-            : (isPayment ? '<span class="badge info">Payment</span>' : '—');
-        const meterCell = isReading ? `<span class="meter-info">${r.meter} @ ${r.rate}</span>` : (isPayment ? 'Payment' : '—');
         return `<tr style="${i===index?'background:#fef9c3;':''}">
-            <td>${r.date}</td>
-            <td>${r.desc || '—'}</td>
-            <td>${meterCell}</td>
-            <td>${r.debit?formatUGX(r.debit):'—'}</td>
-            <td>${r.credit?formatUGX(r.credit):'—'}</td>
-            <td style="font-weight:600;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td>
-            <td>${statusBadge}</td>
+            <td>${row.date||'—'}</td>
+            <td>${row.desc || '—'}</td>
+            <td>${isR ? p : '—'}</td>
+            <td>${isR ? row.reading : '—'}</td>
+            <td>${isR ? row.meter : '—'}</td>
+            <td>${isR ? formatUGX(row.rate) : '—'}</td>
+            <td>${isR ? formatUGX(row.debit||0) : '—'}</td>
+            <td class="text-debit">${row.debit?formatUGX(row.debit):'—'}</td>
+            <td class="text-credit">${row.credit?formatUGX(row.credit):'—'}</td>
+            <td class="${run<0?'text-balance-neg':'text-balance-pos'}">${formatUGX(run)}</td>
         </tr>`;
     }).join('');
 
@@ -3000,27 +3177,29 @@ function viewUtilityDetail(tenantId, type, index){
             <div class="utility-summary">
                 <div class="util-card electric-received"><div class="util-label">⚡ Electricity Balance</div><div class="util-value">${formatUGX(eBal)}</div></div>
                 <div class="util-card water-received"><div class="util-label">💧 Water Balance</div><div class="util-value">${formatUGX(wBal)}</div></div>
-                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Selected Reading Balance</div><div class="util-value">${formatUGX(runBal)}</div></div>
+                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Row Running Balance</div><div class="util-value">${formatUGX(runBal)}</div></div>
             </div>
-            <h3 style="font-size:.95rem;margin-bottom:.75rem;">📋 Reading Details</h3>
+            <h3 style="font-size:.95rem;margin-bottom:.75rem;">📋 Selected Row</h3>
             <table style="margin-bottom:1.25rem;">
                 <thead><tr><th>Field</th><th>Value</th></tr></thead>
                 <tbody>
-                    <tr><td>Utility Type</td><td><span class="badge ${type==='Electric'?'electric':'water'}">${type}</span></td></tr>
-                    <tr><td>Date</td><td>${reading.date}</td></tr>
-                    <tr><td>Description</td><td>${reading.desc||'—'}</td></tr>
-                    <tr><td>Previous Reading</td><td>${(reading.reading-reading.meter).toFixed(2)}</td></tr>
-                    <tr><td>Current Reading</td><td>${reading.reading}</td></tr>
-                    <tr><td>Usage</td><td><strong>${reading.meter} units</strong></td></tr>
-                    <tr><td>Rate</td><td>${formatUGX(reading.rate)}</td></tr>
-                    <tr><td><strong>Total Amount</strong></td><td><strong>${formatUGX(reading.debit)}</strong></td></tr>
-                    <tr><td>Status</td><td>${paid?'<span class="badge paid">Paid</span>':'<span class="badge pending">Pending</span>'}</td></tr>
+                    <tr><td>Utility</td><td><span class="badge ${type==='Electric'?'electric':'water'}">${type}</span></td></tr>
+                    <tr><td>Posting Date</td><td>${r.date||'—'}</td></tr>
+                    <tr><td>Description</td><td>${r.desc||'—'}</td></tr>
+                    <tr><td>Previous Meter</td><td>${isReading ? prev : '—'}</td></tr>
+                    <tr><td>Current Meter</td><td>${isReading ? r.reading : '—'}</td></tr>
+                    <tr><td>Total Units</td><td><strong>${isReading ? r.meter : '—'}</strong></td></tr>
+                    <tr><td>Rate</td><td>${isReading ? formatUGX(r.rate) : '—'}</td></tr>
+                    <tr><td>Total Amount</td><td>${isReading ? formatUGX(r.debit||0) : '—'}</td></tr>
+                    <tr><td>Debit</td><td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td></tr>
+                    <tr><td>Credit</td><td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td></tr>
+                    <tr><td><strong>Running Balance</strong></td><td class="${runBal<0?'text-balance-neg':'text-balance-pos'}">${formatUGX(runBal)}</td></tr>
                 </tbody>
             </table>
-            <h3 style="font-size:.95rem;margin-bottom:.5rem;">📒 Full Ledger (Source of Truth)</h3>
+            <h3 style="font-size:.95rem;margin-bottom:.5rem;">📒 Full Ledger</h3>
             <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:.75rem;">
-                <table style="min-width:700px;">
-                    <thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Status</th></tr></thead>
+                <table style="min-width:1000px;">
+                    <thead><tr><th>Date</th><th>Description</th><th>Prev</th><th>Curr</th><th>Units</th><th>Rate</th><th>Total Amount</th><th>Debit</th><th>Credit</th><th>Running Balance</th></tr></thead>
                     <tbody>${ledgerRows}</tbody>
                 </table>
             </div>
@@ -3105,8 +3284,8 @@ async function saveUtilityReading(e){
     if(type==='electric'){
         const rate=BASE_CHARGES.electricRate;
         const amount=usage*rate;
-        t.electric.push({date,desc:`${new Date(date).toLocaleString('en',{month:'short'})} ${new Date(date).getFullYear()}`,meter:usage,rate,debit:amount,credit:0,reading:curr});
-        t.electric.sort((a,b)=>a.date.localeCompare(b.date));
+        t.electric.push({date,desc:`Inv- ${new Date(date).toLocaleString('en',{month:'short'})} ${new Date(date).getFullYear()}`,meter:usage,rate,debit:amount,credit:0,reading:curr});
+        t.electric.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
         showNotification(`⚡ Electricity reading saved – ${formatUGX(amount)}`);
     }else{
         const rate=BASE_CHARGES.waterRate;
@@ -3116,7 +3295,7 @@ async function saveUtilityReading(e){
         const vat=(subtotal+sewer+service)*BASE_CHARGES.vatPercent/100;
         const total=subtotal+sewer+service+vat;
         t.water.push({date,desc:`Meter-${usage} @${rate}+${BASE_CHARGES.seweragePercent}%+${service}+${BASE_CHARGES.vatPercent}%`,meter:usage,rate,debit:total,credit:0,reading:curr});
-        t.water.sort((a,b)=>a.date.localeCompare(b.date));
+        t.water.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
         showNotification(`💧 Water reading saved – ${formatUGX(total)}`);
     }
     closeModal('utilityModal');
@@ -3167,7 +3346,7 @@ function renderExpensesPage(){
         <tr>
             <td>${e.date}</td><td>Apt ${e.apt}</td><td>${e.tenantName}</td>
             <td><span class="badge ${e.category==='Plumbing'?'cat-plumbing':e.category==='Electric'?'cat-electric':'cat-general'}">${e.category||'General'}</span></td>
-            <td>${e.desc}</td><td>${formatUGX(e.amount)}</td>
+            <td>${e.desc}</td><td class="text-debit">${formatUGX(e.amount)}</td>
             <td>${can('delete_expenses')?`<button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.tenantId}',${e.idx})">Delete</button>`:'—'}</td>
         </tr>
     `).join('');
@@ -3254,32 +3433,41 @@ function doPrintStatement(){
 }
 function buildRentalStatement(t){
     const rentBal=rentBalance(t);
-    return `<html><head><title>Rental Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.85rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}</style></head><body>
+    return `<html><head><title>Rental Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.85rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}.debit{color:#dc2626}.credit{color:#16a34a}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Rental Statement</h1><h2>${t.name} · Apt ${t.apt} · ${t.mobile}</h2>
     <table><thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
-    ${t.rent.map((r,idx)=>{const run=t.rent.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;}).join('')}
+    ${t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);return `<tr><td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td><td class="debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="credit">${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;}).join('')}
     </tbody></table><div class="total">Outstanding Rent Balance: ${formatUGX(rentBal)}</div></body></html>`;
 }
 function buildUtilityStatement(t){
     const eBal=electricBalance(t),wBal=waterBalance(t);
-    return `<html><head><title>Utility Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}h3{margin-top:1.5rem;font-size:1rem}table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:1rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}</style></head><body>
+    const elecRows = t.electric.map((r,idx)=>{
+        const run = runningBalanceAt(t.electric, idx);
+        const isR = r.meter !== null && r.meter !== undefined && r.meter !== 0;
+        const prev = isR ? getPreviousReading(t.electric, idx) : '—';
+        return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${prev}</td><td>${isR?r.reading:'—'}</td><td>${isR?r.meter:'—'}</td><td class="debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="credit">${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;
+    }).join('');
+    const waterRows = t.water.length ? t.water.map((r,idx)=>{
+        const run = runningBalanceAt(t.water, idx);
+        const isR = r.meter !== null && r.meter !== undefined && r.meter !== 0;
+        const prev = isR ? getPreviousReading(t.water, idx) : '—';
+        return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${prev}</td><td>${isR?r.reading:'—'}</td><td>${isR?r.meter:'—'}</td><td class="debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="credit">${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;
+    }).join('') : '<tr><td colspan="8">No water records</td></tr>';
+    return `<html><head><title>Utility Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}h3{margin-top:1.5rem;font-size:1rem}table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:1rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}.debit{color:#dc2626}.credit{color:#16a34a}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Utility Statement</h1><h2>${t.name} · Apt ${t.apt} · ${t.mobile}</h2>
-    <h3>⚡ Electricity (Yaka)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
-    ${t.electric.map((r,idx)=>{const run=t.electric.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td>${r.meter||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;}).join('')}
-    </tbody></table><div class="total">Electricity Balance: ${formatUGX(eBal)}</div>
-    <h3>💧 Water (NWSC)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Meter</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>
-    ${t.water.length?t.water.map((r,idx)=>{const run=t.water.slice(0,idx+1).reduce((s,x)=>s+(x.debit||0)-(x.credit||0),0);return `<tr><td>${r.date}</td><td>${r.desc||'—'}</td><td>${r.meter||'—'}</td><td>${r.debit?formatUGX(r.debit):'—'}</td><td>${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;}).join(''):'<tr><td colspan="6">No water records</td></tr>'}
-    </tbody></table><div class="total">Water Balance: ${formatUGX(wBal)}</div></body></html>`;
+    <h3>⚡ Electricity (Yaka)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Prev</th><th>Curr</th><th>Units</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${elecRows}</tbody></table><div class="total">Electricity Balance: ${formatUGX(eBal)}</div>
+    <h3>💧 Water (NWSC)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Prev</th><th>Curr</th><th>Units</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${waterRows}</tbody></table><div class="total">Water Balance: ${formatUGX(wBal)}</div>
+    </body></html>`;
 }
 function buildExpenseReport(t){
     const total=totalExpenses(t);
-    return `<html><head><title>Expense Report – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.85rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}</style></head><body>
+    return `<html><head><title>Expense Report – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.85rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}.debit{color:#dc2626}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Expense Report</h1><h2>${t.name} · Apt ${t.apt}</h2>
     <table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>
-    ${t.expenses.map(e=>`<tr><td>${e.date}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td>${formatUGX(e.amount)}</td></tr>`).join('')||'<tr><td colspan="4">No expenses</td></tr>'}
+    ${t.expenses.map(e=>`<tr><td>${e.date}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td class="debit">${formatUGX(e.amount)}</td></tr>`).join('')||'<tr><td colspan="4">No expenses</td></tr>'}
     </tbody></table><div class="total">Total Expenses: ${formatUGX(total)}</div></body></html>`;
 }
 
@@ -3492,7 +3680,7 @@ window.openInlineTenant=openInlineTenant;window.closeInlineTenant=closeInlineTen
 window.openAddPaymentModal=openAddPaymentModal;window.openPaymentForTenant=openPaymentForTenant;window.onPaymentTenantChange=onPaymentTenantChange;window.loadPendingInvoices=loadPendingInvoices;window.savePayment=savePayment;window.saveTenant=saveTenant;
 window.closeModal=closeModal;window.openModal=openModal;
 window.openAddExpenseModal=openAddExpenseModal;window.saveExpense=saveExpense;window.deleteExpense=deleteExpense;
-window.openUtilityModal=openUtilityModal;window.onUtilityTenantChange=onUtilityTenantChange;window.updateUtilityPreview=updateUtilityPreview;window.saveUtilityReading=saveUtilityReading;window.viewUtilityDetail=viewUtilityDetail;window.toggleUtilityPaid=toggleUtilityPaid;
+window.openUtilityModal=openUtilityModal;window.onUtilityTenantChange=onUtilityTenantChange;window.updateUtilityPreview=updateUtilityPreview;window.saveUtilityReading=saveUtilityReading;window.viewUtilityRow=viewUtilityRow;window.deleteUtilityRow=deleteUtilityRow;window.openEditUtilityModal=openEditUtilityModal;window.saveUtilityEdit=saveUtilityEdit;
 window.openBaseChargesModal=openBaseChargesModal;window.saveBaseCharges=saveBaseCharges;
 window.openPrintModal=openPrintModal;window.doPrintStatement=doPrintStatement;window.printExpensesContextual=printExpensesContextual;
 window.renderExpensesPage=renderExpensesPage;window.renderUtilityPage=renderUtilityPage;window.onExpenseFilterChange=onExpenseFilterChange;

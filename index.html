@@ -63,7 +63,7 @@ body{background:#f1f5f9;color:#0f172a;min-height:100vh;overflow-x:hidden}
 .section-title{text-align:center;margin-bottom:3rem}
 .section-title h2{font-size:2.2rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:.85rem}
 .section-title p{color:#94a3b8;font-size:1rem;max-width:600px;margin:0 auto}
-.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem}
 .feature-card{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:1.5rem;padding:1.75rem;transition:all .3s}
 .feature-card:hover{background:rgba(255,255,255,.07);border-color:rgba(250,204,21,.3);transform:translateY(-5px)}
 .feature-icon{width:52px;height:52px;border-radius:1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1.15rem}
@@ -71,6 +71,7 @@ body{background:#f1f5f9;color:#0f172a;min-height:100vh;overflow-x:hidden}
 .feature-icon.gold{background:linear-gradient(135deg,#b45309 0%,#f59e0b 100%)}
 .feature-icon.green{background:linear-gradient(135deg,#065f46 0%,#16a34a 100%)}
 .feature-icon.red{background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 100%)}
+.feature-icon.purple{background:linear-gradient(135deg,#4c1d95 0%,#8b5cf6 100%)}
 .feature-card h3{color:#fff;font-size:1.15rem;font-weight:700;margin-bottom:.65rem}
 .feature-card p{color:#94a3b8;font-size:.9rem;line-height:1.6}
 .pricing-section{background:#0a0f1e;padding:4rem;position:relative;z-index:5;border-top:1px solid rgba(255,255,255,.05)}
@@ -122,6 +123,7 @@ body{background:#f1f5f9;color:#0f172a;min-height:100vh;overflow-x:hidden}
 .btn-logout:hover{background:rgba(220,38,38,.8)}
 .btn-password{background:rgba(250,204,21,.2);color:#facc15;border:none;padding:.5rem .9rem;border-radius:2rem;cursor:pointer;font-size:.78rem;font-weight:600;transition:.15s;white-space:nowrap}
 .btn-password:hover{background:rgba(250,204,21,.3)}
+.currency-pill{display:inline-flex;align-items:center;gap:.4rem;background:rgba(250,204,21,.2);color:#facc15;padding:.35rem .8rem;border-radius:2rem;font-size:.72rem;font-weight:700;white-space:nowrap}
 .main-nav{display:flex;gap:.4rem;margin-bottom:1.25rem;background:#fff;padding:.45rem;border-radius:2rem;box-shadow:0 4px 12px rgba(0,0,0,.03);border:1px solid #e2e8f0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
 .main-nav::-webkit-scrollbar{display:none}
 .nav-tab{padding:.65rem 1.15rem;border-radius:2rem;border:none;background:transparent;font-weight:600;font-size:.85rem;color:#64748b;cursor:pointer;transition:.15s;white-space:nowrap;flex-shrink:0}
@@ -324,7 +326,7 @@ td{padding:.7rem .5rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 .admin-stat-card.properties{background:linear-gradient(135deg,#9d174d 0%,#ec4899 100%)}
 .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
 .admin-card{background:#fff;border-radius:1.25rem;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,.03);padding:1.5rem}
-.admin-card h3{font-size:1rem;font-weight:700;margin-bottom:1.1rem;color:#0f172a;display:flex;align-items:center;gap:.5rem}
+.admin-card h3{font-size:1rem;font-weight:700;margin-bottom:1.1rem;color:#0f172a;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .admin-list-item{display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;border-bottom:1px solid #f1f5f9;gap:.6rem;flex-wrap:wrap}
 .admin-list-item:last-child{border-bottom:none}
 .admin-list-item .info{flex:1;min-width:0}
@@ -344,6 +346,17 @@ td{padding:.7rem .5rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 .inline-tenant-panel{position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1500;display:none;justify-content:center;align-items:center;padding:1rem;overflow-y:auto}
 .inline-tenant-panel.active{display:flex}
 .inline-tenant-box{background:#fff;border-radius:1.5rem;padding:1.5rem;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,.35);margin:auto}
+
+/* ============ MODERN CURRENCY SELECTOR ============ */
+.currency-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;margin-top:1rem}
+.currency-card{border:2px solid #e2e8f0;border-radius:1rem;padding:1rem;cursor:pointer;transition:all .2s;text-align:center;background:#fff;position:relative;overflow:hidden}
+.currency-card:hover{border-color:#cbd5e1;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.currency-card.selected{border-color:#0f172a;background:#f8fafc;box-shadow:0 4px 12px rgba(15,23,42,.1)}
+.currency-card.selected::before{content:'✓';position:absolute;top:6px;right:8px;font-weight:800;color:#16a34a;font-size:1rem}
+.currency-card .cc-code{font-size:1.1rem;font-weight:800;color:#0f172a;letter-spacing:-.02em}
+.currency-card .cc-label{font-size:.72rem;color:#64748b;font-weight:600;margin-top:.2rem}
+.currency-card .cc-symbol{font-size:1.2rem;margin-bottom:.2rem}
+
 @media print{
 body{background:#fff;padding:0}
 .app-header,.main-nav,.btn,.modal-overlay,.notification,.section-header .btn,.filter-bar,.inline-tenant-panel,.sync-banner{display:none!important}
@@ -427,6 +440,7 @@ th,td{padding:.55rem .4rem}
 .notification{top:.75rem;right:.75rem;left:.75rem;font-size:.82rem;padding:.8rem 1rem}
 .inline-tenant-box{padding:1.15rem;border-radius:1.25rem}
 .sync-banner{bottom:.5rem;right:.5rem;left:.5rem;max-width:none;text-align:center}
+.currency-grid{grid-template-columns:repeat(2,1fr);gap:.5rem}
 }
 @media (max-width:480px){
 .hero-content h1{font-size:1.75rem}
@@ -521,6 +535,7 @@ input,select,textarea{font-size:16px}
                 <div class="feature-card"><div class="feature-icon gold">⚡</div><h3>Utility Tracking</h3><p>Automatically calculate electricity and water bills from meter readings with accurate rates and tax breakdowns.</p></div>
                 <div class="feature-card"><div class="feature-icon green">💰</div><h3>Financial Reports</h3><p>Track income, expenses, profit, and outstanding balances. Generate professional PDF statements instantly.</p></div>
                 <div class="feature-card"><div class="feature-icon red">📊</div><h3>Smart Dashboard</h3><p>Get real-time insights with beautiful charts. Monitor overdue tenants and collection rates at a glance.</p></div>
+                <div class="feature-card"><div class="feature-icon purple">💱</div><h3>Multi-Currency</h3><p>Seamlessly switch between 9 regional currencies including UGX, USD, KSH, and more. One click updates every invoice, statement, and dashboard total instantly.</p></div>
             </div>
         </div>
     </section>
@@ -542,7 +557,7 @@ input,select,textarea{font-size:16px}
                     <li><span class="check">✓</span> Expense tracking by category</li>
                     <li><span class="check">✓</span> Real-time dashboard & financial charts</li>
                     <li><span class="check">✓</span> Print statements & PDF reports</li>
-                    <li><span class="check">✓</span> Multi-location & multi-user support</li>
+                    <li><span class="check">✓</span> 9 display currencies (UGX, USD, KSH, ETB, SOS, TZS, SSP, RWF, BIF)</li>
                     <li><span class="check">✓</span> No credit card required</li>
                 </ul>
                 <button class="pricing-cta" onclick="openLogin()">Get Started Free →</button>
@@ -560,9 +575,10 @@ input,select,textarea{font-size:16px}
         <h2>Welcome Back</h2>
         <p class="subtitle">Sign in to access your dashboard</p>
         <div class="login-error" id="loginError"></div>
-        <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
-            <div class="form-group"><label>Username</label><input type="text" id="loginUsername" required placeholder="Enter your username" autocomplete="username"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required placeholder="Enter your password" autocomplete="current-password"></div>
+        <!-- novalidate added to prevent native browser form freezing -->
+        <form class="login-form" id="loginForm" onsubmit="handleLogin(event)" novalidate>
+            <div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="Enter your username" autocomplete="username"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password"></div>
             <button type="submit" class="btn-login-submit" id="loginBtn">Sign In</button>
         </form>
     </div>
@@ -571,11 +587,11 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="passwordModal">
     <div class="modal">
         <h3 id="passwordModalTitle">Reset Password</h3>
-        <form id="passwordForm" onsubmit="savePasswordReset(event)">
+        <form id="passwordForm" onsubmit="savePasswordReset(event)" novalidate>
             <input type="hidden" id="passwordTargetUserId">
             <div class="form-group"><label>User</label><input type="text" id="passwordTargetUser" readonly style="background:#f1f5f9;"></div>
-            <div class="form-group"><label>New Password *</label><input type="password" id="newPassword" required minlength="4" placeholder="Enter new password"></div>
-            <div class="form-group"><label>Confirm New Password *</label><input type="password" id="confirmPassword" required minlength="4" placeholder="Re-enter new password"></div>
+            <div class="form-group"><label>New Password *</label><input type="password" id="newPassword" placeholder="Enter new password"></div>
+            <div class="form-group"><label>Confirm New Password *</label><input type="password" id="confirmPassword" placeholder="Re-enter new password"></div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('passwordModal')">Cancel</button><button type="submit" class="btn btn-primary">Update Password</button></div>
         </form>
     </div>
@@ -584,12 +600,12 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="editUserModal">
     <div class="modal">
         <h3>Edit User</h3>
-        <form id="editUserForm" onsubmit="saveUserEdit(event)">
+        <form id="editUserForm" onsubmit="saveUserEdit(event)" novalidate>
             <input type="hidden" id="editUserId">
-            <div class="form-group"><label>Full Name *</label><input type="text" id="editUserFullName" required></div>
-            <div class="form-group"><label>Username *</label><input type="text" id="editUserUsername" required></div>
+            <div class="form-group"><label>Full Name *</label><input type="text" id="editUserFullName"></div>
+            <div class="form-group"><label>Username *</label><input type="text" id="editUserUsername"></div>
             <div class="form-row">
-                <div class="form-group"><label>Role *</label><select id="editUserRole" required><option value="user">User</option><option value="accountant">Accountant</option><option value="cashier">Cashier</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+                <div class="form-group"><label>Role *</label><select id="editUserRole"><option value="user">User</option><option value="accountant">Accountant</option><option value="cashier">Cashier</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
                 <div class="form-group"><label>Location</label><select id="editUserLocation"><option value="">All Locations</option></select></div>
             </div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('editUserModal')">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
@@ -601,6 +617,7 @@ input,select,textarea{font-size:16px}
     <header class="app-header">
         <div class="logo-area"><div class="logo-icon">B</div><h1>Bright <span>Mesh</span> Rentals</h1></div>
         <div class="user-area">
+            <span class="currency-pill" id="headerCurrencyPill">💱 UGX</span>
             <div class="user-badge"><span class="role" id="userRoleBadge">USER</span><span class="name" id="userNameBadge">—</span></div>
             <button class="btn-password" onclick="openOwnPasswordModal()" title="Change Password">🔒 Change Password</button>
             <button class="btn-logout" onclick="handleLogout()">Logout</button>
@@ -699,7 +716,7 @@ input,select,textarea{font-size:16px}
                 <option value="electric">⚡ Electricity</option>
                 <option value="water">💧 Water</option>
             </select>
-            <span class="rate-note">⚡ UGX 1,100/unit · 💧 UGX 4,433/unit + 75% sewer + 1,500 service + 18% VAT</span>
+            <span class="rate-note" id="rateNote">⚡ Electric + service + VAT · 💧 Water + sewer + service + VAT</span>
         </div>
         <div class="utility-summary" id="utilitySummary"></div>
         <div class="table-card">
@@ -851,6 +868,7 @@ input,select,textarea{font-size:16px}
                 <button class="btn btn-success" onclick="openAddUserModal()">＋ Add User</button>
             </div>
         </div>
+        <div id="currencyAdminSection"></div>
         <div class="admin-stats" id="adminStats"></div>
         <div class="admin-grid">
             <div class="admin-card" id="adminLocationsCard">
@@ -881,20 +899,20 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="tenantModal">
     <div class="modal">
         <h3 id="tenantModalTitle">Add Tenant</h3>
-        <form id="tenantForm" onsubmit="saveTenant(event)">
+        <form id="tenantForm" onsubmit="saveTenant(event)" novalidate>
             <input type="hidden" id="tenantEditId">
             <input type="hidden" id="tenantApt">
-            <div class="form-group"><label>Full Name *</label><input type="text" id="tenantName" required></div>
+            <div class="form-group"><label>Full Name *</label><input type="text" id="tenantName"></div>
             <div class="form-row">
-                <div class="form-group"><label>Property *</label><select id="tenantProperty" required onchange="onTenantPropertyChange()"><option value="">Select property</option></select></div>
-                <div class="form-group"><label>Unit *</label><select id="tenantUnit" required onchange="onTenantUnitChange()"><option value="">Select unit</option></select></div>
+                <div class="form-group"><label>Property *</label><select id="tenantProperty" onchange="onTenantPropertyChange()"><option value="">Select property</option></select></div>
+                <div class="form-group"><label>Unit *</label><select id="tenantUnit" onchange="onTenantUnitChange()"><option value="">Select unit</option></select></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Mobile Number *</label><input type="text" id="tenantMobile" required></div>
-                <div class="form-group"><label>Monthly Rent (UGX) *</label><input type="number" id="tenantRent" required min="0" readonly style="background:#f1f5f9;"></div>
+                <div class="form-group"><label>Mobile Number *</label><input type="text" id="tenantMobile"></div>
+                <div class="form-group"><label>Monthly Rent *</label><input type="number" id="tenantRent" min="0" readonly style="background:#f1f5f9;"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Billing Date (day) *</label><input type="number" id="tenantBillingDate" required min="1" max="28" value="1"></div>
+                <div class="form-group"><label>Billing Date (day) *</label><input type="number" id="tenantBillingDate" min="1" max="28" value="1"></div>
                 <div class="form-group"><label>Electric Rate (per unit)</label><input type="number" id="tenantElectricRate" value="1100" min="0"></div>
             </div>
             <div class="form-group"><label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;"><input type="checkbox" id="tenantAdvanceRent" style="width:auto;margin:0;cursor:pointer;"><span>Generate 3 months advance invoice after saving</span></label></div>
@@ -906,12 +924,12 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="propertyModal">
     <div class="modal">
         <h3 id="propertyModalTitle">Add Property</h3>
-        <form id="propertyForm" onsubmit="saveProperty(event)">
+        <form id="propertyForm" onsubmit="saveProperty(event)" novalidate>
             <input type="hidden" id="propertyEditId">
-            <div class="form-group"><label>Property Name *</label><input type="text" id="propertyName" required placeholder="e.g. Bright Mesh Apartments"></div>
+            <div class="form-group"><label>Property Name *</label><input type="text" id="propertyName" placeholder="e.g. Bright Mesh Apartments"></div>
             <div class="form-row">
                 <div class="form-group"><label>Property Type *</label>
-                    <select id="propertyType" required>
+                    <select id="propertyType">
                         <option value="Apartment Block">Apartment Block</option>
                         <option value="Flat">Flat</option>
                         <option value="Bungalow">Bungalow</option>
@@ -921,9 +939,9 @@ input,select,textarea{font-size:16px}
                         <option value="Hostel">Hostel</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Location *</label><select id="propertyLocation" required><option value="">Select location</option></select></div>
+                <div class="form-group"><label>Location *</label><select id="propertyLocation"><option value="">Select location</option></select></div>
             </div>
-            <div class="form-group"><label>Address / Street *</label><input type="text" id="propertyAddress" required placeholder="e.g. Plot 12, Nkoma Road"></div>
+            <div class="form-group"><label>Address / Street *</label><input type="text" id="propertyAddress" placeholder="e.g. Plot 12, Nkoma Road"></div>
             <div class="form-row">
                 <div class="form-group"><label>Total Floors</label><input type="number" id="propertyFloors" min="0" value="1"></div>
                 <div class="form-group"><label>Year Built</label><input type="number" id="propertyYear" min="1900" max="2100" placeholder="e.g. 2020"></div>
@@ -939,13 +957,13 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="unitModal">
     <div class="modal">
         <h3 id="unitModalTitle">Add Unit</h3>
-        <form id="unitForm" onsubmit="saveUnit(event)">
+        <form id="unitForm" onsubmit="saveUnit(event)" novalidate>
             <input type="hidden" id="unitEditId">
-            <div class="form-group"><label>Property *</label><select id="unitProperty" required><option value="">Select property</option></select></div>
+            <div class="form-group"><label>Property *</label><select id="unitProperty"><option value="">Select property</option></select></div>
             <div class="form-row">
-                <div class="form-group"><label>Unit Number *</label><input type="text" id="unitNumber" required placeholder="e.g. A1, 101"></div>
+                <div class="form-group"><label>Unit Number *</label><input type="text" id="unitNumber" placeholder="e.g. A1, 101"></div>
                 <div class="form-group"><label>Unit Type *</label>
-                    <select id="unitType" required>
+                    <select id="unitType">
                         <option value="Single Room">Single Room</option>
                         <option value="Double Room">Double Room</option>
                         <option value="1 Bedroom">1 Bedroom</option>
@@ -960,7 +978,7 @@ input,select,textarea{font-size:16px}
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Monthly Rent (UGX) *</label><input type="number" id="unitRent" required min="0"></div>
+                <div class="form-group"><label>Monthly Rent *</label><input type="number" id="unitRent" min="0"></div>
                 <div class="form-group"><label>Floor</label><input type="number" id="unitFloor" min="0" value="0"></div>
             </div>
             <div class="form-row">
@@ -968,7 +986,7 @@ input,select,textarea{font-size:16px}
                 <div class="form-group"><label>Bedrooms</label><input type="number" id="unitBedrooms" min="0" value="1"></div>
             </div>
             <div class="form-group"><label>Unit Status *</label>
-                <select id="unitStatus" required>
+                <select id="unitStatus">
                     <option value="vacant">Vacant</option>
                     <option value="occupied">Occupied</option>
                     <option value="maintenance">Under Maintenance</option>
@@ -984,13 +1002,13 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="paymentModal">
     <div class="modal">
         <h3>Add Payment</h3>
-        <form id="paymentForm" onsubmit="savePayment(event)">
-            <div class="form-group"><label>Tenant *</label><select id="paymentTenant" required onchange="onPaymentTenantChange()"><option value="">Select tenant</option></select></div>
-            <div class="form-group"><label>Payment Type *</label><select id="paymentType" required onchange="loadPendingInvoices()"><option value="rent">Rent</option><option value="electric">Electricity (Yaka)</option><option value="water">Water (NWSC)</option></select></div>
-            <div class="form-group"><label>Pending Invoice *</label><select id="paymentInvoice" required><option value="">Select invoice</option></select></div>
+        <form id="paymentForm" onsubmit="savePayment(event)" novalidate>
+            <div class="form-group"><label>Tenant *</label><select id="paymentTenant" onchange="onPaymentTenantChange()"><option value="">Select tenant</option></select></div>
+            <div class="form-group"><label>Payment Type *</label><select id="paymentType" onchange="loadPendingInvoices()"><option value="rent">Rent</option><option value="electric">Electricity (Yaka)</option><option value="water">Water (NWSC)</option></select></div>
+            <div class="form-group"><label>Pending Invoice *</label><select id="paymentInvoice"><option value="">Select invoice</option></select></div>
             <div class="form-row">
-                <div class="form-group"><label>Amount (UGX) *</label><input type="number" id="paymentAmount" required min="1"></div>
-                <div class="form-group"><label>Payment Date *</label><input type="date" id="paymentDate" required></div>
+                <div class="form-group"><label>Amount *</label><input type="number" id="paymentAmount" min="1"></div>
+                <div class="form-group"><label>Payment Date *</label><input type="date" id="paymentDate"></div>
             </div>
             <div class="form-group"><label>Reference / Notes</label><input type="text" id="paymentNotes"></div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('paymentModal')">Cancel</button><button type="submit" class="btn btn-success">Record Payment</button></div>
@@ -1001,14 +1019,14 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="advanceRentModal">
     <div class="modal">
         <h3>📅 Advance Rent Payment</h3>
-        <form id="advanceRentForm" onsubmit="saveAdvanceRent(event)">
-            <div class="form-group"><label>Tenant *</label><select id="advanceRentTenant" required onchange="loadAdvanceMonths()"><option value="">Select tenant</option></select></div>
+        <form id="advanceRentForm" onsubmit="saveAdvanceRent(event)" novalidate>
+            <div class="form-group"><label>Tenant *</label><select id="advanceRentTenant" onchange="loadAdvanceMonths()"><option value="">Select tenant</option></select></div>
             <div class="form-group"><label>Select months to pay (unpaid months are clickable)</label><div class="month-picker" id="advanceMonthPicker"></div></div>
             <div class="form-row">
                 <div class="form-group"><label>Months Selected</label><input type="number" id="advanceMonthsCount" readonly style="background:#f1f5f9;"></div>
-                <div class="form-group"><label>Amount to Pay (UGX) *</label><input type="number" id="advanceAmount" required min="1" readonly style="background:#f1f5f9;"></div>
+                <div class="form-group"><label>Amount to Pay *</label><input type="number" id="advanceAmount" min="1" readonly style="background:#f1f5f9;"></div>
             </div>
-            <div class="form-group"><label>Payment Date *</label><input type="date" id="advancePaymentDate" required></div>
+            <div class="form-group"><label>Payment Date *</label><input type="date" id="advancePaymentDate"></div>
             <div class="form-group"><label>Reference / Notes</label><input type="text" id="advanceNotes" placeholder="e.g. Mobile money ref"></div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('advanceRentModal')">Cancel</button><button type="submit" class="btn btn-success">Generate Invoices & Record Payment</button></div>
         </form>
@@ -1018,9 +1036,9 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="utilityModal">
     <div class="modal">
         <h3 id="utilityModalTitle">Electricity Meter Reading</h3>
-        <form id="utilityForm" onsubmit="saveUtilityReading(event)">
+        <form id="utilityForm" onsubmit="saveUtilityReading(event)" novalidate>
             <input type="hidden" id="utilityType" value="electric">
-            <div class="form-group"><label>Tenant *</label><select id="utilityTenant" required onchange="onUtilityTenantChange()"><option value="">Select tenant</option></select></div>
+            <div class="form-group"><label>Tenant *</label><select id="utilityTenant" onchange="onUtilityTenantChange()"><option value="">Select tenant</option></select></div>
             <div class="form-row">
                 <div class="form-group">
                     <label>Previous Reading</label>
@@ -1029,20 +1047,20 @@ input,select,textarea{font-size:16px}
                 </div>
                 <div class="form-group">
                     <label>Current Reading *</label>
-                    <input type="number" id="utilityCurr" step="0.01" required oninput="updateUtilityPreview()">
+                    <input type="number" id="utilityCurr" step="0.01" oninput="updateUtilityPreview()">
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Reading Date *</label><input type="date" id="utilityDate" required></div>
+                <div class="form-group"><label>Reading Date *</label><input type="date" id="utilityDate"></div>
                 <div class="form-group"><label>Usage (units)</label><input type="number" id="utilityUsage" step="0.01" readonly style="background:#f1f5f9;"></div>
             </div>
             <div class="calc-preview" id="utilityPreview">
                 <div class="calc-row"><span>Usage</span><span id="prevUsage">0</span></div>
                 <div class="calc-row" id="prevRateRow"><span>Rate per unit</span><span id="prevRate">1,100</span></div>
                 <div class="calc-row" id="prevSubtotalRow"><span>Subtotal</span><span id="prevSubtotal">0</span></div>
-                <div class="calc-row" id="prevSewerRow" style="display:none;"><span>Sewerage (75%)</span><span id="prevSewer">0</span></div>
+                <div class="calc-row" id="prevSewerRow" style="display:none;"><span>Sewerage</span><span id="prevSewer">0</span></div>
                 <div class="calc-row" id="prevServiceRow" style="display:none;"><span>Service charge</span><span id="prevService">1,500</span></div>
-                <div class="calc-row" id="prevVatRow" style="display:none;"><span>VAT (18%)</span><span id="prevVat">0</span></div>
+                <div class="calc-row" id="prevVatRow" style="display:none;"><span>VAT</span><span id="prevVat">0</span></div>
                 <div class="calc-row"><span>Total Amount</span><span id="prevTotal">0</span></div>
             </div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('utilityModal')">Cancel</button><button type="submit" class="btn btn-primary">Save Reading</button></div>
@@ -1053,12 +1071,18 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="baseChargesModal">
     <div class="modal">
         <h3>⚙️ Base Charges</h3>
-        <form id="baseChargesForm" onsubmit="saveBaseCharges(event)">
-            <div class="form-group"><label>Electric Rate (UGX per unit)</label><input type="number" id="baseElectricRate" value="1100" min="0"></div>
-            <div class="form-group"><label>Water Rate (UGX per unit)</label><input type="number" id="baseWaterRate" value="4433" min="0"></div>
+        <form id="baseChargesForm" onsubmit="saveBaseCharges(event)" novalidate>
+            <div style="font-size:.8rem;font-weight:700;color:#475569;margin-bottom:.5rem;">⚡ Electricity</div>
+            <div class="form-group"><label>Electric Rate (per unit)</label><input type="number" id="baseElectricRate" value="1100" min="0"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Electric Service Charge</label><input type="number" id="baseElectricService" value="0" min="0"></div>
+                <div class="form-group"><label>Electric VAT (%)</label><input type="number" id="baseElectricVat" value="18" min="0" max="100"></div>
+            </div>
+            <div style="font-size:.8rem;font-weight:700;color:#475569;margin:1rem 0 .5rem 0;">💧 Water</div>
+            <div class="form-group"><label>Water Rate (per unit)</label><input type="number" id="baseWaterRate" value="4433" min="0"></div>
             <div class="form-group"><label>Sewerage Charge (%)</label><input type="number" id="baseSewerage" value="75" min="0" max="100"></div>
-            <div class="form-group"><label>Service Charge (UGX)</label><input type="number" id="baseService" value="1500" min="0"></div>
-            <div class="form-group"><label>VAT (%)</label><input type="number" id="baseVat" value="18" min="0" max="100"></div>
+            <div class="form-group"><label>Water Service Charge</label><input type="number" id="baseService" value="1500" min="0"></div>
+            <div class="form-group"><label>Water VAT (%)</label><input type="number" id="baseVat" value="18" min="0" max="100"></div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('baseChargesModal')">Cancel</button><button type="submit" class="btn btn-primary">Save Charges</button></div>
         </form>
     </div>
@@ -1067,13 +1091,13 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="expenseModal">
     <div class="modal">
         <h3>Add Expense</h3>
-        <form id="expenseForm" onsubmit="saveExpense(event)">
-            <div class="form-group"><label>Apartment / Tenant *</label><select id="expenseTenant" required><option value="">Select apartment</option></select></div>
-            <div class="form-group"><label>Category *</label><select id="expenseCategory" required><option value="Plumbing">Plumbing</option><option value="Electric">Electric</option><option value="General Maintenance">General Maintenance</option></select></div>
-            <div class="form-group"><label>Description *</label><input type="text" id="expenseDesc" required></div>
+        <form id="expenseForm" onsubmit="saveExpense(event)" novalidate>
+            <div class="form-group"><label>Apartment / Tenant *</label><select id="expenseTenant"><option value="">Select apartment</option></select></div>
+            <div class="form-group"><label>Category *</label><select id="expenseCategory"><option value="Plumbing">Plumbing</option><option value="Electric">Electric</option><option value="General Maintenance">General Maintenance</option></select></div>
+            <div class="form-group"><label>Description *</label><input type="text" id="expenseDesc"></div>
             <div class="form-row">
-                <div class="form-group"><label>Amount (UGX) *</label><input type="number" id="expenseAmount" required min="0"></div>
-                <div class="form-group"><label>Date *</label><input type="date" id="expenseDate" required></div>
+                <div class="form-group"><label>Amount *</label><input type="number" id="expenseAmount" min="0"></div>
+                <div class="form-group"><label>Date *</label><input type="date" id="expenseDate"></div>
             </div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('expenseModal')">Cancel</button><button type="submit" class="btn btn-primary">Save Expense</button></div>
         </form>
@@ -1083,10 +1107,10 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="editRentModal">
     <div class="modal">
         <h3>Edit Rent Transaction</h3>
-        <form id="editRentForm" onsubmit="saveRentEdit(event)">
+        <form id="editRentForm" onsubmit="saveRentEdit(event)" novalidate>
             <input type="hidden" id="editRentTenantId"><input type="hidden" id="editRentIndex">
-            <div class="form-group"><label>Date</label><input type="date" id="editRentDate" required></div>
-            <div class="form-group"><label>Description</label><input type="text" id="editRentDesc" required></div>
+            <div class="form-group"><label>Date</label><input type="date" id="editRentDate"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="editRentDesc"></div>
             <div class="form-row">
                 <div class="form-group"><label>Debit (Invoice)</label><input type="number" id="editRentDebit" min="0" value="0"></div>
                 <div class="form-group"><label>Credit (Payment)</label><input type="number" id="editRentCredit" min="0" value="0"></div>
@@ -1100,18 +1124,18 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="editUtilityModal">
     <div class="modal">
         <h3>Update Utility Row</h3>
-        <form id="editUtilityForm" onsubmit="saveUtilityEdit(event)">
+        <form id="editUtilityForm" onsubmit="saveUtilityEdit(event)" novalidate>
             <input type="hidden" id="editUtilityTenantId">
             <input type="hidden" id="editUtilityType">
             <input type="hidden" id="editUtilityIndex">
-            <div class="form-group"><label>Posting Date</label><input type="date" id="editUtilityDate" required></div>
+            <div class="form-group"><label>Posting Date</label><input type="date" id="editUtilityDate"></div>
             <div class="form-group"><label>Description</label><input type="text" id="editUtilityDesc"></div>
             <div class="form-row">
                 <div class="form-group"><label>Previous Meter</label><input type="number" step="0.01" id="editUtilityPrev"></div>
                 <div class="form-group"><label>Current Meter</label><input type="number" step="0.01" id="editUtilityCurr"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Rate (UGX/unit)</label><input type="number" step="0.01" id="editUtilityRate"></div>
+                <div class="form-group"><label>Rate (per unit)</label><input type="number" step="0.01" id="editUtilityRate"></div>
                 <div class="form-group"><label>Debit (Invoice Amount)</label><input type="number" step="0.01" id="editUtilityDebit" min="0"></div>
             </div>
             <div class="form-group"><label>Credit (Payment Amount)</label><input type="number" step="0.01" id="editUtilityCredit" min="0"></div>
@@ -1124,17 +1148,17 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="moveoutModal">
     <div class="modal" style="max-width:600px;">
         <h3>🚪 Process Move-out</h3>
-        <form id="moveoutForm" onsubmit="saveMoveOut(event)">
-            <div class="form-group"><label>Select Tenant *</label><select id="moveoutTenant" required onchange="loadMoveOutDetails()"><option value="">Select tenant</option></select></div>
+        <form id="moveoutForm" onsubmit="saveMoveOut(event)" novalidate>
+            <div class="form-group"><label>Select Tenant *</label><select id="moveoutTenant" onchange="loadMoveOutDetails()"><option value="">Select tenant</option></select></div>
             <div id="moveoutDetailsPanel" style="background:#f8fafc;border-radius:1rem;padding:1rem;margin-bottom:1rem;">
                 <p style="color:#94a3b8;font-size:.85rem;text-align:center;padding:.5rem;">Select a tenant to view move-out details.</p>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Move-out Date *</label><input type="date" id="moveoutDate" required></div>
+                <div class="form-group"><label>Move-out Date *</label><input type="date" id="moveoutDate"></div>
                 <div class="form-group"><label>Reason / Notes</label><input type="text" id="moveoutReason" placeholder="e.g. Lease ended"></div>
             </div>
             <div style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:.65rem;padding:.75rem 1rem;font-size:.82rem;color:#78350f;margin-bottom:1rem;">
-                <strong>Note:</strong> Saving will finalize the move-out. The apartment will return to <strong>vacant</strong>, the tenant will be removed from the active list, and this record will be stored in the Move-out tab. You can edit the pending balances below before saving.
+                <strong>Note:</strong> Saving will finalize the move-out. The apartment will return to <strong>vacant</strong>, the tenant will be removed from the active list, and this record will be stored in the Move-out tab.
             </div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('moveoutModal')">Cancel</button><button type="submit" class="btn btn-danger">Confirm Move-out</button></div>
         </form>
@@ -1144,7 +1168,7 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="editMoveoutModal">
     <div class="modal">
         <h3>Update Move-out Balances</h3>
-        <form id="editMoveoutForm" onsubmit="saveMoveoutEdit(event)">
+        <form id="editMoveoutForm" onsubmit="saveMoveoutEdit(event)" novalidate>
             <input type="hidden" id="editMoveoutId">
             <div class="form-group"><label>Tenant</label><input type="text" id="editMoveoutTenantName" readonly style="background:#f1f5f9;"></div>
             <div class="form-row">
@@ -1152,11 +1176,11 @@ input,select,textarea{font-size:16px}
                 <div class="form-group"><label>Reason / Notes</label><input type="text" id="editMoveoutReason"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Rent Balance (UGX)</label><input type="number" step="0.01" id="editMoveoutRentBal" min="0"></div>
-                <div class="form-group"><label>Electric Balance (UGX)</label><input type="number" step="0.01" id="editMoveoutElecBal" min="0"></div>
+                <div class="form-group"><label>Rent Balance</label><input type="number" step="0.01" id="editMoveoutRentBal" min="0"></div>
+                <div class="form-group"><label>Electric Balance</label><input type="number" step="0.01" id="editMoveoutElecBal" min="0"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Water Balance (UGX)</label><input type="number" step="0.01" id="editMoveoutWaterBal" min="0"></div>
+                <div class="form-group"><label>Water Balance</label><input type="number" step="0.01" id="editMoveoutWaterBal" min="0"></div>
                 <div class="form-group"><label>Additional Notes</label><input type="text" id="editMoveoutNotes"></div>
             </div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('editMoveoutModal')">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
@@ -1175,10 +1199,11 @@ input,select,textarea{font-size:16px}
 
 <div class="modal-overlay" id="locationModal">
     <div class="modal">
-        <h3>Add Location</h3>
-        <form id="locationForm" onsubmit="saveLocation(event)">
-            <div class="form-group"><label>Area Name *</label><input type="text" id="locationArea" required></div>
-            <div class="form-group"><label>City *</label><input type="text" id="locationCity" required></div>
+        <h3 id="locationModalTitle">Add Location</h3>
+        <form id="locationForm" onsubmit="saveLocation(event)" novalidate>
+            <input type="hidden" id="locationEditId">
+            <div class="form-group"><label>Area Name *</label><input type="text" id="locationArea"></div>
+            <div class="form-group"><label>City *</label><input type="text" id="locationCity"></div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('locationModal')">Cancel</button><button type="submit" class="btn btn-primary">Save Location</button></div>
         </form>
     </div>
@@ -1187,13 +1212,13 @@ input,select,textarea{font-size:16px}
 <div class="modal-overlay" id="userModal">
     <div class="modal">
         <h3>Add User</h3>
-        <form id="userForm" onsubmit="saveUser(event)">
-            <div class="form-group"><label>Full Name *</label><input type="text" id="userFullName" required></div>
-            <div class="form-group"><label>Username *</label><input type="text" id="userUsername" required></div>
-            <div class="form-group"><label>Password *</label><input type="password" id="userPassword" required minlength="4"></div>
+        <form id="userForm" onsubmit="saveUser(event)" novalidate>
+            <div class="form-group"><label>Full Name *</label><input type="text" id="userFullName"></div>
+            <div class="form-group"><label>Username *</label><input type="text" id="userUsername"></div>
+            <div class="form-group"><label>Password *</label><input type="password" id="userPassword" minlength="4"></div>
             <div class="form-row">
-                <div class="form-group"><label>Role *</label><select id="userRole" required><option value="user">User</option><option value="accountant">Accountant</option><option value="cashier">Cashier</option><option value="manager">Manager</option></select></div>
-                <div class="form-group"><label>Location *</label><select id="userLocation" required><option value="">Select location</option></select></div>
+                <div class="form-group"><label>Role *</label><select id="userRole"><option value="user">User</option><option value="accountant">Accountant</option><option value="cashier">Cashier</option><option value="manager">Manager</option></select></div>
+                <div class="form-group"><label>Location *</label><select id="userLocation"><option value="">Select location</option></select></div>
             </div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('userModal')">Cancel</button><button type="submit" class="btn btn-primary">Save User</button></div>
         </form>
@@ -1204,6 +1229,94 @@ input,select,textarea{font-size:16px}
 <div class="sync-banner" id="syncBanner"></div>
 
 <script>
+// ============================================================
+// CURRENCY SUPPORT
+// ============================================================
+const CURRENCIES = {
+    UGX: { code: 'UGX', label: 'Uganda Shilling',       rate: 1,        prefix: 'UGX ', symbol: '🇺🇬' },
+    USD: { code: 'USD', label: 'US Dollar',             rate: 0.00027,  prefix: '$ ',   symbol: '🇺🇸' },
+    KSH: { code: 'KSH', label: 'Kenya Shilling',        rate: 0.036,    prefix: 'KSH ', symbol: '🇰🇪' },
+    ETB: { code: 'ETB', label: 'Ethiopian Birr',        rate: 0.015,    prefix: 'ETB ', symbol: '🇪🇹' },
+    SOS: { code: 'SOS', label: 'Somali Shilling',       rate: 0.15,     prefix: 'SOS ', symbol: '🇸🇴' },
+    TZS: { code: 'TZS', label: 'Tanzanian Shilling',    rate: 0.68,     prefix: 'TZS ', symbol: '🇹🇿' },
+    SSP: { code: 'SSP', label: 'South Sudanese Pound',  rate: 0.38,     prefix: 'SSP ', symbol: '🇸🇸' },
+    RWF: { code: 'RWF', label: 'Rwandan Franc',         rate: 0.37,     prefix: 'RWF ', symbol: '🇷🇼' },
+    BIF: { code: 'BIF', label: 'Burundian Franc',       rate: 0.78,     prefix: 'BIF ', symbol: '🇧🇮' }
+};
+const LS_ACTIVE_CURRENCY = 'bmr_active_currency_v1';
+let ACTIVE_CURRENCY = 'UGX';
+
+function loadActiveCurrency() {
+    try {
+        const c = localStorage.getItem(LS_ACTIVE_CURRENCY);
+        if (c && CURRENCIES[c]) ACTIVE_CURRENCY = c;
+    } catch (e) {}
+}
+function saveActiveCurrency(c) {
+    if (CURRENCIES[c]) {
+        ACTIVE_CURRENCY = c;
+        try { localStorage.setItem(LS_ACTIVE_CURRENCY, c); } catch (e) {}
+    }
+}
+function formatMoney(ugx) {
+    const cur = CURRENCIES[ACTIVE_CURRENCY];
+    const converted = (Number(ugx) || 0) * cur.rate;
+    return cur.prefix + converted.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+const formatUGX = formatMoney;
+
+function updateCurrencyPill() {
+    const pill = document.getElementById('headerCurrencyPill');
+    if (pill) pill.textContent = '💱 ' + ACTIVE_CURRENCY;
+}
+
+function changeCurrency(code) {
+    if (!CURRENCIES[code]) return;
+    if (!can('manage_currency')) { showNotification('Permission denied', 'warning'); return; }
+    saveActiveCurrency(code);
+    updateCurrencyPill();
+    refreshAllViewsAfterCurrencyChange();
+    showNotification('Currency changed to ' + code, 'success');
+}
+
+function refreshAllViewsAfterCurrencyChange() {
+    try { renderDashboard(); } catch (e) {}
+    try { renderPropertyPage(); } catch (e) {}
+    try { renderTenantsPage(); } catch (e) {}
+    try { renderUtilityPage(); } catch (e) {}
+    try { renderExpensesPage(); } catch (e) {}
+    try { renderReceiptsPage(); } catch (e) {}
+    try { renderStatementsPage(); } catch (e) {}
+    try { renderMoveoutPage(); } catch (e) {}
+    try { if (can('view_admin')) renderAdminPage(); } catch (e) {}
+    try { updateRateNote(); } catch (e) {}
+}
+
+function renderCurrencyAdminSection() {
+    const el = document.getElementById('currencyAdminSection');
+    if (!el) return;
+    if (!can('manage_currency')) { el.innerHTML = ''; return; }
+    
+    // Modern card-based selector
+    const cards = Object.values(CURRENCIES).map(c => `
+        <div class="currency-card ${c.code === ACTIVE_CURRENCY ? 'selected' : ''}" onclick="changeCurrency('${c.code}')">
+            <div class="cc-symbol">${c.symbol}</div>
+            <div class="cc-code">${c.code}</div>
+            <div class="cc-label">${c.label}</div>
+        </div>
+    `).join('');
+
+    el.innerHTML = `
+        <div class="currency-section" style="padding:1.5rem;background:#fff;border-radius:1.25rem;margin-bottom:1.25rem;border:1px solid #e2e8f0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+                <label style="font-size:1rem;font-weight:800;color:#0f172a;">💱 Display Currency</label>
+                <span style="font-size:.75rem;color:#64748b;background:#f1f5f9;padding:.2rem .6rem;border-radius:1rem;">Global App Setting</span>
+            </div>
+            <div style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Choose the active currency. Every amount, invoice, and report across the entire app will instantly update to use this currency.</div>
+            <div class="currency-grid">${cards}</div>
+        </div>`;
+}
+
 // ============================================================
 // FIREBASE INIT
 // ============================================================
@@ -1230,13 +1343,14 @@ try {
 // LOCALSTORAGE
 // ============================================================
 const LS_KEYS = {
-    tenants: 'bmr_tenants_v9',
-    properties: 'bmr_properties_v9',
-    units: 'bmr_units_v9',
-    users: 'bmr_users_v9',
-    locations: 'bmr_locations_v9',
-    moveouts: 'bmr_moveouts_v9',
-    syncOff: 'bmr_sync_off_v9'
+    tenants: 'bmr_tenants_v10',
+    properties: 'bmr_properties_v10',
+    units: 'bmr_units_v10',
+    users: 'bmr_users_v10',
+    locations: 'bmr_locations_v10',
+    moveouts: 'bmr_moveouts_v10',
+    baseCharges: 'bmr_base_charges_v2',
+    syncOff: 'bmr_sync_off_v10'
 };
 
 function saveLocalCache() {
@@ -1247,6 +1361,7 @@ function saveLocalCache() {
         localStorage.setItem(LS_KEYS.users, JSON.stringify(USERS));
         localStorage.setItem(LS_KEYS.locations, JSON.stringify(LOCATIONS));
         localStorage.setItem(LS_KEYS.moveouts, JSON.stringify(MOVEOUTS));
+        localStorage.setItem(LS_KEYS.baseCharges, JSON.stringify(BASE_CHARGES));
     } catch (err) { console.warn('Local cache save failed:', err.message); }
 }
 
@@ -1258,12 +1373,14 @@ function loadLocalCache() {
         const usr = localStorage.getItem(LS_KEYS.users);
         const loc = localStorage.getItem(LS_KEYS.locations);
         const mo = localStorage.getItem(LS_KEYS.moveouts);
+        const bc = localStorage.getItem(LS_KEYS.baseCharges);
         if (t) { const parsed = JSON.parse(t); if (Array.isArray(parsed)) { TENANTS.length = 0; parsed.forEach(x => TENANTS.push(x)); } }
         if (p) { const parsed = JSON.parse(p); if (Array.isArray(parsed)) { PROPERTIES.length = 0; parsed.forEach(x => PROPERTIES.push(x)); } }
         if (u) { const parsed = JSON.parse(u); if (Array.isArray(parsed)) { UNITS.length = 0; parsed.forEach(x => UNITS.push(x)); } }
         if (usr) { const parsed = JSON.parse(usr); if (Array.isArray(parsed)) { USERS.length = 0; parsed.forEach(x => USERS.push(x)); } }
         if (loc) { const parsed = JSON.parse(loc); if (Array.isArray(parsed)) { LOCATIONS.length = 0; parsed.forEach(x => LOCATIONS.push(x)); } }
         if (mo) { const parsed = JSON.parse(mo); if (Array.isArray(parsed)) { MOVEOUTS.length = 0; parsed.forEach(x => MOVEOUTS.push(x)); } }
+        if (bc) { const parsed = JSON.parse(bc); if (parsed && typeof parsed === 'object') Object.assign(BASE_CHARGES, parsed); }
     } catch (err) { console.warn('Local cache load failed:', err.message); }
 }
 
@@ -1384,6 +1501,7 @@ async function saveUnitNow(u) { stamp(u); saveLocalCache(); return fsWrite('unit
 async function deleteUnitNow(id) { saveLocalCache(); return fsDelete('units', id); }
 async function saveUserNow(u) { stamp(u); saveLocalCache(); return fsWrite('users', u.id, u); }
 async function saveLocationNow(l) { stamp(l); saveLocalCache(); return fsWrite('locations', l.id, l); }
+async function deleteLocationNow(id) { saveLocalCache(); return fsDelete('locations', id); }
 async function saveMoveoutNow(m) { stamp(m); saveLocalCache(); return fsWrite('moveouts', m.id, m); }
 async function deleteMoveoutNow(id) { saveLocalCache(); return fsDelete('moveouts', id); }
 
@@ -1393,7 +1511,15 @@ async function deleteMoveoutNow(id) { saveLocalCache(); return fsDelete('moveout
 const today = new Date();
 const todayStr = today.toISOString().split('T')[0];
 let currentUser = null;
-const BASE_CHARGES = { electricRate: 1100, waterRate: 4433, seweragePercent: 75, serviceCharge: 1500, vatPercent: 18 };
+const BASE_CHARGES = {
+    electricRate: 1100,
+    electricServiceCharge: 0,
+    electricVatPercent: 18,
+    waterRate: 4433,
+    seweragePercent: 75,
+    serviceCharge: 1500,
+    vatPercent: 18
+};
 const DEFAULT_LOCATIONS = [{ id: 'loc1', area: 'Malukhu', city: 'Mbale' }];
 const DEFAULT_USERS = [
     { id: 'u1', username: 'admin', password: 'admin', fullName: 'System Admin', role: 'admin', locationId: null, locationName: 'All Locations' },
@@ -1401,6 +1527,7 @@ const DEFAULT_USERS = [
 ];
 let LOCATIONS = [...DEFAULT_LOCATIONS];
 let USERS = [...DEFAULT_USERS];
+
 const DEFAULT_PROPERTIES = [{ id: 'prop1', name: 'Bright Mesh Apartments', type: 'Apartment Block', locationId: 'loc1', address: 'Plot 12, Nkoma Road', floors: 2, yearBuilt: 2018, owner: 'Bright Mesh Ltd', ownerContact: '+256 700 000 000', notes: 'Secure parking, borehole backup, 24/7 security' }];
 const DEFAULT_UNITS = [
     { id: 'u_apt1', propertyId: 'prop1', unitNumber: '1', unitType: '2 Bedroom', rent: 150000, floor: 0, bathrooms: 1, bedrooms: 2, status: 'occupied', notes: '' },
@@ -1417,8 +1544,8 @@ function can(action) {
     if (!currentUser) return false;
     const role = currentUser.role;
     const perms = {
-        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','view_receipts','manage_properties','view_statements','manage_moveouts'],
-        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','view_receipts','manage_properties','view_statements','manage_moveouts'],
+        admin: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','manage_locations','print','view_receipts','manage_properties','view_statements','manage_moveouts','manage_currency'],
+        manager: ['view_dashboard','view_tenants','edit_tenants','delete_tenants','add_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','delete_expenses','view_admin','manage_users','print','view_receipts','manage_properties','view_statements','manage_moveouts','manage_currency'],
         accountant: ['view_dashboard','view_tenants','edit_tenants','add_payments','view_utility','add_utility','delete_utility','view_expenses','add_expenses','print','view_receipts','view_statements','manage_moveouts'],
         cashier: ['view_dashboard','view_tenants','add_payments','view_expenses','print','view_receipts','view_statements'],
         user: ['view_dashboard','view_tenants','view_expenses','print','view_receipts','view_statements']
@@ -1427,7 +1554,7 @@ function can(action) {
 }
 
 // ============================================================
-// SEED TENANTS
+// SEED TENANTS (Truncated for brevity but includes data)
 // ============================================================
 const TENANTS = [
     { id: 'ivan', name: 'Ivan', apt: 1, mobile: '+256 772 100 001', monthlyRent: 150000, billingDate: 1, electricRate: 1100, locationId: 'loc1', propertyId: 'prop1', unitId: 'u_apt1',
@@ -1652,7 +1779,6 @@ const TENANTS = [
 // ============================================================
 // HELPERS
 // ============================================================
-function formatUGX(a){return 'UGX '+Number(a||0).toLocaleString('en-UG',{maximumFractionDigits:2});}
 function ordinal(n){const num=parseInt(n);if(isNaN(num))return n;const j=num%10,k=num%100;if(j===1&&k!==11)return num+'st';if(j===2&&k!==12)return num+'nd';if(j===3&&k!==13)return num+'rd';return num+'th';}
 function utilityBalance(a){return (a||[]).reduce((s,r)=>s+(r.debit||0)-(r.credit||0),0);}
 function rentBalance(t){return utilityBalance(t.rent);}
@@ -1685,7 +1811,7 @@ function getTenantUnit(t){if(t.unitId){const u=getUnitById(t.unitId);if(u)return
 function getUnitOccupant(id){return TENANTS.find(t=>t.unitId===id);}
 function getNextInvoiceNo(t){const n=t.rent.filter(r=>r.invoiceNo).map(r=>{const m=r.invoiceNo.match(/\d+/);return m?parseInt(m[0]):0;});const mx=n.length?Math.max(...n):0;return 'INV-'+String(mx+1).padStart(3,'0');}
 function getNextReceiptNo(prefix){const all=[];TENANTS.forEach(t=>{t.rent.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.electric.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.water.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});});const n=all.map(r=>{const m=r.match(/\d+/);return m?parseInt(m[0]):0;});const mx=n.length?Math.max(...n):0;return (prefix||'RCPT-')+String(mx+1).padStart(4,'0');}
-function showNotification(msg,type='success'){const n=document.getElementById('notification');n.textContent=msg;n.className='notification '+type+' show';setTimeout(()=>n.classList.remove('show'),3000);}
+function showNotification(msg,type='success'){const n=document.getElementById('notification');if(!n)return;n.textContent=msg;n.className='notification '+type+' show';setTimeout(()=>n.classList.remove('show'),3000);}
 function closeModal(id){const o=document.getElementById(id);if(!o)return;o.classList.remove('active');o.style.display='none';void o.offsetHeight;setTimeout(()=>{o.style.display='';},60);}
 function openModal(id){const o=document.getElementById(id);if(!o)return;o.style.display='flex';o.classList.add('active');}
 function getLastMeterReading(t,type){const arr=type==='electric'?t.electric:t.water;for(let k=arr.length-1;k>=0;k--){if(arr[k].reading!==null&&arr[k].reading!==undefined&&arr[k].reading!==0)return arr[k].reading;}return 0;}
@@ -1732,33 +1858,74 @@ function generateAutoInvoices(){
 // ============================================================
 function scrollToFeatures(){document.getElementById('featuresSection').scrollIntoView({behavior:'smooth'});}
 function scrollToPricing(){document.getElementById('pricingSection').scrollIntoView({behavior:'smooth'});}
-function openLogin(){document.getElementById('loginForm').reset();document.getElementById('loginError').classList.remove('show');resetLoginButton();document.getElementById('loginOverlay').classList.add('active');setTimeout(()=>document.getElementById('loginUsername').focus(),100);}
-function closeLogin(){document.getElementById('loginOverlay').classList.remove('active');document.getElementById('loginUsername').value='';document.getElementById('loginPassword').value='';document.getElementById('loginError').classList.remove('show');resetLoginButton();}
+function openLogin(){
+    const form = document.getElementById('loginForm');
+    if(form) form.reset();
+    const err = document.getElementById('loginError');
+    if(err) err.classList.remove('show');
+    resetLoginButton();
+    const overlay = document.getElementById('loginOverlay');
+    if(overlay) overlay.classList.add('active');
+    setTimeout(()=>{const u=document.getElementById('loginUsername');if(u)u.focus();},100);
+}
+function closeLogin(){
+    const overlay = document.getElementById('loginOverlay');
+    if(overlay) overlay.classList.remove('active');
+    document.getElementById('loginUsername').value='';
+    document.getElementById('loginPassword').value='';
+    document.getElementById('loginError').classList.remove('show');
+    resetLoginButton();
+}
 
 // ============================================================
 // AUTH
 // ============================================================
 async function handleLogin(e){
-    e.preventDefault();
-    const username=document.getElementById('loginUsername').value.trim().toLowerCase();
-    const password=document.getElementById('loginPassword').value;
-    const errorEl=document.getElementById('loginError');
-    const btn=document.getElementById('loginBtn');
+    if(e) e.preventDefault();
+    
+    // Manual validation
+    const uInput = document.getElementById('loginUsername').value.trim().toLowerCase();
+    const pInput = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    
+    if(!uInput || !pInput) {
+        errorEl.textContent = 'Please enter both username and password.';
+        errorEl.classList.add('show');
+        return;
+    }
+
     errorEl.classList.remove('show');
     btn.textContent='Signing in...';
     btn.disabled=true;
+    
     try{
-        let userRecord=USERS.find(u=>u.username.toLowerCase()===username);
+        let userRecord=USERS.find(u=>u.username.toLowerCase()===uInput);
         if(!userRecord && firebaseReady && !cloudSyncBlocked){
-            try{const snap=await db.collection('users').where('username','==',username).limit(1).get();if(!snap.empty){const doc=snap.docs[0];userRecord={id:doc.id,...doc.data()};USERS.push(userRecord);}}catch(err){}
+            try{const snap=await db.collection('users').where('username','==',uInput).limit(1).get();if(!snap.empty){const doc=snap.docs[0];userRecord={id:doc.id,...doc.data()};USERS.push(userRecord);}}catch(err){}
         }
-        if(!userRecord){errorEl.textContent='Username not found. Please check your credentials.';errorEl.classList.add('show');resetLoginButton();return;}
-        if(userRecord.password!==password){errorEl.textContent='Incorrect password. Please try again.';errorEl.classList.add('show');resetLoginButton();return;}
+        if(!userRecord){
+            errorEl.textContent='Username not found. Please check your credentials.';
+            errorEl.classList.add('show');
+            return;
+        }
+        if(userRecord.password!==pInput){
+            errorEl.textContent='Incorrect password. Please try again.';
+            errorEl.classList.add('show');
+            return;
+        }
         currentUser=userRecord;
         sessionStorage.setItem('bmr_currentUser',JSON.stringify(userRecord));
         closeLogin();
         enterApp();
-    }catch(err){console.error(err);errorEl.textContent='Login failed. Please try again.';errorEl.classList.add('show');resetLoginButton();}
+    }catch(err){
+        console.error(err);
+        errorEl.textContent='Login failed. Please try again.';
+        errorEl.classList.add('show');
+    }finally{
+        // GUARANTEED RESET
+        resetLoginButton();
+    }
 }
 
 function handleLogout(){
@@ -1781,6 +1948,7 @@ function enterApp(){
     document.getElementById('userNameBadge').textContent=currentUser.fullName||currentUser.username;
     document.getElementById('userRoleBadge').textContent=currentUser.role.toUpperCase();
     if(currentUser.role!=='admin'&&currentUser.locationName)document.getElementById('userNameBadge').textContent=`${currentUser.fullName} · ${currentUser.locationName}`;
+    updateCurrencyPill();
     applyPermissions();
     refreshFilterOptions();
     refreshAllPropertyDropdowns();
@@ -1789,6 +1957,7 @@ function enterApp(){
     if(can('view_admin'))renderAdminPage();
     renderStatementsPage();
     renderMoveoutPage();
+    updateRateNote();
 }
 
 function applyPermissions(){
@@ -1814,10 +1983,17 @@ function applyPermissions(){
     document.querySelectorAll('#page-moveout .section-header .btn-warning').forEach(b=>{b.style.display=can('manage_moveouts')?'':'none';});
 }
 
+function updateRateNote(){
+    const note = document.getElementById('rateNote');
+    if(!note) return;
+    note.textContent = `⚡ ${formatMoney(BASE_CHARGES.electricRate)}/unit + ${formatMoney(BASE_CHARGES.electricServiceCharge)} service + ${BASE_CHARGES.electricVatPercent}% VAT · 💧 ${formatMoney(BASE_CHARGES.waterRate)}/unit + ${BASE_CHARGES.seweragePercent}% sewer + ${formatMoney(BASE_CHARGES.serviceCharge)} service + ${BASE_CHARGES.vatPercent}% VAT`;
+}
+
 // ============================================================
 // INIT
 // ============================================================
 (async function init(){
+    loadActiveCurrency();
     const splash=document.getElementById('splash');
     const syncOff=localStorage.getItem(LS_KEYS.syncOff);
     if(syncOff==='1')cloudSyncBlocked=true;
@@ -1835,6 +2011,7 @@ function applyPermissions(){
     splash.classList.add('hidden');
     setTimeout(()=>{splash.style.display='none';},400);
     if(currentUser)enterApp();else{document.getElementById('landingPage').classList.remove('hidden');resetLoginButton();}
+    updateRateNote();
 })();
 
 // ============================================================
@@ -1877,11 +2054,11 @@ function renderDashboard(){
     const vacantUnits=allUnits.filter(u=>u.status==='vacant').length;
     const occRate=allUnits.length?Math.round((occupiedUnits/allUnits.length)*100):0;
     document.getElementById('dashboardCards').innerHTML=`
-        <div class="dash-card income"><div class="label">Total Income</div><div class="value">${formatUGX(totalIncome)}</div><div class="sub">All received payments</div></div>
-        <div class="dash-card profit"><div class="label">Profit</div><div class="value">${formatUGX(profit)}</div><div class="sub">Income – Expenses</div></div>
-        <div class="dash-card rent"><div class="label">💰 Rent Received</div><div class="value">${formatUGX(totalRentPaid)}</div><div class="sub">Total rent payments</div></div>
-        <div class="dash-card outstanding"><div class="label">Outstanding</div><div class="value">${formatUGX(outstanding)}</div><div class="sub">Pending balances</div></div>
-        <div class="dash-card expenses"><div class="label">Total Expenses</div><div class="value">${formatUGX(totalExp)}</div><div class="sub">${tenants.reduce((s,t)=>s+t.expenses.length,0)} items</div></div>
+        <div class="dash-card income"><div class="label">Total Income</div><div class="value">${formatMoney(totalIncome)}</div><div class="sub">All received payments</div></div>
+        <div class="dash-card profit"><div class="label">Profit</div><div class="value">${formatMoney(profit)}</div><div class="sub">Income – Expenses</div></div>
+        <div class="dash-card rent"><div class="label">💰 Rent Received</div><div class="value">${formatMoney(totalRentPaid)}</div><div class="sub">Total rent payments</div></div>
+        <div class="dash-card outstanding"><div class="label">Outstanding</div><div class="value">${formatMoney(outstanding)}</div><div class="sub">Pending balances</div></div>
+        <div class="dash-card expenses"><div class="label">Total Expenses</div><div class="value">${formatMoney(totalExp)}</div><div class="sub">${tenants.reduce((s,t)=>s+t.expenses.length,0)} items</div></div>
         <div class="dash-card units"><div class="label">🏢 Total Units</div><div class="value">${allUnits.length}</div><div class="sub">${getVisibleProperties().length} properties</div></div>
         <div class="dash-card occupied"><div class="label">🔑 Occupied</div><div class="value">${occupiedUnits}</div><div class="sub">${occRate}% occupancy rate</div></div>
         <div class="dash-card vacant"><div class="label">🚪 Vacant</div><div class="value">${vacantUnits}</div><div class="sub">Available for rent</div></div>
@@ -1893,7 +2070,7 @@ function renderDashboard(){
     }else{
         overdueSection.innerHTML=`<div class="alert-card"><h3>⚠️ Overdue Tenants <span class="count">${overdue.length}</span></h3>
             <table class="alert-table"><thead><tr><th>Tenant</th><th>Apt</th><th>Mobile</th><th>Invoice</th><th>Date</th><th>Days</th><th>Due</th></tr></thead>
-            <tbody>${overdue.map(o=>`<tr><td><strong>${o.name}</strong></td><td>${o.apt}</td><td>${o.mobile}</td><td>${o.invoiceNo}</td><td>${o.invoiceDate}</td><td><span class="days-overdue">${o.daysOverdue}d</span></td><td><strong>${formatUGX(o.amountDue)}</strong></td></tr>`).join('')}</tbody></table></div>`;
+            <tbody>${overdue.map(o=>`<tr><td><strong>${o.name}</strong></td><td>${o.apt}</td><td>${o.mobile}</td><td>${o.invoiceNo}</td><td>${o.invoiceDate}</td><td><span class="days-overdue">${o.daysOverdue}d</span></td><td><strong>${formatMoney(o.amountDue)}</strong></td></tr>`).join('')}</tbody></table></div>`;
     }
     const revCtx=document.getElementById('revenueChart').getContext('2d');
     if(charts.revenue)charts.revenue.destroy();
@@ -1933,7 +2110,7 @@ function renderPropertyOccupancyDashboard(){
         return `<div style="margin-bottom:.85rem;border:1px solid #e2e8f0;border-radius:.85rem;overflow:hidden;">
             <div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;padding:.65rem 1rem;">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;"><div style="font-weight:700;font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🏢 ${p.name}</div><div style="font-size:.7rem;color:#facc15;font-weight:700;flex-shrink:0;">${units.length} units</div></div>
-                <div style="display:flex;gap:.85rem;margin-top:.4rem;font-size:.7rem;color:#cbd5e1;flex-wrap:wrap;"><span>🟢 ${occ} occupied</span><span>🔴 ${vac} vacant</span>${maint?`<span>🟡 ${maint} maint</span>`:''}${reserved?`<span>🔵 ${reserved} reserved</span>`:''}<span style="margin-left:auto;color:#facc15;font-weight:700;">${formatUGX(roll)}</span></div>
+                <div style="display:flex;gap:.85rem;margin-top:.4rem;font-size:.7rem;color:#cbd5e1;flex-wrap:wrap;"><span>🟢 ${occ} occupied</span><span>🔴 ${vac} vacant</span>${maint?`<span>🟡 ${maint} maint</span>`:''}${reserved?`<span>🔵 ${reserved} reserved</span>`:''}<span style="margin-left:auto;color:#facc15;font-weight:700;">${formatMoney(roll)}</span></div>
             </div>
             <div style="padding:.4rem 0;">${unitRows}</div>
         </div>`;
@@ -1959,15 +2136,15 @@ function showUnitDetail(unitId){
                 <div style="font-size:.8rem;opacity:.9;margin-top:.15rem;">📞 ${occupant.mobile||'—'}</div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.9rem;">
-                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Rent Balance</div><div style="font-size:.95rem;font-weight:800;color:${rBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(rBal)}</div></div>
-                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Electric</div><div style="font-size:.95rem;font-weight:800;color:${eBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(eBal)}</div></div>
-                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Water</div><div style="font-size:.95rem;font-weight:800;color:${wBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(wBal)}</div></div>
-                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Total Due</div><div style="font-size:.95rem;font-weight:800;color:${totalDue>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(totalDue)}</div></div>
+                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Rent Balance</div><div style="font-size:.95rem;font-weight:800;color:${rBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(rBal)}</div></div>
+                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Electric</div><div style="font-size:.95rem;font-weight:800;color:${eBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(eBal)}</div></div>
+                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Water</div><div style="font-size:.95rem;font-weight:800;color:${wBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(wBal)}</div></div>
+                <div style="background:#f1f5f9;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Total Due</div><div style="font-size:.95rem;font-weight:800;color:${totalDue>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(totalDue)}</div></div>
             </div>
             <div style="background:#f8fafc;border-radius:.85rem;padding:.75rem .9rem;font-size:.82rem;margin-bottom:.9rem;">
-                <div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Monthly Rent</span><strong>${formatUGX(occupant.monthlyRent)}</strong></div>
+                <div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Monthly Rent</span><strong>${formatMoney(occupant.monthlyRent)}</strong></div>
                 <div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Billing Date</span><strong>${ordinal(occupant.billingDate)}</strong></div>
-                <div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Electric Rate</span><strong>${formatUGX(occupant.electricRate)}/unit</strong></div>
+                <div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Electric Rate</span><strong>${formatMoney(occupant.electricRate)}/unit</strong></div>
             </div>
             <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
                 <button class="btn btn-outline btn-sm" onclick="openInlineTenant('${occupant.id}')" style="flex:1;">📋 View Tenant</button>
@@ -1976,13 +2153,13 @@ function showUnitDetail(unitId){
     }else{
         financialBlock=`<div style="background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 100%);color:#fff;border-radius:.85rem;padding:.9rem 1rem;margin-bottom:.9rem;text-align:center;">
             <div style="font-size:1.6rem;">🚪</div><div style="font-size:1rem;font-weight:800;margin-top:.3rem;">Vacant Unit</div><div style="font-size:.78rem;opacity:.9;margin-top:.15rem;">No tenant currently assigned</div></div>
-            <div style="background:#f8fafc;border-radius:.85rem;padding:.75rem .9rem;font-size:.82rem;margin-bottom:.9rem;"><div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Expected Rent</span><strong>${formatUGX(u.rent)}</strong></div><div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Unit Type</span><strong>${u.unitType}</strong></div></div>
+            <div style="background:#f8fafc;border-radius:.85rem;padding:.75rem .9rem;font-size:.82rem;margin-bottom:.9rem;"><div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Expected Rent</span><strong>${formatMoney(u.rent)}</strong></div><div style="display:flex;justify-content:space-between;padding:.25rem 0;"><span style="color:#64748b;">Unit Type</span><strong>${u.unitType}</strong></div></div>
             ${can('add_tenants')?`<button class="btn btn-primary btn-sm" onclick="openAddTenantModal()" style="width:100%;">＋ Assign Tenant</button>`:''}`;
     }
     detailEl.innerHTML=`<div style="border:1px solid #e2e8f0;border-radius:.85rem;overflow:hidden;">
         <div style="background:#f8fafc;padding:.75rem 1rem;border-bottom:1px solid #e2e8f0;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;"><div><div style="font-weight:800;font-size:.95rem;color:#0f172a;">Unit ${u.unitNumber}</div><div style="font-size:.75rem;color:#64748b;margin-top:.1rem;">${prop?prop.name:'—'} · ${u.unitType}</div></div><span class="badge ${cls}">${u.status}</span></div>
-            <div style="display:flex;gap:.85rem;margin-top:.5rem;font-size:.75rem;color:#475569;flex-wrap:wrap;"><span>🛏️ ${u.bedrooms} bed</span><span>🚿 ${u.bathrooms} bath</span><span>🏢 Floor ${u.floor}</span><span>💰 ${formatUGX(u.rent)}/mo</span></div>
+            <div style="display:flex;gap:.85rem;margin-top:.5rem;font-size:.75rem;color:#475569;flex-wrap:wrap;"><span>🛏️ ${u.bedrooms} bed</span><span>🚿 ${u.bathrooms} bath</span><span>🏢 Floor ${u.floor}</span><span>💰 ${formatMoney(u.rent)}/mo</span></div>
         </div>
         <div style="padding:.9rem 1rem;">${financialBlock}${u.notes?`<div style="background:#fffbeb;border-left:3px solid #f59e0b;border-radius:.5rem;padding:.6rem .75rem;font-size:.8rem;color:#78350f;"><strong>Notes:</strong> ${u.notes}</div>`:''}</div>
     </div>`;
@@ -1994,16 +2171,16 @@ function openInlineTenant(tenantId){
     const unit=getTenantUnit(t),prop=unit?getPropertyById(unit.propertyId):null;
     const rBal=rentBalance(t),eBal=electricBalance(t),wBal=waterBalance(t),totalDue=rBal+eBal+wBal;
     document.getElementById('inlineTenantName').textContent=t.name;
-    document.getElementById('inlineTenantMeta').textContent=`${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile} · Rent ${formatUGX(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}`;
-    const rentRows=t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join('');
-    const elecRows=t.electric.map((r,idx)=>{const run=runningBalanceAt(t.electric,idx);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter!==null&&r.meter!==undefined?r.meter:'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join('');
-    const waterRows=t.water.length?t.water.map((r,idx)=>{const run=runningBalanceAt(t.water,idx);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter!==null&&r.meter!==undefined?r.meter:'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td></tr>`;}).join(''):'<tr><td colspan="6" style="padding:.75rem;color:#94a3b8;text-align:center;font-size:.82rem;">No water records</td></tr>';
+    document.getElementById('inlineTenantMeta').textContent=`${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile} · Rent ${formatMoney(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}`;
+    const rentRows=t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatMoney(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatMoney(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatMoney(run)}</td></tr>`;}).join('');
+    const elecRows=t.electric.map((r,idx)=>{const run=runningBalanceAt(t.electric,idx);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter!==null&&r.meter!==undefined?r.meter:'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatMoney(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatMoney(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatMoney(run)}</td></tr>`;}).join('');
+    const waterRows=t.water.length?t.water.map((r,idx)=>{const run=runningBalanceAt(t.water,idx);return `<tr><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.date||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.desc||'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;">${r.meter!==null&&r.meter!==undefined?r.meter:'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-debit">${r.debit?formatMoney(r.debit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;" class="text-credit">${r.credit?formatMoney(r.credit):'—'}</td><td style="padding:.45rem .5rem;border-bottom:1px solid #f1f5f9;font-size:.78rem;font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatMoney(run)}</td></tr>`;}).join(''):'<tr><td colspan="6" style="padding:.75rem;color:#94a3b8;text-align:center;font-size:.82rem;">No water records</td></tr>';
     document.getElementById('inlineTenantBody').innerHTML=`
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem;">
-            <div style="background:#fee2e2;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#991b1b;font-weight:700;">Rent Balance</div><div style="font-size:.95rem;font-weight:800;color:${rBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(rBal)}</div></div>
-            <div style="background:#fef3c7;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#92400e;font-weight:700;">Electric Balance</div><div style="font-size:.95rem;font-weight:800;color:${eBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(eBal)}</div></div>
-            <div style="background:#dbeafe;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#1e40af;font-weight:700;">Water Balance</div><div style="font-size:.95rem;font-weight:800;color:${wBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(wBal)}</div></div>
-            <div style="background:#0f172a;border-radius:.65rem;padding:.6rem .75rem;color:#fff;"><div style="font-size:.65rem;text-transform:uppercase;color:#facc15;font-weight:700;">Total Due</div><div style="font-size:.95rem;font-weight:800;color:${totalDue>0?'#f87171':'#4ade80'};margin-top:.15rem;">${formatUGX(totalDue)}</div></div>
+            <div style="background:#fee2e2;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#991b1b;font-weight:700;">Rent Balance</div><div style="font-size:.95rem;font-weight:800;color:${rBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(rBal)}</div></div>
+            <div style="background:#fef3c7;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#92400e;font-weight:700;">Electric Balance</div><div style="font-size:.95rem;font-weight:800;color:${eBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(eBal)}</div></div>
+            <div style="background:#dbeafe;border-radius:.65rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#1e40af;font-weight:700;">Water Balance</div><div style="font-size:.95rem;font-weight:800;color:${wBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(wBal)}</div></div>
+            <div style="background:#0f172a;border-radius:.65rem;padding:.6rem .75rem;color:#fff;"><div style="font-size:.65rem;text-transform:uppercase;color:#facc15;font-weight:700;">Total Due</div><div style="font-size:.95rem;font-weight:800;color:${totalDue>0?'#f87171':'#4ade80'};margin-top:.15rem;">${formatMoney(totalDue)}</div></div>
         </div>
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem;">
             ${can('add_payments')?`<button class="btn btn-success btn-sm" onclick="closeInlineTenant(); openPaymentForTenant('${t.id}')">💵 Add Payment</button>`:''}
@@ -2056,7 +2233,7 @@ function renderPropertyPage(){
         <div class="tenant-total-card"><div class="exp-label">🏢 Properties</div><div class="exp-value">${filtered.length}</div><div class="exp-sub">Managed buildings</div></div>
         <div class="tenant-amount-card"><div class="exp-label">🔑 Total Units</div><div class="exp-value">${allUnits.length}</div><div class="exp-sub">${occupied} occupied · ${vacant} vacant</div></div>
         <div class="admin-stat-card properties" style="border-radius:1.15rem;"><div class="admin-label">📈 Occupancy Rate</div><div class="admin-value">${occRate}%</div><div class="admin-sub">${maint} maint · ${reserved} reserved</div></div>
-        <div class="expense-total-card"><div class="exp-label">💰 Monthly Rent Roll</div><div class="exp-value">${formatUGX(totalRentRoll)}</div><div class="exp-sub">From occupied units</div></div>
+        <div class="expense-total-card"><div class="exp-label">💰 Monthly Rent Roll</div><div class="exp-value">${formatMoney(totalRentRoll)}</div><div class="exp-sub">From occupied units</div></div>
     `;
     const fsel=document.getElementById('propertyFilterProperty');
     if(fsel){const cur=fsel.value;fsel.innerHTML='<option value="all">All Properties</option>'+props.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');fsel.value=cur&&[...fsel.options].some(o=>o.value===cur)?cur:'all';}
@@ -2068,7 +2245,7 @@ function renderPropertyPage(){
         const vac=units.filter(u=>u.status==='vacant').length;
         const roll=units.filter(u=>u.status==='occupied').reduce((s,u)=>s+(u.rent||0),0);
         const loc=LOCATIONS.find(l=>l.id===p.locationId);
-        return `<tr><td><strong>${p.name}</strong></td><td>${p.type}</td><td>${p.address}</td><td>${loc?loc.area+', '+loc.city:'—'}</td><td>${units.length}</td><td><span class="badge paid">${occ}</span></td><td><span class="badge pending">${vac}</span></td><td>${formatUGX(roll)}</td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="viewProperty('${p.id}')">View</button>${can('manage_properties')?`<button class="btn btn-warning btn-sm" onclick="editProperty('${p.id}')">Edit</button>`:''}${currentUser.role==='admin'?`<button class="btn btn-danger btn-sm" onclick="deleteProperty('${p.id}')">Del</button>`:''}</div></td></tr>`;
+        return `<tr><td><strong>${p.name}</strong></td><td>${p.type}</td><td>${p.address}</td><td>${loc?loc.area+', '+loc.city:'—'}</td><td>${units.length}</td><td><span class="badge paid">${occ}</span></td><td><span class="badge pending">${vac}</span></td><td>${formatMoney(roll)}</td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="viewProperty('${p.id}')">View</button>${can('manage_properties')?`<button class="btn btn-warning btn-sm" onclick="editProperty('${p.id}')">Edit</button>`:''}${currentUser.role==='admin'?`<button class="btn btn-danger btn-sm" onclick="deleteProperty('${p.id}')">Del</button>`:''}</div></td></tr>`;
     }).join('');
     document.getElementById('propertyDetailPanel').innerHTML='';
 }
@@ -2091,11 +2268,11 @@ function viewProperty(id){
             <div class="util-card electric-received"><div class="util-label">Total Units</div><div class="util-value">${units.length}</div></div>
             <div class="util-card water-received"><div class="util-label">Occupied</div><div class="util-value">${occ}</div></div>
             <div class="util-card" style="background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 100%);"><div class="util-label">Vacant</div><div class="util-value">${vac}</div></div>
-            <div class="expense-total-card"><div class="exp-label">Rent Roll</div><div class="exp-value">${formatUGX(roll)}</div></div>
+            <div class="expense-total-card"><div class="exp-label">Rent Roll</div><div class="exp-value">${formatMoney(roll)}</div></div>
         </div>
         ${p.owner||p.notes||p.yearBuilt?`<div style="background:#f8fafc;border-radius:1rem;padding:1rem;margin-bottom:1rem;font-size:.85rem;">${p.owner?`<div><strong>Owner:</strong> ${p.owner}${p.ownerContact?' · '+p.ownerContact:''}</div>`:''}${p.yearBuilt?`<div><strong>Year Built:</strong> ${p.yearBuilt}</div>`:''}${p.floors?`<div><strong>Floors:</strong> ${p.floors}</div>`:''}${p.notes?`<div style="margin-top:.4rem;"><strong>Notes:</strong> ${p.notes}</div>`:''}</div>`:''}
         <h3 style="font-size:.95rem;margin:1rem 0 .75rem 0;">🔑 Units</h3>
-        ${units.length===0?'<p style="color:#94a3b8;">No units yet. Click "Add Unit" to create one.</p>':`<table><thead><tr><th>Unit</th><th>Type</th><th>Floor</th><th>Beds/Baths</th><th>Rent</th><th>Status</th><th>Tenant</th><th>Actions</th></tr></thead><tbody>${units.map(u=>{const occupant=getUnitOccupant(u.id);return `<tr><td><strong>${u.unitNumber}</strong></td><td>${u.unitType}</td><td>${u.floor}</td><td>${u.bedrooms}bd / ${u.bathrooms}ba</td><td>${formatUGX(u.rent)}</td><td>${statusBadge(u.status)}</td><td>${occupant?`<strong>${occupant.name}</strong>`:'<span style="color:#94a3b8;">—</span>'}</td><td><div class="action-btns">${can('manage_properties')?`<button class="btn btn-warning btn-sm" onclick="editUnit('${u.id}')">Edit</button>`:''}${can('manage_properties')?`<button class="btn btn-danger btn-sm" onclick="deleteUnit('${u.id}')">Delete</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>`}
+        ${units.length===0?'<p style="color:#94a3b8;">No units yet. Click "Add Unit" to create one.</p>':`<table><thead><tr><th>Unit</th><th>Type</th><th>Floor</th><th>Beds/Baths</th><th>Rent</th><th>Status</th><th>Tenant</th><th>Actions</th></tr></thead><tbody>${units.map(u=>{const occupant=getUnitOccupant(u.id);return `<tr><td><strong>${u.unitNumber}</strong></td><td>${u.unitType}</td><td>${u.floor}</td><td>${u.bedrooms}bd / ${u.bathrooms}ba</td><td>${formatMoney(u.rent)}</td><td>${statusBadge(u.status)}</td><td>${occupant?`<strong>${occupant.name}</strong>`:'<span style="color:#94a3b8;">—</span>'}</td><td><div class="action-btns">${can('manage_properties')?`<button class="btn btn-warning btn-sm" onclick="editUnit('${u.id}')">Edit</button>`:''}${can('manage_properties')?`<button class="btn btn-danger btn-sm" onclick="deleteUnit('${u.id}')">Delete</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>`}
     </div>`;
 }
 
@@ -2107,6 +2284,7 @@ async function saveProperty(e){
     if(!can('manage_properties')){showNotification('Permission denied','warning');return;}
     const editId=document.getElementById('propertyEditId').value;
     const data={name:document.getElementById('propertyName').value.trim(),type:document.getElementById('propertyType').value,locationId:document.getElementById('propertyLocation').value,address:document.getElementById('propertyAddress').value.trim(),floors:parseInt(document.getElementById('propertyFloors').value)||1,yearBuilt:parseInt(document.getElementById('propertyYear').value)||null,owner:document.getElementById('propertyOwner').value.trim(),ownerContact:document.getElementById('propertyOwnerContact').value.trim(),notes:document.getElementById('propertyNotes').value.trim()};
+    if(!data.name || !data.locationId || !data.address) { showNotification('Please fill all required fields','warning'); return; }
     let prop;
     if(editId){prop=getPropertyById(editId);if(prop)Object.assign(prop,data);showNotification('Property updated');}
     else{prop={id:'prop_'+Date.now(),...data};PROPERTIES.push(prop);showNotification('Property added');}
@@ -2135,6 +2313,7 @@ async function saveUnit(e){
     if(!can('manage_properties')){showNotification('Permission denied','warning');return;}
     const editId=document.getElementById('unitEditId').value;
     const data={propertyId:document.getElementById('unitProperty').value,unitNumber:document.getElementById('unitNumber').value.trim(),unitType:document.getElementById('unitType').value,rent:parseFloat(document.getElementById('unitRent').value)||0,floor:parseInt(document.getElementById('unitFloor').value)||0,bathrooms:parseInt(document.getElementById('unitBathrooms').value)||0,bedrooms:parseInt(document.getElementById('unitBedrooms').value)||0,status:document.getElementById('unitStatus').value,notes:document.getElementById('unitNotes').value.trim()};
+    if(!data.propertyId || !data.unitNumber) { showNotification('Please fill all required fields','warning'); return; }
     const dup=UNITS.find(u=>u.propertyId===data.propertyId&&u.unitNumber===data.unitNumber&&u.id!==editId);
     if(dup){showNotification('Unit number already exists in this property','warning');return;}
     let unit;
@@ -2169,7 +2348,7 @@ function refreshAllPropertyDropdowns(){
     const sl=document.getElementById('statementLocationFilter');
     if(sl){const cur=sl.value;const vis=currentUser?.role==='admin'?LOCATIONS:LOCATIONS.filter(l=>l.id===currentUser?.locationId);sl.innerHTML='<option value="all">All Locations</option>'+vis.map(l=>`<option value="${l.id}">${l.area}, ${l.city}</option>`).join('');if(cur&&[...sl.options].some(o=>o.value===cur))sl.value=cur;}
 }
-function onTenantPropertyChange(){const propId=document.getElementById('tenantProperty').value;const usel=document.getElementById('tenantUnit');const editId=document.getElementById('tenantEditId').value;if(!propId){usel.innerHTML='<option value="">Select unit</option>';return;}const units=getUnitsForProperty(propId).filter(u=>{const o=getUnitOccupant(u.id);return !o||o.id===editId;});usel.innerHTML='<option value="">Select unit</option>'+units.map(u=>`<option value="${u.id}">${u.unitNumber} – ${u.unitType} – ${formatUGX(u.rent)}</option>`).join('');if(units.length===0)usel.innerHTML='<option value="">No vacant units</option>';}
+function onTenantPropertyChange(){const propId=document.getElementById('tenantProperty').value;const usel=document.getElementById('tenantUnit');const editId=document.getElementById('tenantEditId').value;if(!propId){usel.innerHTML='<option value="">Select unit</option>';return;}const units=getUnitsForProperty(propId).filter(u=>{const o=getUnitOccupant(u.id);return !o||o.id===editId;});usel.innerHTML='<option value="">Select unit</option>'+units.map(u=>`<option value="${u.id}">${u.unitNumber} – ${u.unitType} – ${formatMoney(u.rent)}</option>`).join('');if(units.length===0)usel.innerHTML='<option value="">No vacant units</option>';}
 function onTenantUnitChange(){const unitId=document.getElementById('tenantUnit').value;const u=getUnitById(unitId);if(u){document.getElementById('tenantRent').value=u.rent;document.getElementById('tenantApt').value=u.unitNumber;}}
 
 // ============================================================
@@ -2180,7 +2359,7 @@ function renderTenantsPage(){
     const totalMonthly=tenants.reduce((s,t)=>s+(t.monthlyRent||0),0);
     document.getElementById('tenantSummary').innerHTML=`
         <div class="tenant-total-card"><div class="exp-label">🏠 Total Rentals</div><div class="exp-value">${tenants.length}</div><div class="exp-sub">Active tenant${tenants.length===1?'':'s'} in this view</div></div>
-        <div class="tenant-amount-card"><div class="exp-label">💰 Total Rent Amount</div><div class="exp-value">${formatUGX(totalMonthly)}</div><div class="exp-sub">Combined monthly rent</div></div>
+        <div class="tenant-amount-card"><div class="exp-label">💰 Total Rent Amount</div><div class="exp-value">${formatMoney(totalMonthly)}</div><div class="exp-sub">Combined monthly rent</div></div>
     `;
     const tbody=document.getElementById('tenantsTableBody');
     tbody.innerHTML=tenants.map(t=>{
@@ -2189,7 +2368,7 @@ function renderTenantsPage(){
         const editDelete=(can('edit_tenants')||can('delete_tenants'))?`${can('edit_tenants')?`<button class="btn btn-warning btn-sm" onclick="editTenant('${t.id}')">Edit</button>`:''}${can('delete_tenants')?`<button class="btn btn-danger btn-sm" onclick="deleteTenant('${t.id}')">Delete</button>`:''}`:'';
         const unit=getTenantUnit(t);
         const prop=t.propertyId?getPropertyById(t.propertyId):(unit?getPropertyById(unit.propertyId):null);
-        return `<tr><td><strong>${t.name}</strong></td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td><td>${t.mobile}</td><td>${formatUGX(t.monthlyRent)}</td><td>${ordinal(t.billingDate)}</td><td>${formatUGX(rBal)}</td><td>${formatUGX(eBal)}</td><td>${formatUGX(wBal)}</td><td><span class="badge ${statusClass}">${formatUGX(totalDue)}</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="viewTenant('${t.id}')">View</button>${editDelete}</div></td></tr>`;
+        return `<tr><td><strong>${t.name}</strong></td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td><td>${t.mobile}</td><td>${formatMoney(t.monthlyRent)}</td><td>${ordinal(t.billingDate)}</td><td>${formatMoney(rBal)}</td><td>${formatMoney(eBal)}</td><td>${formatMoney(wBal)}</td><td><span class="badge ${statusClass}">${formatMoney(totalDue)}</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="viewTenant('${t.id}')">View</button>${editDelete}</div></td></tr>`;
     }).join('');
     document.getElementById('tenantDetailPanel').innerHTML='';
 }
@@ -2205,7 +2384,7 @@ function viewTenant(id){
     panel.innerHTML=`
         <div class="detail-panel">
             <div class="detail-header">
-                <h2>${t.name} <small>${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile} · Rent ${formatUGX(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}</small></h2>
+                <h2>${t.name} <small>${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile} · Rent ${formatMoney(t.monthlyRent)}/mo · Billing day ${ordinal(t.billingDate)}</small></h2>
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
                     ${can('add_payments')?`<button class="btn btn-success btn-sm" onclick="openPaymentForTenant('${t.id}')">💵 Add Payment</button>`:''}
                     ${can('add_payments')?`<button class="btn btn-info btn-sm" onclick="openAdvanceRentForTenant('${t.id}')">📅 Advance Rent</button>`:''}
@@ -2214,7 +2393,7 @@ function viewTenant(id){
                 </div>
             </div>
             <div style="display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap;">
-                <span>Rent: <strong>${formatUGX(rBal)}</strong></span><span>Electric: <strong>${formatUGX(eBal)}</strong></span><span>Water: <strong>${formatUGX(wBal)}</strong></span><span>Total Due: <strong style="color:${totalDue>0?'#dc2626':'#16a34a'}">${formatUGX(totalDue)}</strong></span>
+                <span>Rent: <strong>${formatMoney(rBal)}</strong></span><span>Electric: <strong>${formatMoney(eBal)}</strong></span><span>Water: <strong>${formatMoney(wBal)}</strong></span><span>Total Due: <strong style="color:${totalDue>0?'#dc2626':'#16a34a'}">${formatMoney(totalDue)}</strong></span>
             </div>
             <div class="section-tabs">
                 <button class="tab-btn active" data-tab="rent">Rent</button>
@@ -2223,14 +2402,14 @@ function viewTenant(id){
             </div>
             <div id="tab-rent" class="tab-content">
                 <table><thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Actions</th></tr></thead>
-                <tbody>${t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);const isPayment=r.credit>0;return `<tr><td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td><td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td><td><div class="action-btns">${isPayment?`<button class="btn btn-success btn-sm" onclick="printReceipt('${t.id}','rent',${idx})">🧾 Receipt</button>`:''}${canEditRent?`<button class="btn btn-warning btn-sm" onclick="openEditRentModal('${t.id}',${idx})">Update</button>`:''}${canEditRent?`<button class="btn btn-danger btn-sm" onclick="deleteRentTransaction('${t.id}',${idx})">Del</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>
+                <tbody>${t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);const isPayment=r.credit>0;return `<tr><td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td><td class="text-debit">${r.debit?formatMoney(r.debit):'—'}</td><td class="text-credit">${r.credit?formatMoney(r.credit):'—'}</td><td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatMoney(run)}</td><td><div class="action-btns">${isPayment?`<button class="btn btn-success btn-sm" onclick="printReceipt('${t.id}','rent',${idx})">🧾 Receipt</button>`:''}${canEditRent?`<button class="btn btn-warning btn-sm" onclick="openEditRentModal('${t.id}',${idx})">Update</button>`:''}${canEditRent?`<button class="btn btn-danger btn-sm" onclick="deleteRentTransaction('${t.id}',${idx})">Del</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>
             </div>
             <div id="tab-electric" class="tab-content hidden">
                 <table><thead><tr><th>Posting Date</th><th>Description</th><th>Previous Meter</th><th>Current Meter</th><th>Total Units</th><th>Rate</th><th>Total Amount</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Actions</th></tr></thead>
-                <tbody>${t.electric.map((r,idx)=>{const prev=getPreviousReading(t.electric,idx);const isReading=r.meter!==null&&r.meter!==undefined&&r.meter!==0;const run=runningBalanceAt(t.electric,idx);return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${isReading?prev:'—'}</td><td>${isReading?r.reading:'—'}</td><td>${isReading?r.meter:'—'}</td><td>${isReading?formatUGX(r.rate):'—'}</td><td>${isReading?formatUGX(r.debit||0):'—'}</td><td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td><td><div class="action-btns">${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${t.id}','electric',${idx})">Update</button>`:''}${can('delete_utility')?`<button class="btn btn-danger btn-sm" onclick="deleteUtilityRow('${t.id}','electric',${idx})">Del</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>
+                <tbody>${t.electric.map((r,idx)=>{const prev=getPreviousReading(t.electric,idx);const isReading=r.meter!==null&&r.meter!==undefined&&r.meter!==0;const run=runningBalanceAt(t.electric,idx);return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${isReading?prev:'—'}</td><td>${isReading?r.reading:'—'}</td><td>${isReading?r.meter:'—'}</td><td>${isReading?formatMoney(r.rate):'—'}</td><td>${isReading?formatMoney(r.debit||0):'—'}</td><td class="text-debit">${r.debit?formatMoney(r.debit):'—'}</td><td class="text-credit">${r.credit?formatMoney(r.credit):'—'}</td><td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatMoney(run)}</td><td><div class="action-btns">${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${t.id}','electric',${idx})">Update</button>`:''}${can('delete_utility')?`<button class="btn btn-danger btn-sm" onclick="deleteUtilityRow('${t.id}','electric',${idx})">Del</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>
             </div>
             <div id="tab-water" class="tab-content hidden">
-                ${t.water.length?`<table><thead><tr><th>Posting Date</th><th>Description</th><th>Previous Meter</th><th>Current Meter</th><th>Total Units</th><th>Rate</th><th>Total Amount</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Actions</th></tr></thead><tbody>${t.water.map((r,idx)=>{const prev=getPreviousReading(t.water,idx);const isReading=r.meter!==null&&r.meter!==undefined&&r.meter!==0;const run=runningBalanceAt(t.water,idx);return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${isReading?prev:'—'}</td><td>${isReading?r.reading:'—'}</td><td>${isReading?r.meter:'—'}</td><td>${isReading?formatUGX(r.rate):'—'}</td><td>${isReading?formatUGX(r.debit||0):'—'}</td><td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td><td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatUGX(run)}</td><td><div class="action-btns">${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${t.id}','water',${idx})">Update</button>`:''}${can('delete_utility')?`<button class="btn btn-danger btn-sm" onclick="deleteUtilityRow('${t.id}','water',${idx})">Del</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>`:'<p style="color:#64748b;padding:1rem 0;">No water records.</p>'}
+                ${t.water.length?`<table><thead><tr><th>Posting Date</th><th>Description</th><th>Previous Meter</th><th>Current Meter</th><th>Total Units</th><th>Rate</th><th>Total Amount</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Actions</th></tr></thead><tbody>${t.water.map((r,idx)=>{const prev=getPreviousReading(t.water,idx);const isReading=r.meter!==null&&r.meter!==undefined&&r.meter!==0;const run=runningBalanceAt(t.water,idx);return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${isReading?prev:'—'}</td><td>${isReading?r.reading:'—'}</td><td>${isReading?r.meter:'—'}</td><td>${isReading?formatMoney(r.rate):'—'}</td><td>${isReading?formatMoney(r.debit||0):'—'}</td><td class="text-debit">${r.debit?formatMoney(r.debit):'—'}</td><td class="text-credit">${r.credit?formatMoney(r.credit):'—'}</td><td style="font-weight:700;color:${run<=0?'#16a34a':'#dc2626'};">${formatMoney(run)}</td><td><div class="action-btns">${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${t.id}','water',${idx})">Update</button>`:''}${can('delete_utility')?`<button class="btn btn-danger btn-sm" onclick="deleteUtilityRow('${t.id}','water',${idx})">Del</button>`:''}</div></td></tr>`;}).join('')}</tbody></table>`:'<p style="color:#64748b;padding:1rem 0;">No water records.</p>'}
             </div>
         </div>`;
     panel.querySelectorAll('.tab-btn').forEach(btn=>{btn.addEventListener('click',()=>{panel.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');panel.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));panel.querySelector('#tab-'+btn.dataset.tab).classList.remove('hidden');});});
@@ -2322,6 +2501,9 @@ async function saveTenant(e){
     const electricRate=parseFloat(document.getElementById('tenantElectricRate').value)||1100;
     const unitId=document.getElementById('tenantUnit').value;
     const propertyId=document.getElementById('tenantProperty').value;
+    
+    if(!name || !mobile || !unitId || !billingDate) { showNotification('Please fill all required fields','warning'); return; }
+    
     const unit=getUnitById(unitId);
     if(!unit){showNotification('Please select a valid unit','warning');return;}
     const apt=unit.unitNumber;
@@ -2370,7 +2552,7 @@ function refreshFilterOptions(){
 }
 
 // ============================================================
-// MOVE-OUT PAGE — cards fixed with proper CSS classes
+// MOVE-OUT PAGE
 // ============================================================
 function getVisibleMoveouts(){
     if(!currentUser)return [];
@@ -2402,7 +2584,7 @@ function renderMoveoutPage(){
         </div>
         <div class="expense-total-card">
             <div class="exp-label">💰 Total Owed</div>
-            <div class="exp-value">${formatUGX(totalOwed)}</div>
+            <div class="exp-value">${formatMoney(totalOwed)}</div>
             <div class="exp-sub">Pending from move-outs</div>
         </div>
     `;
@@ -2421,10 +2603,10 @@ function renderMoveoutPage(){
             <td>${m.unitNumber||'—'}</td>
             <td>${m.mobile||'—'}</td>
             <td>${m.moveoutDate||'—'}</td>
-            <td class="text-debit">${m.rentBalance>0?formatUGX(m.rentBalance):'—'}</td>
-            <td class="text-debit">${m.electricBalance>0?formatUGX(m.electricBalance):'—'}</td>
-            <td class="text-debit">${m.waterBalance>0?formatUGX(m.waterBalance):'—'}</td>
-            <td style="font-weight:700;" class="${m.totalBalance>0?'text-debit':'text-credit'}">${formatUGX(m.totalBalance)}</td>
+            <td class="text-debit">${m.rentBalance>0?formatMoney(m.rentBalance):'—'}</td>
+            <td class="text-debit">${m.electricBalance>0?formatMoney(m.electricBalance):'—'}</td>
+            <td class="text-debit">${m.waterBalance>0?formatMoney(m.waterBalance):'—'}</td>
+            <td style="font-weight:700;" class="${m.totalBalance>0?'text-debit':'text-credit'}">${formatMoney(m.totalBalance)}</td>
             <td><span class="badge ${statusClass}">${statusLabel}</span></td>
             <td><div class="action-btns">
                 <button class="btn btn-outline btn-sm" onclick="viewMoveoutRecord('${m.id}')">View</button>
@@ -2468,10 +2650,10 @@ function loadMoveOutDetails(){
             <div><div style="font-size:.65rem;text-transform:uppercase;color:#64748b;font-weight:700;">Mobile</div><div style="font-size:.9rem;font-weight:700;color:#0f172a;margin-top:.2rem;">${t.mobile||'—'}</div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.75rem;">
-            <div style="background:#fee2e2;border-radius:.6rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#991b1b;font-weight:700;">Rent Balance</div><div style="font-size:1rem;font-weight:800;color:${rBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(rBal)}</div></div>
-            <div style="background:#fef3c7;border-radius:.6rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#92400e;font-weight:700;">Electric Balance</div><div style="font-size:1rem;font-weight:800;color:${eBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(eBal)}</div></div>
-            <div style="background:#dbeafe;border-radius:.6rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#1e40af;font-weight:700;">Water Balance</div><div style="font-size:1rem;font-weight:800;color:${wBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatUGX(wBal)}</div></div>
-            <div style="background:#0f172a;border-radius:.6rem;padding:.6rem .75rem;color:#fff;"><div style="font-size:.65rem;text-transform:uppercase;color:#facc15;font-weight:700;">Total Balance</div><div style="font-size:1rem;font-weight:800;color:${totalDue>0?'#f87171':'#4ade80'};margin-top:.15rem;">${formatUGX(totalDue)}</div></div>
+            <div style="background:#fee2e2;border-radius:.6rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#991b1b;font-weight:700;">Rent Balance</div><div style="font-size:1rem;font-weight:800;color:${rBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(rBal)}</div></div>
+            <div style="background:#fef3c7;border-radius:.6rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#92400e;font-weight:700;">Electric Balance</div><div style="font-size:1rem;font-weight:800;color:${eBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(eBal)}</div></div>
+            <div style="background:#dbeafe;border-radius:.6rem;padding:.6rem .75rem;"><div style="font-size:.65rem;text-transform:uppercase;color:#1e40af;font-weight:700;">Water Balance</div><div style="font-size:1rem;font-weight:800;color:${wBal>0?'#dc2626':'#16a34a'};margin-top:.15rem;">${formatMoney(wBal)}</div></div>
+            <div style="background:#0f172a;border-radius:.6rem;padding:.6rem .75rem;color:#fff;"><div style="font-size:.65rem;text-transform:uppercase;color:#facc15;font-weight:700;">Total Balance</div><div style="font-size:1rem;font-weight:800;color:${totalDue>0?'#f87171':'#4ade80'};margin-top:.15rem;">${formatMoney(totalDue)}</div></div>
         </div>
     `;
 }
@@ -2488,7 +2670,7 @@ async function saveMoveOut(e){
     const unit=getTenantUnit(t);
     const prop=unit?getPropertyById(unit.propertyId):null;
     const rBal=rentBalance(t),eBal=electricBalance(t),wBal=waterBalance(t),totalDue=rBal+eBal+wBal;
-    if(!confirm(`Confirm move-out for ${t.name}?\n\nBuilding: ${prop?prop.name:'—'}\nApt: ${unit?unit.unitNumber:t.apt}\nTotal Balance: ${formatUGX(totalDue)}\n\nThis will remove the tenant from active list and mark the unit as vacant.`)) return;
+    if(!confirm(`Confirm move-out for ${t.name}?\n\nBuilding: ${prop?prop.name:'—'}\nApt: ${unit?unit.unitNumber:t.apt}\nTotal Balance: ${formatMoney(totalDue)}\n\nThis will remove the tenant from active list and mark the unit as vacant.`)) return;
     const record={
         id: 'mo_'+Date.now(),
         tenantId: t.id,
@@ -2537,10 +2719,10 @@ function viewMoveoutRecord(id){
                 </div>
             </div>
             <div class="moveout-summary">
-                <div class="moveout-total-card"><div class="exp-label">Rent Balance</div><div class="exp-value">${formatUGX(m.rentBalance)}</div></div>
-                <div class="moveout-balance-card"><div class="exp-label">Electric Balance</div><div class="exp-value">${formatUGX(m.electricBalance)}</div></div>
-                <div class="util-card water-received"><div class="util-label">Water Balance</div><div class="util-value">${formatUGX(m.waterBalance)}</div></div>
-                <div class="${m.totalBalance<=0?'moveout-cleared-card':'moveout-balance-card'}"><div class="exp-label">Total Balance</div><div class="exp-value">${formatUGX(m.totalBalance)}</div></div>
+                <div class="moveout-total-card"><div class="exp-label">Rent Balance</div><div class="exp-value">${formatMoney(m.rentBalance)}</div></div>
+                <div class="moveout-balance-card"><div class="exp-label">Electric Balance</div><div class="exp-value">${formatMoney(m.electricBalance)}</div></div>
+                <div class="util-card water-received"><div class="util-label">Water Balance</div><div class="util-value">${formatMoney(m.waterBalance)}</div></div>
+                <div class="${m.totalBalance<=0?'moveout-cleared-card':'moveout-balance-card'}"><div class="exp-label">Total Balance</div><div class="exp-value">${formatMoney(m.totalBalance)}</div></div>
             </div>
             <table>
                 <thead><tr><th>Field</th><th>Value</th></tr></thead>
@@ -2551,11 +2733,11 @@ function viewMoveoutRecord(id){
                     <tr><td>Apt Number</td><td>${m.unitNumber||'—'}</td></tr>
                     <tr><td>Move-out Date</td><td>${m.moveoutDate||'—'}</td></tr>
                     <tr><td>Reason</td><td>${m.reason||'—'}</td></tr>
-                    <tr><td>Monthly Rent at Move-out</td><td>${formatUGX(m.originalMonthlyRent||0)}</td></tr>
-                    <tr><td>Rent Balance</td><td class="${m.rentBalance>0?'text-debit':'text-credit'}">${formatUGX(m.rentBalance)}</td></tr>
-                    <tr><td>Electric Balance</td><td class="${m.electricBalance>0?'text-debit':'text-credit'}">${formatUGX(m.electricBalance)}</td></tr>
-                    <tr><td>Water Balance</td><td class="${m.waterBalance>0?'text-debit':'text-credit'}">${formatUGX(m.waterBalance)}</td></tr>
-                    <tr><td><strong>Total Balance</strong></td><td class="${m.totalBalance>0?'text-debit':'text-credit'}"><strong>${formatUGX(m.totalBalance)}</strong></td></tr>
+                    <tr><td>Monthly Rent at Move-out</td><td>${formatMoney(m.originalMonthlyRent||0)}</td></tr>
+                    <tr><td>Rent Balance</td><td class="${m.rentBalance>0?'text-debit':'text-credit'}">${formatMoney(m.rentBalance)}</td></tr>
+                    <tr><td>Electric Balance</td><td class="${m.electricBalance>0?'text-debit':'text-credit'}">${formatMoney(m.electricBalance)}</td></tr>
+                    <tr><td>Water Balance</td><td class="${m.waterBalance>0?'text-debit':'text-credit'}">${formatMoney(m.waterBalance)}</td></tr>
+                    <tr><td><strong>Total Balance</strong></td><td class="${m.totalBalance>0?'text-debit':'text-credit'}"><strong>${formatMoney(m.totalBalance)}</strong></td></tr>
                     <tr><td>Status</td><td><span class="badge ${statusClass}">${statusLabel}</span></td></tr>
                     ${m.notes?`<tr><td>Notes</td><td>${m.notes}</td></tr>`:''}
                 </tbody>
@@ -2643,11 +2825,11 @@ function renderStatementsPage(){
         const totalBal=rentBal+elecBal+waterBal;
         const statusClass=totalBal<=0?'paid':(totalBal<t.monthlyRent?'partial':'pending');
         let rentCol='',elecCol='',waterCol='';
-        if(type==='rent'){rentCol=`<td>${formatUGX(rentPaid)}</td>`;}
-        else if(type==='electric'){elecCol=`<td>${formatUGX(elecPaid)}</td>`;}
-        else if(type==='water'){waterCol=`<td>${formatUGX(waterPaid)}</td>`;}
-        else{rentCol=`<td>${formatUGX(rentPaid)}</td>`;elecCol=`<td>${formatUGX(elecPaid)}</td>`;waterCol=`<td>${formatUGX(waterPaid)}</td>`;}
-        return `<tr><td><strong>${t.name}</strong></td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td>${rentCol}${elecCol}${waterCol}<td>${formatUGX(totalPaid)}</td><td><span class="badge ${statusClass}">${formatUGX(totalBal)}</span></td><td><span class="badge ${totalBal<=0?'paid':'pending'}">${totalBal<=0?'Cleared':'Pending'}</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="printSingleTenantStatement('${t.id}')">🖨️ Print</button></div></td></tr>`;
+        if(type==='rent'){rentCol=`<td>${formatMoney(rentPaid)}</td>`;}
+        else if(type==='electric'){elecCol=`<td>${formatMoney(elecPaid)}</td>`;}
+        else if(type==='water'){waterCol=`<td>${formatMoney(waterPaid)}</td>`;}
+        else{rentCol=`<td>${formatMoney(rentPaid)}</td>`;elecCol=`<td>${formatMoney(elecPaid)}</td>`;waterCol=`<td>${formatMoney(waterPaid)}</td>`;}
+        return `<tr><td><strong>${t.name}</strong></td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td>${rentCol}${elecCol}${waterCol}<td>${formatMoney(totalPaid)}</td><td><span class="badge ${statusClass}">${formatMoney(totalBal)}</span></td><td><span class="badge ${totalBal<=0?'paid':'pending'}">${totalBal<=0?'Cleared':'Pending'}</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="printSingleTenantStatement('${t.id}')">🖨️ Print</button></div></td></tr>`;
     }).join('');
 }
 
@@ -2667,11 +2849,11 @@ function printSingleTenantStatement(tenantId){
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Tenant Statement – ${t.name}</h1><h2>${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile}</h2>
     <table><thead><tr><th>Metric</th><th>Amount</th><th>Balance</th></tr></thead><tbody>`;
-    if(type==='rent'||type==='all')html+=`<tr><td>Rent Paid</td><td>${formatUGX(rentPaid)}</td><td>${formatUGX(rentBal)}</td></tr>`;
-    if(type==='electric'||type==='all')html+=`<tr><td>Electricity Paid</td><td>${formatUGX(elecPaid)}</td><td>${formatUGX(elecBal)}</td></tr>`;
-    if(type==='water'||type==='all')html+=`<tr><td>Water Paid</td><td>${formatUGX(waterPaid)}</td><td>${formatUGX(waterBal)}</td></tr>`;
-    html+=`<tr style="font-weight:700;background:#f8fafc;"><td>Total</td><td>${formatUGX(totalPaid)}</td><td>${formatUGX(totalBal)}</td></tr>
-    </tbody></table><div class="total">Outstanding Balance: <span class="badge ${totalBal<=0?'cleared':'pending'}">${totalBal<=0?'CLEARED':'PENDING'} ${formatUGX(totalBal)}</span></div>
+    if(type==='rent'||type==='all')html+=`<tr><td>Rent Paid</td><td>${formatMoney(rentPaid)}</td><td>${formatMoney(rentBal)}</td></tr>`;
+    if(type==='electric'||type==='all')html+=`<tr><td>Electricity Paid</td><td>${formatMoney(elecPaid)}</td><td>${formatMoney(elecBal)}</td></tr>`;
+    if(type==='water'||type==='all')html+=`<tr><td>Water Paid</td><td>${formatMoney(waterPaid)}</td><td>${formatMoney(waterBal)}</td></tr>`;
+    html+=`<tr style="font-weight:700;background:#f8fafc;"><td>Total</td><td>${formatMoney(totalPaid)}</td><td>${formatMoney(totalBal)}</td></tr>
+    </tbody></table><div class="total">Outstanding Balance: <span class="badge ${totalBal<=0?'cleared':'pending'}">${totalBal<=0?'CLEARED':'PENDING'} ${formatMoney(totalBal)}</span></div>
     </body></html>`;
     const w=window.open('','_blank');
     w.document.write(html);
@@ -2702,11 +2884,11 @@ function printTenantStatementSummary(){
         const totalPaid=rentPaid+elecPaid+waterPaid;
         const totalBal=rentBalance(t)+electricBalance(t)+waterBalance(t);
         let rentCell='',elecCell='',waterCell='';
-        if(type==='rent')rentCell=`<td>${formatUGX(rentPaid)}</td>`;
-        else if(type==='electric')elecCell=`<td>${formatUGX(elecPaid)}</td>`;
-        else if(type==='water')waterCell=`<td>${formatUGX(waterPaid)}</td>`;
-        else{rentCell=`<td>${formatUGX(rentPaid)}</td>`;elecCell=`<td>${formatUGX(elecPaid)}</td>`;waterCell=`<td>${formatUGX(waterPaid)}</td>`;}
-        return `<tr><td>${t.name}</td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td>${rentCell}${elecCell}${waterCell}<td>${formatUGX(totalPaid)}</td><td>${formatUGX(totalBal)}</td><td>${totalBal<=0?'Cleared':'Pending'}</td></tr>`;
+        if(type==='rent')rentCell=`<td>${formatMoney(rentPaid)}</td>`;
+        else if(type==='electric')elecCell=`<td>${formatMoney(elecPaid)}</td>`;
+        else if(type==='water')waterCell=`<td>${formatMoney(waterPaid)}</td>`;
+        else{rentCell=`<td>${formatMoney(rentPaid)}</td>`;elecCell=`<td>${formatMoney(elecPaid)}</td>`;waterCell=`<td>${formatMoney(waterPaid)}</td>`;}
+        return `<tr><td>${t.name}</td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td>${rentCell}${elecCell}${waterCell}<td>${formatMoney(totalPaid)}</td><td>${formatMoney(totalBal)}</td><td>${totalBal<=0?'Cleared':'Pending'}</td></tr>`;
     }).join('');
     let headerCells='<th>Tenant</th><th>Property</th><th>Unit</th>';
     if(type==='rent')headerCells+='<th>Rent Paid</th>';
@@ -2802,7 +2984,7 @@ async function saveAdvanceRent(e){
     t.rent.push({date:payDate,desc:notes||`RC-Advance rent payment – ${monthLabels}`,debit:0,credit:totalAmount,invoiceNo:invoiceNums.length?invoiceNums[0]:null,receiptNo,advanceMonths:monthLabels});
     t.rent.sort((a,b)=>a.date.localeCompare(b.date));
     await saveTenantNow(t);
-    showNotification(`Advance payment of ${formatUGX(totalAmount)} recorded (${selectedAdvanceMonths.length} months)`,'success');
+    showNotification(`Advance payment of ${formatMoney(totalAmount)} recorded (${selectedAdvanceMonths.length} months)`,'success');
     closeModal('advanceRentModal');
     setTimeout(()=>{printAdvanceReceipt(t.id,receiptNo);},400);
     renderTenantsPage();renderDashboard();renderStatementsPage();
@@ -2842,11 +3024,11 @@ function loadPendingInvoices(){
     if(type==='rent'){
         const groups={};
         t.rent.forEach(r=>{const key=r.invoiceNo||'No Invoice';if(!groups[key])groups[key]={debit:0,credit:0,desc:r.desc};groups[key].debit+=(r.debit||0);groups[key].credit+=(r.credit||0);});
-        Object.entries(groups).forEach(([inv,g])=>{const bal=g.debit-g.credit;if(bal>0)sel.innerHTML+=`<option value="${inv}">${inv} – ${g.desc} – Due ${formatUGX(bal)}</option>`;});
+        Object.entries(groups).forEach(([inv,g])=>{const bal=g.debit-g.credit;if(bal>0)sel.innerHTML+=`<option value="${inv}">${inv} – ${g.desc} – Due ${formatMoney(bal)}</option>`;});
     }else if(type==='electric'){
-        t.electric.forEach((r,idx)=>{if(r.debit>0&&r.meter){const bal = runningBalanceAt(t.electric,idx);if(bal>0)sel.innerHTML+=`<option value="elec_${idx}">${r.date} – Meter ${r.reading} – Due ${formatUGX(bal)}</option>`;}});
+        t.electric.forEach((r,idx)=>{if(r.debit>0&&r.meter){const bal = runningBalanceAt(t.electric,idx);if(bal>0)sel.innerHTML+=`<option value="elec_${idx}">${r.date} – Meter ${r.reading} – Due ${formatMoney(bal)}</option>`;}});
     }else if(type==='water'){
-        t.water.forEach((r,idx)=>{if(r.debit>0&&r.meter){const bal = runningBalanceAt(t.water,idx);if(bal>0)sel.innerHTML+=`<option value="water_${idx}">${r.date} – Meter ${r.reading} – Due ${formatUGX(bal)}</option>`;}});
+        t.water.forEach((r,idx)=>{if(r.debit>0&&r.meter){const bal = runningBalanceAt(t.water,idx);if(bal>0)sel.innerHTML+=`<option value="water_${idx}">${r.date} – Meter ${r.reading} – Due ${formatMoney(bal)}</option>`;}});
     }
 }
 async function savePayment(e){
@@ -2858,7 +3040,9 @@ async function savePayment(e){
     const amount=parseFloat(document.getElementById('paymentAmount').value);
     const date=document.getElementById('paymentDate').value;
     const notes=document.getElementById('paymentNotes').value.trim();
-    if(!tenantId||!invoice||!amount){showNotification('Please fill all required fields','warning');return;}
+    
+    if(!tenantId||!invoice||!amount||!date){showNotification('Please fill all required fields','warning');return;}
+    
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
     const receiptNo=getNextReceiptNo(type==='electric'?'RCPT-E':(type==='water'?'RCPT-W':'RC-'));
@@ -2888,7 +3072,7 @@ async function savePayment(e){
         } else { t.water.push(payment); }
         paymentIndex = t.water.findIndex(r => r.receiptNo === receiptNo);
     }
-    showNotification(`Payment of ${formatUGX(amount)} recorded`);
+    showNotification(`Payment of ${formatMoney(amount)} recorded`);
     closeModal('paymentModal');
     setTimeout(()=>{printReceipt(tenantId,type,paymentIndex);},400);
     renderTenantsPage();renderDashboard();renderStatementsPage();renderUtilityPage();
@@ -2912,7 +3096,7 @@ function renderReceiptsPage(){
     receipts.sort((a,b)=>b.date.localeCompare(a.date));
     const tbody=document.getElementById('receiptsTableBody');
     if(receipts.length===0){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:2rem;">No receipts found.</td></tr>';return;}
-    tbody.innerHTML=receipts.map(r=>`<tr><td><span class="badge role user">${r.receiptNo}</span></td><td>${r.date}</td><td><strong>${r.tenantName}</strong></td><td>${r.apt}</td><td><span class="badge ${r.typeKey==='electric'?'electric':r.typeKey==='water'?'water':'info'}">${r.type}</span></td><td>${r.desc}</td><td class="text-credit">${formatUGX(r.amount)}</td><td><div class="action-btns"><button class="btn btn-success btn-sm" onclick="printReceipt('${r.tenantId}','${r.typeKey}',${r.idx})">🖨️ Print</button></div></td></tr>`).join('');
+    tbody.innerHTML=receipts.map(r=>`<tr><td><span class="badge role user">${r.receiptNo}</span></td><td>${r.date}</td><td><strong>${r.tenantName}</strong></td><td>${r.apt}</td><td><span class="badge ${r.typeKey==='electric'?'electric':r.typeKey==='water'?'water':'info'}">${r.type}</span></td><td>${r.desc}</td><td class="text-credit">${formatMoney(r.amount)}</td><td><div class="action-btns"><button class="btn btn-success btn-sm" onclick="printReceipt('${r.tenantId}','${r.typeKey}',${r.idx})">🖨️ Print</button></div></td></tr>`).join('');
 }
 function printReceipt(tenantId,type,idx){
     const t=TENANTS.find(x=>x.id===tenantId);
@@ -2933,14 +3117,14 @@ function printReceipt(tenantId,type,idx){
         </div>
         <div class="title">PAYMENT RECEIPT</div>
         <div class="grid-2 section"><div><div class="section-label">Received From</div><div class="section-value">${t.name}</div><div style="font-size:.82rem;color:#64748b;margin-top:.15rem;">${prop?prop.name+' · Unit '+unit.unitNumber:'Apt '+t.apt} · ${t.mobile}</div></div><div style="text-align:right;"><div class="section-label">Payment Type</div><div class="section-value">${typeLabel}</div></div></div>
-        <div class="amount-box"><div class="lbl">Amount Received</div><div class="amt">${formatUGX(payment.credit)}</div><div class="words">${amountWords} shillings only</div></div>
+        <div class="amount-box"><div class="lbl">Amount Received</div><div class="amt">${formatMoney(payment.credit)}</div><div class="words">${amountWords} shillings only</div></div>
         <table class="details-table">
             <tr><td>Description</td><td>${payment.desc||'—'}</td></tr>
             ${payment.invoiceNo?`<tr><td>Invoice Reference</td><td>${payment.invoiceNo}</td></tr>`:''}
             ${payment.advanceMonths?`<tr><td>Months Covered</td><td>${payment.advanceMonths}</td></tr>`:''}
             <tr><td>Payment Method</td><td>Cash / Mobile Money</td></tr>
             <tr><td>Date</td><td>${payment.date||todayStr}</td></tr>
-            <tr><td>Balance After Payment</td><td>${formatUGX(utilityBalance(arr))}</td></tr>
+            <tr><td>Balance After Payment</td><td>${formatMoney(utilityBalance(arr))}</td></tr>
         </table>
         <div class="paid-stamp"><span>PAID ✓</span></div>
         <div class="signature"><div>Received By</div><div>Authorized Signature</div></div>
@@ -2990,8 +3174,8 @@ function renderUtilityPage(){
         if(filterType==='all'||filterType==='water'){t.water.forEach(r=>{ waterDebit += (r.debit||0); waterCredit += (r.credit||0); });}
     });
     document.getElementById('utilitySummary').innerHTML=`
-        <div class="util-card electric-received"><div class="util-label">⚡ Electricity</div><div class="util-value">${formatUGX(elecDebit)}</div><div class="exp-sub">Paid: ${formatUGX(elecCredit)} · Balance: <strong>${formatUGX(elecDebit-elecCredit)}</strong></div></div>
-        <div class="util-card water-received"><div class="util-label">💧 Water</div><div class="util-value">${formatUGX(waterDebit)}</div><div class="exp-sub">Paid: ${formatUGX(waterCredit)} · Balance: <strong>${formatUGX(waterDebit-waterCredit)}</strong></div></div>
+        <div class="util-card electric-received"><div class="util-label">⚡ Electricity</div><div class="util-value">${formatMoney(elecDebit)}</div><div class="exp-sub">Paid: ${formatMoney(elecCredit)} · Balance: <strong>${formatMoney(elecDebit-elecCredit)}</strong></div></div>
+        <div class="util-card water-received"><div class="util-label">💧 Water</div><div class="util-value">${formatMoney(waterDebit)}</div><div class="exp-sub">Paid: ${formatMoney(waterCredit)} · Balance: <strong>${formatMoney(waterDebit-waterCredit)}</strong></div></div>
     `;
     const tbody=document.getElementById('utilityTableBody');
     const rows=[];
@@ -3021,11 +3205,11 @@ function renderUtilityPage(){
             <td>${r.prev !== null && r.prev !== undefined ? r.prev : '—'}</td>
             <td>${r.curr !== null && r.curr !== undefined ? r.curr : '—'}</td>
             <td>${r.units !== null && r.units !== undefined ? r.units : '—'}</td>
-            <td>${r.rate ? formatUGX(r.rate) : '—'}</td>
-            <td>${r.totalAmt !== null ? formatUGX(r.totalAmt) : '—'}</td>
-            <td class="text-debit">${r.debit ? formatUGX(r.debit) : '—'}</td>
-            <td class="text-credit">${r.credit ? formatUGX(r.credit) : '—'}</td>
-            <td class="${r.runBal < 0 ? 'text-balance-neg' : 'text-balance-pos'}">${formatUGX(r.runBal)}</td>
+            <td>${r.rate ? formatMoney(r.rate) : '—'}</td>
+            <td>${r.totalAmt !== null ? formatMoney(r.totalAmt) : '—'}</td>
+            <td class="text-debit">${r.debit ? formatMoney(r.debit) : '—'}</td>
+            <td class="text-credit">${r.credit ? formatMoney(r.credit) : '—'}</td>
+            <td class="${r.runBal < 0 ? 'text-balance-neg' : 'text-balance-pos'}">${formatMoney(r.runBal)}</td>
             <td><div class="action-btns">
                 <button class="btn btn-outline btn-sm" onclick="viewUtilityRow('${r.tenantId}','${r.type}',${r.idx})">View</button>
                 ${can('add_utility')?`<button class="btn btn-warning btn-sm" onclick="openEditUtilityModal('${r.tenantId}','${r.type}',${r.idx})">Update</button>`:''}
@@ -3043,7 +3227,7 @@ async function deleteUtilityRow(tenantId, type, index){
     const arr = type==='Electric' ? t.electric : t.water;
     if(index<0 || index>=arr.length){showNotification('Invalid row','warning');return;}
     const row = arr[index];
-    const label = row.meter !== null && row.meter !== undefined && row.meter !== 0 ? `reading ${row.reading} (${row.meter} units @ ${formatUGX(row.rate)})` : `payment ${formatUGX(row.credit||0)}`;
+    const label = row.meter !== null && row.meter !== undefined && row.meter !== 0 ? `reading ${row.reading} (${row.meter} units @ ${formatMoney(row.rate)})` : `payment ${formatMoney(row.credit||0)}`;
     if(!confirm(`Delete this ${type} ${label}?\n\nDate: ${row.date||'—'}`)) return;
     arr.splice(index,1);
     await saveTenantNow(t);
@@ -3094,8 +3278,18 @@ async function saveUtilityEdit(e){
     if(isReading){
         units = Math.max(0, +(curr - prev).toFixed(4));
         reading = curr;
-        if(type==='Electric'){newDebit = units * rate;}
-        else{newDebit = ((units * rate) * (1 + BASE_CHARGES.seweragePercent/100) + BASE_CHARGES.serviceCharge) * (1 + BASE_CHARGES.vatPercent/100);}
+        if(type==='Electric'){
+            const subtotal = units * rate;
+            const service = BASE_CHARGES.electricServiceCharge;
+            const vat = (subtotal + service) * BASE_CHARGES.electricVatPercent / 100;
+            newDebit = subtotal + service + vat;
+        } else {
+            const subtotal = units * rate;
+            const sewer = subtotal * BASE_CHARGES.seweragePercent / 100;
+            const service = BASE_CHARGES.serviceCharge;
+            const vat = (subtotal + sewer + service) * BASE_CHARGES.vatPercent / 100;
+            newDebit = subtotal + sewer + service + vat;
+        }
         newCredit = 0;
     } else {
         isReading = false; units = null; reading = null; newDebit = 0; newCredit = creditIn || existing.credit || 0;
@@ -3131,7 +3325,7 @@ function viewUtilityRow(tenantId, type, index){
         const isR = row.meter !== null && row.meter !== undefined && row.meter !== 0;
         const run = runningBalanceAt(arr, i);
         return `<tr style="${i===index?'background:#fef9c3;':''}">
-            <td>${row.date||'—'}</td><td>${row.desc || '—'}</td><td>${isR ? p : '—'}</td><td>${isR ? row.reading : '—'}</td><td>${isR ? row.meter : '—'}</td><td>${isR ? formatUGX(row.rate) : '—'}</td><td>${isR ? formatUGX(row.debit||0) : '—'}</td><td class="text-debit">${row.debit?formatUGX(row.debit):'—'}</td><td class="text-credit">${row.credit?formatUGX(row.credit):'—'}</td><td class="${run<0?'text-balance-neg':'text-balance-pos'}">${formatUGX(run)}</td>
+            <td>${row.date||'—'}</td><td>${row.desc || '—'}</td><td>${isR ? p : '—'}</td><td>${isR ? row.reading : '—'}</td><td>${isR ? row.meter : '—'}</td><td>${isR ? formatMoney(row.rate) : '—'}</td><td>${isR ? formatMoney(row.debit||0) : '—'}</td><td class="text-debit">${row.debit?formatMoney(row.debit):'—'}</td><td class="text-credit">${row.credit?formatMoney(row.credit):'—'}</td><td class="${run<0?'text-balance-neg':'text-balance-pos'}">${formatMoney(run)}</td>
         </tr>`;
     }).join('');
     panel.innerHTML=`
@@ -3141,9 +3335,9 @@ function viewUtilityRow(tenantId, type, index){
                 <button class="btn btn-outline btn-sm" onclick="document.getElementById('utilityDetailPanel').innerHTML='';">Close</button>
             </div>
             <div class="utility-summary">
-                <div class="util-card electric-received"><div class="util-label">⚡ Electricity Balance</div><div class="util-value">${formatUGX(eBal)}</div></div>
-                <div class="util-card water-received"><div class="util-label">💧 Water Balance</div><div class="util-value">${formatUGX(wBal)}</div></div>
-                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Row Running Balance</div><div class="util-value">${formatUGX(runBal)}</div></div>
+                <div class="util-card electric-received"><div class="util-label">⚡ Electricity Balance</div><div class="util-value">${formatMoney(eBal)}</div></div>
+                <div class="util-card water-received"><div class="util-label">💧 Water Balance</div><div class="util-value">${formatMoney(wBal)}</div></div>
+                <div class="util-card" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%);"><div class="util-label">Row Running Balance</div><div class="util-value">${formatMoney(runBal)}</div></div>
             </div>
             <h3 style="font-size:.95rem;margin-bottom:.75rem;">📋 Selected Row</h3>
             <table style="margin-bottom:1.25rem;">
@@ -3155,11 +3349,11 @@ function viewUtilityRow(tenantId, type, index){
                     <tr><td>Previous Meter</td><td>${isReading ? prev : '—'}</td></tr>
                     <tr><td>Current Meter</td><td>${isReading ? r.reading : '—'}</td></tr>
                     <tr><td>Total Units</td><td><strong>${isReading ? r.meter : '—'}</strong></td></tr>
-                    <tr><td>Rate</td><td>${isReading ? formatUGX(r.rate) : '—'}</td></tr>
-                    <tr><td>Total Amount</td><td>${isReading ? formatUGX(r.debit||0) : '—'}</td></tr>
-                    <tr><td>Debit</td><td class="text-debit">${r.debit?formatUGX(r.debit):'—'}</td></tr>
-                    <tr><td>Credit</td><td class="text-credit">${r.credit?formatUGX(r.credit):'—'}</td></tr>
-                    <tr><td><strong>Running Balance</strong></td><td class="${runBal<0?'text-balance-neg':'text-balance-pos'}">${formatUGX(runBal)}</td></tr>
+                    <tr><td>Rate</td><td>${isReading ? formatMoney(r.rate) : '—'}</td></tr>
+                    <tr><td>Total Amount</td><td>${isReading ? formatMoney(r.debit||0) : '—'}</td></tr>
+                    <tr><td>Debit</td><td class="text-debit">${r.debit?formatMoney(r.debit):'—'}</td></tr>
+                    <tr><td>Credit</td><td class="text-credit">${r.credit?formatMoney(r.credit):'—'}</td></tr>
+                    <tr><td><strong>Running Balance</strong></td><td class="${runBal<0?'text-balance-neg':'text-balance-pos'}">${formatMoney(runBal)}</td></tr>
                 </tbody>
             </table>
             <h3 style="font-size:.95rem;margin-bottom:.5rem;">📒 Full Ledger</h3>
@@ -3207,10 +3401,16 @@ function updateUtilityPreview(){
     document.getElementById('utilityUsage').value=usage.toFixed(2);
     if(type==='electric'){
         const rate=BASE_CHARGES.electricRate;
+        const subtotal = usage * rate;
+        const service = BASE_CHARGES.electricServiceCharge;
+        const vat = (subtotal + service) * BASE_CHARGES.electricVatPercent / 100;
+        const total = subtotal + service + vat;
         document.getElementById('prevUsage').textContent=usage.toFixed(2)+' units';
-        document.getElementById('prevRate').textContent=formatUGX(rate);
-        document.getElementById('prevSubtotal').textContent=formatUGX(usage*rate);
-        document.getElementById('prevTotal').textContent=formatUGX(usage*rate);
+        document.getElementById('prevRate').textContent=formatMoney(rate);
+        document.getElementById('prevSubtotal').textContent=formatMoney(subtotal);
+        document.getElementById('prevService').textContent=formatMoney(service);
+        document.getElementById('prevVat').textContent=formatMoney(vat);
+        document.getElementById('prevTotal').textContent=formatMoney(total);
     }else{
         const rate=BASE_CHARGES.waterRate;
         const subtotal=usage*rate;
@@ -3219,12 +3419,12 @@ function updateUtilityPreview(){
         const vat=(subtotal+sewer+service)*BASE_CHARGES.vatPercent/100;
         const total=subtotal+sewer+service+vat;
         document.getElementById('prevUsage').textContent=usage.toFixed(2)+' units';
-        document.getElementById('prevRate').textContent=formatUGX(rate);
-        document.getElementById('prevSubtotal').textContent=formatUGX(subtotal);
-        document.getElementById('prevSewer').textContent=formatUGX(sewer);
-        document.getElementById('prevService').textContent=formatUGX(service);
-        document.getElementById('prevVat').textContent=formatUGX(vat);
-        document.getElementById('prevTotal').textContent=formatUGX(total);
+        document.getElementById('prevRate').textContent=formatMoney(rate);
+        document.getElementById('prevSubtotal').textContent=formatMoney(subtotal);
+        document.getElementById('prevSewer').textContent=formatMoney(sewer);
+        document.getElementById('prevService').textContent=formatMoney(service);
+        document.getElementById('prevVat').textContent=formatMoney(vat);
+        document.getElementById('prevTotal').textContent=formatMoney(total);
     }
 }
 async function saveUtilityReading(e){
@@ -3235,17 +3435,20 @@ async function saveUtilityReading(e){
     const prev=parseFloat(document.getElementById('utilityPrev').value)||0;
     const curr=parseFloat(document.getElementById('utilityCurr').value)||0;
     const date=document.getElementById('utilityDate').value;
-    if(!tenantId){showNotification('Select a tenant','warning');return;}
+    if(!tenantId || !date){showNotification('Please fill all required fields','warning');return;}
     const usage=Math.max(0,curr-prev);
     if(usage<=0){showNotification('Current reading must be greater than previous','warning');return;}
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
     if(type==='electric'){
         const rate=BASE_CHARGES.electricRate;
-        const amount=usage*rate;
-        t.electric.push({date,desc:`Inv- ${new Date(date).toLocaleString('en',{month:'short'})} ${new Date(date).getFullYear()}`,meter:usage,rate,debit:amount,credit:0,reading:curr});
+        const subtotal = usage * rate;
+        const service = BASE_CHARGES.electricServiceCharge;
+        const vat = (subtotal + service) * BASE_CHARGES.electricVatPercent / 100;
+        const total = subtotal + service + vat;
+        t.electric.push({date,desc:`Inv- ${new Date(date).toLocaleString('en',{month:'short'})} ${new Date(date).getFullYear()}`,meter:usage,rate,debit:total,credit:0,reading:curr});
         t.electric.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-        showNotification(`⚡ Electricity reading saved – ${formatUGX(amount)}`);
+        showNotification(`⚡ Electricity reading saved – ${formatMoney(total)}`);
     }else{
         const rate=BASE_CHARGES.waterRate;
         const subtotal=usage*rate;
@@ -3255,7 +3458,7 @@ async function saveUtilityReading(e){
         const total=subtotal+sewer+service+vat;
         t.water.push({date,desc:`Meter-${usage} @${rate}+${BASE_CHARGES.seweragePercent}%+${service}+${BASE_CHARGES.vatPercent}%`,meter:usage,rate,debit:total,credit:0,reading:curr});
         t.water.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-        showNotification(`💧 Water reading saved – ${formatUGX(total)}`);
+        showNotification(`💧 Water reading saved – ${formatMoney(total)}`);
     }
     closeModal('utilityModal');
     renderUtilityPage();renderDashboard();renderStatementsPage();
@@ -3264,6 +3467,8 @@ async function saveUtilityReading(e){
 function openBaseChargesModal(){
     if(!can('add_utility')){showNotification('Permission denied','warning');return;}
     document.getElementById('baseElectricRate').value=BASE_CHARGES.electricRate;
+    document.getElementById('baseElectricService').value=BASE_CHARGES.electricServiceCharge;
+    document.getElementById('baseElectricVat').value=BASE_CHARGES.electricVatPercent;
     document.getElementById('baseWaterRate').value=BASE_CHARGES.waterRate;
     document.getElementById('baseSewerage').value=BASE_CHARGES.seweragePercent;
     document.getElementById('baseService').value=BASE_CHARGES.serviceCharge;
@@ -3274,11 +3479,15 @@ function saveBaseCharges(e){
     e.preventDefault();
     if(!can('add_utility')){showNotification('Permission denied','warning');return;}
     BASE_CHARGES.electricRate=parseFloat(document.getElementById('baseElectricRate').value)||1100;
+    BASE_CHARGES.electricServiceCharge=parseFloat(document.getElementById('baseElectricService').value)||0;
+    BASE_CHARGES.electricVatPercent=parseFloat(document.getElementById('baseElectricVat').value)||0;
     BASE_CHARGES.waterRate=parseFloat(document.getElementById('baseWaterRate').value)||4433;
     BASE_CHARGES.seweragePercent=parseFloat(document.getElementById('baseSewerage').value)||75;
     BASE_CHARGES.serviceCharge=parseFloat(document.getElementById('baseService').value)||1500;
     BASE_CHARGES.vatPercent=parseFloat(document.getElementById('baseVat').value)||18;
+    saveLocalCache();
     showNotification('Base charges updated');
+    updateRateNote();
     closeModal('baseChargesModal');
 }
 
@@ -3294,14 +3503,14 @@ function renderExpensesPage(){
     const selectedLabel=filterTenant==='all'?'All Tenants':(selectedTenants[0]?`Apt ${selectedTenants[0].apt} – ${selectedTenants[0].name}`:'—');
     const count=selectedTenants.reduce((s,t)=>s+t.expenses.length,0);
     document.getElementById('expenseSummary').innerHTML=`
-        <div class="expense-total-card"><div class="exp-label">Total Expenses – ${selectedLabel}</div><div class="exp-value">${formatUGX(selectedTotal)}</div><div class="exp-sub">${count} item${count===1?'':'s'}</div></div>
+        <div class="expense-total-card"><div class="exp-label">Total Expenses – ${selectedLabel}</div><div class="exp-value">${formatMoney(selectedTotal)}</div><div class="exp-sub">${count} item${count===1?'':'s'}</div></div>
     `;
     const tbody=document.getElementById('expensesTableBody');
     const all=[];
     selectedTenants.forEach(t=>{t.expenses.forEach((e,idx)=>{all.push({tenantId:t.id,tenantName:t.name,apt:t.apt,...e,idx});});});
     all.sort((a,b)=>b.date.localeCompare(a.date));
     if(all.length===0){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:2rem;">No expenses found.</td></tr>';return;}
-    tbody.innerHTML=all.map(e=>`<tr><td>${e.date}</td><td>Apt ${e.apt}</td><td>${e.tenantName}</td><td><span class="badge ${e.category==='Plumbing'?'cat-plumbing':e.category==='Electric'?'cat-electric':'cat-general'}">${e.category||'General'}</span></td><td>${e.desc}</td><td class="text-debit">${formatUGX(e.amount)}</td><td>${can('delete_expenses')?`<button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.tenantId}',${e.idx})">Delete</button>`:'—'}</td></tr>`).join('');
+    tbody.innerHTML=all.map(e=>`<tr><td>${e.date}</td><td>Apt ${e.apt}</td><td>${e.tenantName}</td><td><span class="badge ${e.category==='Plumbing'?'cat-plumbing':e.category==='Electric'?'cat-electric':'cat-general'}">${e.category||'General'}</span></td><td>${e.desc}</td><td class="text-debit">${formatMoney(e.amount)}</td><td>${can('delete_expenses')?`<button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.tenantId}',${e.idx})">Delete</button>`:'—'}</td></tr>`).join('');
 }
 function openAddExpenseModal(){
     if(!can('add_expenses')){showNotification('Permission denied','warning');return;}
@@ -3320,7 +3529,7 @@ async function saveExpense(e){
     const desc=document.getElementById('expenseDesc').value.trim();
     const amount=parseFloat(document.getElementById('expenseAmount').value);
     const date=document.getElementById('expenseDate').value;
-    if(!tenantId||!desc||!amount){showNotification('Please fill all fields','warning');return;}
+    if(!tenantId||!desc||!amount||!date){showNotification('Please fill all fields','warning');return;}
     const t=TENANTS.find(x=>x.id===tenantId);
     if(t){t.expenses.push({desc,amount,date,category});showNotification('Expense added');}
     closeModal('expenseModal');
@@ -3347,8 +3556,8 @@ function printExpensesContextual(){
     const html=`<html><head><title>${title}</title><style>body{font-family:Arial,sans-serif;padding:2rem;color:#0f172a}h1{font-size:1.6rem}table{width:100%;border-collapse:collapse;font-size:.85rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>${title}</h1>
-    <table><thead><tr><th>Date</th><th>Apartment</th><th>Tenant</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>${all.map(e=>`<tr><td>${e.date}</td><td>Apt ${e.apt}</td><td>${e.tenantName}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td>${formatUGX(e.amount)}</td></tr>`).join('')||'<tr><td colspan="6">No expenses</td></tr>'}</tbody></table>
-    <div class="total">Grand Total: ${formatUGX(total)}</div></body></html>`;
+    <table><thead><tr><th>Date</th><th>Apartment</th><th>Tenant</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>${all.map(e=>`<tr><td>${e.date}</td><td>Apt ${e.apt}</td><td>${e.tenantName}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td>${formatMoney(e.amount)}</td></tr>`).join('')||'<tr><td colspan="6">No expenses</td></tr>'}</tbody></table>
+    <div class="total">Grand Total: ${formatMoney(total)}</div></body></html>`;
     const w=window.open('','_blank');
     w.document.write(html);
     w.document.close();
@@ -3386,24 +3595,24 @@ function buildRentalStatement(t){
     return `<html><head><title>Rental Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.85rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}.debit{color:#dc2626}.credit{color:#16a34a}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Rental Statement</h1><h2>${t.name} · Apt ${t.apt} · ${t.mobile}</h2>
-    <table><thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);return `<tr><td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td><td class="debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="credit">${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;}).join('')}</tbody></table><div class="total">Outstanding Rent Balance: ${formatUGX(rentBal)}</div></body></html>`;
+    <table><thead><tr><th>Date</th><th>Description</th><th>Invoice</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${t.rent.map((r,idx)=>{const run=runningBalanceAt(t.rent,idx);return `<tr><td>${r.date}</td><td>${r.desc}</td><td>${r.invoiceNo||'—'}</td><td class="debit">${r.debit?formatMoney(r.debit):'—'}</td><td class="credit">${r.credit?formatMoney(r.credit):'—'}</td><td>${formatMoney(run)}</td></tr>`;}).join('')}</tbody></table><div class="total">Outstanding Rent Balance: ${formatMoney(rentBal)}</div></body></html>`;
 }
 function buildUtilityStatement(t){
     const eBal=electricBalance(t),wBal=waterBalance(t);
-    const elecRows = t.electric.map((r,idx)=>{const run = runningBalanceAt(t.electric, idx);const isR = r.meter !== null && r.meter !== undefined && r.meter !== 0;const prev = isR ? getPreviousReading(t.electric, idx) : '—';return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${prev}</td><td>${isR?r.reading:'—'}</td><td>${isR?r.meter:'—'}</td><td class="debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="credit">${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;}).join('');
-    const waterRows = t.water.length ? t.water.map((r,idx)=>{const run = runningBalanceAt(t.water, idx);const isR = r.meter !== null && r.meter !== undefined && r.meter !== 0;const prev = isR ? getPreviousReading(t.water, idx) : '—';return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${prev}</td><td>${isR?r.reading:'—'}</td><td>${isR?r.meter:'—'}</td><td class="debit">${r.debit?formatUGX(r.debit):'—'}</td><td class="credit">${r.credit?formatUGX(r.credit):'—'}</td><td>${formatUGX(run)}</td></tr>`;}).join('') : '<tr><td colspan="8">No water records</td></tr>';
+    const elecRows = t.electric.map((r,idx)=>{const run = runningBalanceAt(t.electric, idx);const isR = r.meter !== null && r.meter !== undefined && r.meter !== 0;const prev = isR ? getPreviousReading(t.electric, idx) : '—';return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${prev}</td><td>${isR?r.reading:'—'}</td><td>${isR?r.meter:'—'}</td><td class="debit">${r.debit?formatMoney(r.debit):'—'}</td><td class="credit">${r.credit?formatMoney(r.credit):'—'}</td><td>${formatMoney(run)}</td></tr>`;}).join('');
+    const waterRows = t.water.length ? t.water.map((r,idx)=>{const run = runningBalanceAt(t.water, idx);const isR = r.meter !== null && r.meter !== undefined && r.meter !== 0;const prev = isR ? getPreviousReading(t.water, idx) : '—';return `<tr><td>${r.date||'—'}</td><td>${r.desc||'—'}</td><td>${prev}</td><td>${isR?r.reading:'—'}</td><td>${isR?r.meter:'—'}</td><td class="debit">${r.debit?formatMoney(r.debit):'—'}</td><td class="credit">${r.credit?formatMoney(r.credit):'—'}</td><td>${formatMoney(run)}</td></tr>`;}).join('') : '<tr><td colspan="8">No water records</td></tr>';
     return `<html><head><title>Utility Statement – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}h3{margin-top:1.5rem;font-size:1rem}table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:1rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}.debit{color:#dc2626}.credit{color:#16a34a}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Utility Statement</h1><h2>${t.name} · Apt ${t.apt} · ${t.mobile}</h2>
-    <h3>⚡ Electricity (Yaka)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Prev</th><th>Curr</th><th>Units</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${elecRows}</tbody></table><div class="total">Electricity Balance: ${formatUGX(eBal)}</div>
-    <h3>💧 Water (NWSC)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Prev</th><th>Curr</th><th>Units</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${waterRows}</tbody></table><div class="total">Water Balance: ${formatUGX(wBal)}</div></body></html>`;
+    <h3>⚡ Electricity (Yaka)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Prev</th><th>Curr</th><th>Units</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${elecRows}</tbody></table><div class="total">Electricity Balance: ${formatMoney(eBal)}</div>
+    <h3>💧 Water (NWSC)</h3><table><thead><tr><th>Date</th><th>Description</th><th>Prev</th><th>Curr</th><th>Units</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${waterRows}</tbody></table><div class="total">Water Balance: ${formatMoney(wBal)}</div></body></html>`;
 }
 function buildExpenseReport(t){
     const total=totalExpenses(t);
     return `<html><head><title>Expense Report – ${t.name}</title><style>body{font-family:Arial;padding:2rem}h1{font-size:1.6rem}h2{color:#64748b;font-size:1rem;font-weight:400;margin-bottom:1.5rem}table{width:100%;border-collapse:collapse;font-size:.85rem}th{text-align:left;padding:.6rem;background:#0f172a;color:#fff}td{padding:.5rem .6rem;border-bottom:1px solid #e2e8f0}.total{font-weight:700;font-size:1.1rem;margin-top:1rem;text-align:right}.header{display:flex;justify-content:space-between;margin-bottom:1.5rem}.logo{font-size:1.5rem;font-weight:800}.logo span{color:#facc15}.debit{color:#dc2626}</style></head><body>
     <div class="header"><div class="logo">Bright <span>Mesh</span> Rentals</div><div>${new Date().toLocaleDateString()}</div></div>
     <h1>Expense Report</h1><h2>${t.name} · Apt ${t.apt}</h2>
-    <table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>${t.expenses.map(e=>`<tr><td>${e.date}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td class="debit">${formatUGX(e.amount)}</td></tr>`).join('')||'<tr><td colspan="4">No expenses</td></tr>'}</tbody></table><div class="total">Total Expenses: ${formatUGX(total)}</div></body></html>`;
+    <table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>${t.expenses.map(e=>`<tr><td>${e.date}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td class="debit">${formatMoney(e.amount)}</td></tr>`).join('')||'<tr><td colspan="4">No expenses</td></tr>'}</tbody></table><div class="total">Total Expenses: ${formatMoney(total)}</div></body></html>`;
 }
 
 // ============================================================
@@ -3415,6 +3624,7 @@ function renderAdminPage(){
     const role=currentUser.role;
     document.getElementById('adminPanelTitle').textContent=role==='admin'?'Admin Panel':'Manage Users';
     document.getElementById('adminLocationsCard').style.display=(role==='admin')?'':'none';
+    renderCurrencyAdminSection();
     let statsTenants=TENANTS,statsUsers=USERS,statsProperties=PROPERTIES;
     if(role==='manager'){
         statsTenants=TENANTS.filter(t=>t.locationId===currentUser.locationId);
@@ -3442,7 +3652,17 @@ function renderAdminPage(){
                 const locProperties=PROPERTIES.filter(p=>p.locationId===loc.id);
                 const locIncome=totalRentReceived(locTenants)+totalElectricReceived(locTenants)+totalWaterReceived(locTenants);
                 const locExpenses=totalExpensesReceived(locTenants);
-                return `<div class="location-income"><div><div class="loc-name">📍 ${loc.area}, ${loc.city}</div><div style="font-size:.72rem;color:#94a3b8;margin-top:.15rem;">${locProperties.length} propert${locProperties.length===1?'y':'ies'} · ${locTenants.length} tenant${locTenants.length===1?'':'s'}</div></div><div style="text-align:right;"><div class="loc-amount">${formatUGX(locIncome)}</div><div style="font-size:.7rem;color:#94a3b8;">Expenses: ${formatUGX(locExpenses)}</div></div></div>`;
+                return `<div class="location-income">
+                    <div style="flex:1;min-width:0;">
+                        <div class="loc-name">📍 ${loc.area}, ${loc.city}</div>
+                        <div style="font-size:.72rem;color:#94a3b8;margin-top:.15rem;">${locProperties.length} propert${locProperties.length===1?'y':'ies'} · ${locTenants.length} tenant${locTenants.length===1?'':'s'}</div>
+                        <div style="display:flex;gap:.35rem;margin-top:.4rem;">
+                            <button class="btn btn-warning btn-sm" onclick="openEditLocationModal('${loc.id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteLocation('${loc.id}')">Delete</button>
+                        </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;"><div class="loc-amount">${formatMoney(locIncome)}</div><div style="font-size:.7rem;color:#94a3b8;">Expenses: ${formatMoney(locExpenses)}</div></div>
+                </div>`;
             }).join('');
         }
     }
@@ -3456,19 +3676,61 @@ function renderAdminPage(){
         return `<div class="admin-list-item"><div class="info"><div class="primary">${u.fullName} <span style="color:#94a3b8;font-weight:400;">@${u.username}</span>${isSelf?' <span style="color:#facc15;font-size:.72rem;">(you)</span>':''}</div><div class="secondary"><span class="badge role ${u.role}">${u.role.toUpperCase()}</span> &nbsp;· ${u.locationName||'All Locations'}</div></div><div class="actions">${canEditThis?`<button class="btn btn-warning btn-sm" onclick="openEditUserModal('${u.id}')">Edit</button><button class="btn btn-outline btn-sm" onclick="openAdminResetPassword('${u.id}')">🔒</button>`:'<span style="font-size:.7rem;color:#94a3b8;">—</span>'}</div></div>`;
     }).join('');
 }
-function openAddLocationModal(){if(currentUser.role!=='admin'){showNotification('Only admin can add locations','warning');return;}document.getElementById('locationForm').reset();openModal('locationModal');}
+
+function openAddLocationModal(){if(currentUser.role!=='admin'){showNotification('Only admin can add locations','warning');return;}document.getElementById('locationForm').reset();document.getElementById('locationEditId').value='';document.getElementById('locationModalTitle').textContent='Add Location';openModal('locationModal');}
+function openEditLocationModal(id){
+    if(currentUser.role!=='admin'){showNotification('Only admin can edit locations','warning');return;}
+    const loc=LOCATIONS.find(l=>l.id===id);
+    if(!loc){showNotification('Location not found','warning');return;}
+    document.getElementById('locationForm').reset();
+    document.getElementById('locationEditId').value=loc.id;
+    document.getElementById('locationArea').value=loc.area;
+    document.getElementById('locationCity').value=loc.city;
+    document.getElementById('locationModalTitle').textContent='Edit Location';
+    openModal('locationModal');
+}
 async function saveLocation(e){
     e.preventDefault();
     if(currentUser.role!=='admin'){showNotification('Permission denied','warning');return;}
+    const editId=document.getElementById('locationEditId').value;
     const area=document.getElementById('locationArea').value.trim();
     const city=document.getElementById('locationCity').value.trim();
-    const newLoc={id:'loc_'+Date.now(),area,city};
-    LOCATIONS.push(newLoc);
-    showNotification(`Location "${area}, ${city}" added`);
-    await saveLocationNow(newLoc);
+    if(!area || !city) { showNotification('Please fill all required fields','warning'); return; }
+    
+    if(editId){
+        const loc=LOCATIONS.find(l=>l.id===editId);
+        if(loc){loc.area=area;loc.city=city;await saveLocationNow(loc);showNotification(`Location "${area}, ${city}" updated`);}
+    }else{
+        const newLoc={id:'loc_'+Date.now(),area,city};
+        LOCATIONS.push(newLoc);
+        await saveLocationNow(newLoc);
+        showNotification(`Location "${area}, ${city}" added`);
+    }
     closeModal('locationModal');
     renderAdminPage();refreshLocationDropdowns();refreshFilterOptions();refreshAllPropertyDropdowns();
 }
+async function deleteLocation(id){
+    if(currentUser.role!=='admin'){showNotification('Only admin can delete locations','warning');return;}
+    const loc=LOCATIONS.find(l=>l.id===id);
+    if(!loc)return;
+    const attachedProps=PROPERTIES.filter(p=>p.locationId===id);
+    const attachedTenants=TENANTS.filter(t=>t.locationId===id);
+    const attachedUsers=USERS.filter(u=>u.locationId===id);
+    if(attachedProps.length>0||attachedTenants.length>0){
+        showNotification(`Cannot delete: location has ${attachedProps.length} properties, ${attachedTenants.length} tenants. Reassign first.`,'warning');
+        return;
+    }
+    if(attachedUsers.length>0){
+        showNotification(`Cannot delete: ${attachedUsers.length} user(s) still assigned to this location.`,'warning');
+        return;
+    }
+    if(!confirm(`Delete location "${loc.area}, ${loc.city}"?`)) return;
+    LOCATIONS=LOCATIONS.filter(l=>l.id!==id);
+    await deleteLocationNow(id);
+    showNotification('Location deleted','warning');
+    renderAdminPage();refreshLocationDropdowns();refreshFilterOptions();refreshAllPropertyDropdowns();
+}
+
 function refreshLocationDropdowns(){
     const sel=document.getElementById('userLocation'),esel=document.getElementById('editUserLocation');
     const vis=currentUser?.role==='admin'?LOCATIONS:LOCATIONS.filter(l=>l.id===currentUser?.locationId);
@@ -3485,6 +3747,8 @@ async function saveUser(e){
     const password=document.getElementById('userPassword').value;
     const role=document.getElementById('userRole').value;
     const locationId=document.getElementById('userLocation').value;
+    if(!fullName || !username || !password || !locationId) { showNotification('Please fill all required fields','warning'); return; }
+    
     if(USERS.find(u=>u.username.toLowerCase()===username)){showNotification('Username already exists','warning');return;}
     if(currentUser.role==='manager'){if(role==='admin'){showNotification('Managers cannot create admins','warning');return;}if(locationId!==currentUser.locationId){showNotification('You can only create users in your location','warning');return;}}
     const loc=LOCATIONS.find(l=>l.id===locationId);
@@ -3566,7 +3830,7 @@ async function savePasswordReset(e){
 }
 
 // ============================================================
-// EXPOSE
+// EXPOSE GLOBALS
 // ============================================================
 window.openLogin=openLogin;window.closeLogin=closeLogin;window.handleLogin=handleLogin;window.handleLogout=handleLogout;
 window.scrollToFeatures=scrollToFeatures;window.scrollToPricing=scrollToPricing;
@@ -3580,7 +3844,7 @@ window.openBaseChargesModal=openBaseChargesModal;window.saveBaseCharges=saveBase
 window.openPrintModal=openPrintModal;window.doPrintStatement=doPrintStatement;window.printExpensesContextual=printExpensesContextual;
 window.renderExpensesPage=renderExpensesPage;window.renderUtilityPage=renderUtilityPage;window.onExpenseFilterChange=onExpenseFilterChange;
 window.openEditRentModal=openEditRentModal;window.saveRentEdit=saveRentEdit;window.deleteRentTransaction=deleteRentTransaction;
-window.openAddLocationModal=openAddLocationModal;window.saveLocation=saveLocation;
+window.openAddLocationModal=openAddLocationModal;window.saveLocation=saveLocation;window.openEditLocationModal=openEditLocationModal;window.deleteLocation=deleteLocation;
 window.openAddUserModal=openAddUserModal;window.saveUser=saveUser;window.openEditUserModal=openEditUserModal;window.saveUserEdit=saveUserEdit;
 window.openOwnPasswordModal=openOwnPasswordModal;window.openAdminResetPassword=openAdminResetPassword;window.savePasswordReset=savePasswordReset;
 window.openAdvanceRentModal=openAdvanceRentModal;window.openAdvanceRentForTenant=openAdvanceRentForTenant;window.loadAdvanceMonths=loadAdvanceMonths;window.toggleAdvanceMonth=toggleAdvanceMonth;window.saveAdvanceRent=saveAdvanceRent;
@@ -3591,6 +3855,7 @@ window.renderPropertyPage=renderPropertyPage;window.onTenantPropertyChange=onTen
 window.refreshAllPropertyDropdowns=refreshAllPropertyDropdowns;window.renderPropertyOccupancyDashboard=renderPropertyOccupancyDashboard;window.showUnitDetail=showUnitDetail;
 window.renderStatementsPage=renderStatementsPage;window.printTenantStatementSummary=printTenantStatementSummary;window.printSingleTenantStatement=printSingleTenantStatement;
 window.renderMoveoutPage=renderMoveoutPage;window.openMoveOutModal=openMoveOutModal;window.loadMoveOutDetails=loadMoveOutDetails;window.saveMoveOut=saveMoveOut;window.viewMoveoutRecord=viewMoveoutRecord;window.openEditMoveoutModal=openEditMoveoutModal;window.saveMoveoutEdit=saveMoveoutEdit;window.deleteMoveoutRecord=deleteMoveoutRecord;
+window.changeCurrency=changeCurrency;
 </script>
 </body>
 </html>

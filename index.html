@@ -218,7 +218,7 @@ td{padding:.7rem .5rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 .tab-content{display:block}
 .tab-content.hidden{display:none}
 .meter-info{font-size:.7rem;color:#475569;background:#f8fafc;padding:.2rem .5rem;border-radius:.5rem;display:inline-block}
-.notification{position:fixed;top:1rem;right:1rem;left:1rem;background:#0f172a;color:#fff;padding:.9rem 1.25rem;border-radius:1rem;box-shadow:0 10px 25px rgba(0,0,0,.2);z-index:2000;opacity:0;transform:translateY(-10px);transition:all .3s;font-size:.88rem;font-weight:500;max-width:380px;margin-left:auto}
+.notification{pointer-events:none;position:fixed;top:1rem;right:1rem;left:1rem;background:#0f172a;color:#fff;padding:.9rem 1.25rem;border-radius:1rem;box-shadow:0 10px 25px rgba(0,0,0,.2);z-index:2000;opacity:0;transform:translateY(-10px);transition:all .3s;font-size:.88rem;font-weight:500;max-width:380px;margin-left:auto}
 .notification.show{opacity:1;transform:translateY(0)}
 .notification.success{background:#16a34a}
 .notification.warning{background:#d97706}
@@ -1811,10 +1811,32 @@ function getTenantUnit(t){if(t.unitId){const u=getUnitById(t.unitId);if(u)return
 function getUnitOccupant(id){return TENANTS.find(t=>t.unitId===id);}
 function getNextInvoiceNo(t){const n=t.rent.filter(r=>r.invoiceNo).map(r=>{const m=r.invoiceNo.match(/\d+/);return m?parseInt(m[0]):0;});const mx=n.length?Math.max(...n):0;return 'INV-'+String(mx+1).padStart(3,'0');}
 function getNextReceiptNo(prefix){const all=[];TENANTS.forEach(t=>{t.rent.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.electric.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});t.water.forEach(r=>{if(r.receiptNo)all.push(r.receiptNo);});});const n=all.map(r=>{const m=r.match(/\d+/);return m?parseInt(m[0]):0;});const mx=n.length?Math.max(...n):0;return (prefix||'RCPT-')+String(mx+1).padStart(4,'0');}
-function showNotification(msg,type='success'){const n=document.getElementById('notification');if(!n)return;n.textContent=msg;n.className='notification '+type+' show';setTimeout(()=>n.classList.remove('show'),3000);}
-function closeModal(id){const o=document.getElementById(id);if(!o)return;o.classList.remove('active');o.style.display='none';void o.offsetHeight;setTimeout(()=>{o.style.display='';},60);}
-function openModal(id){const o=document.getElementById(id);if(!o)return;o.style.display='flex';o.classList.add('active');}
+let _notifTimer=null;
+function showNotification(msg,type='success'){const n=document.getElementById('notification');if(!n)return;n.textContent=msg;n.className='notification '+type+' show';clearTimeout(_notifTimer);_notifTimer=setTimeout(()=>n.classList.remove('show'),3000);}
+function closeModal(id){const o=document.getElementById(id);if(!o)return;o.classList.remove('active');o.style.display='';}
+function openModal(id){const o=document.getElementById(id);if(!o)return;o.style.display='';o.classList.add('active');}
 function getLastMeterReading(t,type){const arr=type==='electric'?t.electric:t.water;for(let k=arr.length-1;k>=0;k--){if(arr[k].reading!==null&&arr[k].reading!==undefined&&arr[k].reading!==0)return arr[k].reading;}return 0;}
+
+// Prints HTML through a hidden iframe instead of a pop-up window.
+// Pop-ups get blocked, steal focus and leave dropdowns/buttons frozen on the main page.
+function printHTML(html){
+    try{
+        const old=document.getElementById('printFrame');if(old)old.remove();
+        const f=document.createElement('iframe');
+        f.id='printFrame';
+        f.setAttribute('aria-hidden','true');
+        f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none;';
+        document.body.appendChild(f);
+        const d=f.contentWindow.document;
+        d.open();d.write(html);d.close();
+        const go=()=>{
+            try{f.contentWindow.focus();f.contentWindow.print();}
+            catch(e){console.error(e);showNotification('Could not open the print dialog','warning');}
+            setTimeout(()=>{window.focus();const x=document.getElementById('printFrame');if(x)x.remove();},1500);
+        };
+        setTimeout(go,300);
+    }catch(e){console.error(e);showNotification('Printing failed. Please try again.','error');}
+}
 function resetLoginButton(){const b=document.getElementById('loginBtn');if(b){b.textContent='Sign In';b.disabled=false;}}
 function getForwardMonths(count){const m=[];const now=new Date();for(let i=0;i<count;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);m.push({year:d.getFullYear(),month:d.getMonth()+1,label:d.toLocaleString('en',{month:'short',year:'numeric'})});}return m;}
 function hasInvoiceForMonth(t,y,mo){const n=new Date(y,mo-1,1).toLocaleString('en',{month:'long'});return t.rent.some(r=>r.debit>0&&r.desc.includes(n)&&r.desc.includes(String(y)));}
@@ -1932,6 +1954,8 @@ function handleLogout(){
     saveLocalCache();
     currentUser=null;
     sessionStorage.removeItem('bmr_currentUser');
+    document.querySelectorAll('.modal-overlay.active').forEach(m=>{m.classList.remove('active');m.style.display='';});
+    const lo=document.getElementById('loginOverlay');if(lo)lo.classList.remove('active');
     document.getElementById('appContainer').classList.remove('active');
     document.getElementById('landingPage').classList.remove('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
@@ -2855,10 +2879,7 @@ function printSingleTenantStatement(tenantId){
     html+=`<tr style="font-weight:700;background:#f8fafc;"><td>Total</td><td>${formatMoney(totalPaid)}</td><td>${formatMoney(totalBal)}</td></tr>
     </tbody></table><div class="total">Outstanding Balance: <span class="badge ${totalBal<=0?'cleared':'pending'}">${totalBal<=0?'CLEARED':'PENDING'} ${formatMoney(totalBal)}</span></div>
     </body></html>`;
-    const w=window.open('','_blank');
-    w.document.write(html);
-    w.document.close();
-    setTimeout(()=>w.print(),500);
+    printHTML(html);
 }
 
 function printTenantStatementSummary(){
@@ -2902,10 +2923,7 @@ function printTenantStatementSummary(){
     <table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>
     <div class="footer">Generated on ${new Date().toLocaleString()}</div>
     </body></html>`;
-    const w=window.open('','_blank');
-    w.document.write(html);
-    w.document.close();
-    setTimeout(()=>w.print(),500);
+    printHTML(html);
 }
 
 // ============================================================
@@ -3131,10 +3149,7 @@ function printReceipt(tenantId,type,idx){
         <div class="footer">Bright Mesh Rentals · Thank you for your payment<br>This is a system-generated receipt. No signature required.</div>
     </div>
     </body></html>`;
-    const w=window.open('','_blank');
-    w.document.write(html);
-    w.document.close();
-    setTimeout(()=>w.print(),500);
+    printHTML(html);
 }
 function printAdvanceReceipt(tenantId,receiptNo){
     const t=TENANTS.find(x=>x.id===tenantId);
@@ -3558,10 +3573,7 @@ function printExpensesContextual(){
     <h1>${title}</h1>
     <table><thead><tr><th>Date</th><th>Apartment</th><th>Tenant</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>${all.map(e=>`<tr><td>${e.date}</td><td>Apt ${e.apt}</td><td>${e.tenantName}</td><td>${e.category||'General'}</td><td>${e.desc}</td><td>${formatMoney(e.amount)}</td></tr>`).join('')||'<tr><td colspan="6">No expenses</td></tr>'}</tbody></table>
     <div class="total">Grand Total: ${formatMoney(total)}</div></body></html>`;
-    const w=window.open('','_blank');
-    w.document.write(html);
-    w.document.close();
-    setTimeout(()=>w.print(),500);
+    printHTML(html);
 }
 
 // ============================================================
@@ -3585,10 +3597,7 @@ function doPrintStatement(){
     if(type==='rental')html=buildRentalStatement(t);
     else if(type==='utility')html=buildUtilityStatement(t);
     else html=buildExpenseReport(t);
-    const w=window.open('','_blank');
-    w.document.write(html);
-    w.document.close();
-    setTimeout(()=>w.print(),500);
+    printHTML(html);
 }
 function buildRentalStatement(t){
     const rentBal=rentBalance(t);

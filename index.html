@@ -1917,6 +1917,65 @@ function generateAutoInvoices(){
     });
 }
 
+// Re-price rent invoices (current month onward) that are not fully paid so they match the tenant's monthly rent.
+// Past months and fully-paid invoices keep the rent that applied when they were billed.
+function repriceUnpaidRentInvoices(t,onlyCurrentMonth){
+    if(!t||!Array.isArray(t.rent)||!(t.monthlyRent>=0))return 0;
+    const now=new Date();
+    const monthStartISO=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    const monthEndISO=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()).padStart(2,'0')}`;
+    let pool=t.rent.reduce((s,r)=>s+(r.credit||0),0);
+    const rows=t.rent.map((r,i)=>({r,i})).filter(x=>x.r.debit>0).sort((a,b)=>String(a.r.date||'').localeCompare(String(b.r.date||''))||a.i-b.i);
+    let changed=0;
+    rows.forEach(({r})=>{
+        const paid=Math.min(r.debit,pool);
+        pool-=paid;
+        const isRentInvoice=/^INV-\s*Rent for/i.test(r.desc||'');
+        const inRange=r.date&&r.date>=monthStartISO&&(!onlyCurrentMonth||r.date<=monthEndISO);
+        if(!isRentInvoice||!inRange||r.manual)return;
+        if(paid>=r.debit)return; // fully paid at the old rate
+        if(r.debit!==t.monthlyRent){r.debit=t.monthlyRent;changed++;}
+    });
+    return changed;
+}
+async function reconcileRentInvoices(){
+    const fixed=[];
+    TENANTS.forEach(t=>{if(repriceUnpaidRentInvoices(t,true)>0)fixed.push(t);});
+    for(const t of fixed){try{await saveTenantNow(t);}catch(e){}}
+}
+
+// ============================================================
+// WHATSAPP DUES
+// ============================================================
+function whatsappNumber(mobile){
+    let d=String(mobile||'').replace(/[^\d+]/g,'');
+    if(d.startsWith('+'))return d.slice(1).replace(/\D/g,'');
+    d=d.replace(/\D/g,'');
+    if(d.startsWith('00'))return d.slice(2);
+    if(d.startsWith('256'))return d;
+    if(d.startsWith('0'))return '256'+d.slice(1);
+    if(d.length===9)return '256'+d;
+    return d;
+}
+function ugx(n){return 'UGX '+Math.round(Number(n)||0).toLocaleString('en-US');}
+function buildDuesMessage(t){
+    const rBal=rentBalance(t),eBal=electricBalance(t),wBal=waterBalance(t),total=rBal+eBal+wBal;
+    if(total<=0)return `Hello ${t.name}, your account is fully up to date with no outstanding dues. Thank you!`;
+    const lines=[];
+    if(rBal>0)lines.push(`• Rent: ${ugx(rBal)}`);
+    if(eBal>0)lines.push(`• Electricity: ${ugx(eBal)}`);
+    if(wBal>0)lines.push(`• Water: ${ugx(wBal)}`);
+    return `Hello ${t.name}, your current dues are:\n${lines.join('\n')}\n*Total due: ${ugx(total)}*\nKindly make your payment as soon as possible. Thank you.`;
+}
+function sendWhatsAppDues(id){
+    const t=TENANTS.find(x=>x.id===id);
+    if(!t)return;
+    const num=whatsappNumber(t.mobile);
+    if(!num||num.length<9){showNotification('No valid mobile number saved for '+t.name,'warning');return;}
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(buildDuesMessage(t))}`,'_blank');
+}
+window.sendWhatsAppDues=sendWhatsAppDues;
+
 // ============================================================
 // LANDING
 // ============================================================
@@ -2105,6 +2164,7 @@ function updateRateNote(){
     }
     saveLocalCache();
     generateAutoInvoices();
+    await reconcileRentInvoices();
     await syncUnitStatuses();
     saveLocalCache();
     splash.classList.add('hidden');
@@ -2418,7 +2478,7 @@ async function saveUnit(e){
     let unit;
     if(editId){unit=getUnitById(editId);if(unit)Object.assign(unit,data);showNotification('Unit updated');}
     else{unit={id:'unit_'+Date.now(),...data};UNITS.push(unit);showNotification('Unit added');}
-    if(unit){const occ=TENANTS.find(t=>t.unitId===unit.id);if(occ&&occ.monthlyRent!==unit.rent){occ.monthlyRent=unit.rent;await saveTenantNow(occ);}}
+    if(unit){const occ=TENANTS.find(t=>t.unitId===unit.id);if(occ&&occ.monthlyRent!==unit.rent){occ.monthlyRent=unit.rent;repriceUnpaidRentInvoices(occ,false);await saveTenantNow(occ);}}
     await saveUnitNow(unit);
     closeModal('unitModal');
     renderPropertyPage();renderDashboard();refreshAllPropertyDropdowns();
@@ -2467,7 +2527,7 @@ function renderTenantsPage(){
         const editDelete=(can('edit_tenants')||can('delete_tenants'))?`${can('edit_tenants')?`<button class="btn btn-warning btn-sm" onclick="editTenant('${t.id}')">Edit</button>`:''}${can('delete_tenants')?`<button class="btn btn-danger btn-sm" onclick="deleteTenant('${t.id}')">Delete</button>`:''}`:'';
         const unit=getTenantUnit(t);
         const prop=t.propertyId?getPropertyById(t.propertyId):(unit?getPropertyById(unit.propertyId):null);
-        return `<tr><td><strong>${t.name}</strong></td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td><td>${t.mobile}</td><td>${formatMoney(t.monthlyRent)}</td><td>${ordinal(t.billingDate)}</td><td>${formatMoney(rBal)}</td><td>${formatMoney(eBal)}</td><td>${formatMoney(wBal)}</td><td><span class="badge ${statusClass}">${formatMoney(totalDue)}</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="viewTenant('${t.id}')">View</button>${editDelete}</div></td></tr>`;
+        return `<tr><td><strong>${t.name}</strong></td><td>${prop?prop.name:'—'}</td><td>${unit?unit.unitNumber:t.apt}</td><td>${t.mobile}</td><td>${formatMoney(t.monthlyRent)}</td><td>${ordinal(t.billingDate)}</td><td>${formatMoney(rBal)}</td><td>${formatMoney(eBal)}</td><td>${formatMoney(wBal)}</td><td><span class="badge ${statusClass}">${formatMoney(totalDue)}</span></td><td><div class="action-btns"><button class="btn btn-outline btn-sm" onclick="viewTenant('${t.id}')">View</button><button class="btn btn-success btn-sm" title="Send current dues via WhatsApp" onclick="sendWhatsAppDues('${t.id}')">WhatsApp</button>${editDelete}</div></td></tr>`;
     }).join('');
     document.getElementById('tenantDetailPanel').innerHTML='';
 }
@@ -2487,6 +2547,7 @@ function viewTenant(id){
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
                     ${can('add_payments')?`<button class="btn btn-success btn-sm" onclick="openPaymentForTenant('${t.id}')">💵 Add Payment</button>`:''}
                     ${can('add_payments')?`<button class="btn btn-info btn-sm" onclick="openAdvanceRentForTenant('${t.id}')">📅 Advance Rent</button>`:''}
+                    <button class="btn btn-success btn-sm" onclick="sendWhatsAppDues('${t.id}')">💬 WhatsApp Dues</button>
                     <button class="btn btn-outline btn-sm" onclick="openPrintModal('${t.id}')">🖨️ Print</button>
                     <button class="btn btn-outline btn-sm" onclick="document.getElementById('tenantDetailPanel').innerHTML='';">Close</button>
                 </div>
@@ -2524,6 +2585,7 @@ async function saveRentEdit(e){
     if(!t||!t.rent[idx])return;
     const existing=t.rent[idx];
     t.rent[idx]={date:document.getElementById('editRentDate').value,desc:document.getElementById('editRentDesc').value.trim(),debit:parseFloat(document.getElementById('editRentDebit').value)||0,credit:parseFloat(document.getElementById('editRentCredit').value)||0,invoiceNo:document.getElementById('editRentInvoice').value.trim()||null,receiptNo:existing.receiptNo||null};
+    if(existing.manual||(t.rent[idx].debit>0&&t.rent[idx].debit!==existing.debit))t.rent[idx].manual=true;
     showNotification('Rent transaction updated');
     closeModal('editRentModal');
     viewTenant(tenantId);renderTenantsPage();renderDashboard();
@@ -2613,7 +2675,7 @@ async function saveTenant(e){
     let oldUnitId=null;
     if(editId){
         const t=TENANTS.find(x=>x.id===editId);
-        if(t){oldUnitId=t.unitId;t.name=name;t.apt=apt;t.mobile=mobile;t.monthlyRent=monthlyRent;t.billingDate=billingDate;t.electricRate=electricRate;t.unitId=unitId;t.propertyId=propertyId;tenantToSave=t;showNotification('Tenant updated');}
+        if(t){oldUnitId=t.unitId;t.name=name;t.apt=apt;t.mobile=mobile;t.monthlyRent=monthlyRent;repriceUnpaidRentInvoices(t,false);t.billingDate=billingDate;t.electricRate=electricRate;t.unitId=unitId;t.propertyId=propertyId;tenantToSave=t;showNotification('Tenant updated');}
     }else{
         tenantToSave={id:'t_'+Date.now(),name,apt,mobile,monthlyRent,billingDate,electricRate,locationId:currentUser?.locationId||'loc1',propertyId,unitId,rent:[],electric:[],water:[],expenses:[]};
         TENANTS.push(tenantToSave);

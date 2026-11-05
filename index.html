@@ -646,7 +646,7 @@ input,select,textarea{font-size:16px}
             <input type="hidden" id="subPayLoc">
             <div class="form-group"><label>Location</label><input type="text" id="subPayLocName" readonly style="background:#f1f5f9;"></div>
             <div class="form-group"><label>Months paid *</label><select id="subPayMonths" onchange="updateSubPayAmount()"><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option></select></div>
-            <div class="form-group"><label>Amount received (UGX) *</label><input type="number" id="subPayAmount" min="0" step="1"></div>
+            <div class="form-group"><label id="subPayAmountLabel">Amount received *</label><input type="number" id="subPayAmount" min="0" step="1"></div>
             <div class="form-group"><label>Note / reference</label><input type="text" id="subPayNote" placeholder="e.g. MTN MoMo ref"></div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('subPayModal')">Cancel</button><button type="submit" class="btn btn-success">Save Payment</button></div>
         </form>
@@ -1383,7 +1383,7 @@ function refreshAllViewsAfterCurrencyChange() {
 function renderCurrencyAdminSection() {
     const el = document.getElementById('currencyAdminSection');
     if (!el) return;
-    if (!can('manage_currency')) { el.innerHTML = ''; return; }
+    if (!can('manage_currency') || (currentUser && currentUser.role === 'admin')) { el.innerHTML = ''; return; }
     
     // Modern card-based selector
     const cards = Object.values(CURRENCIES).map(c => `
@@ -2152,6 +2152,7 @@ function enterApp(){
     if(!currentUser)return;
     const blockedNow=isUserBlockedBySubscription(currentUser);
     if(blockedNow){forceDisconnect(blockedNow);return;}
+    if(currentUser.role==='admin')saveActiveCurrency('UGX');
     if(currentUser.role!=='admin'){
         const locCur=currentLocationCurrencyForUser();
         if(locCur)saveActiveCurrency(locCur);else rememberLocationCurrency(ACTIVE_CURRENCY);
@@ -2232,10 +2233,10 @@ function rememberLocationCurrency(code){
 // APP PLAN (FREE / PAID) SETTINGS
 // ============================================================
 const LS_SETTINGS='bmr_settings_v1';
-let APP_SETTINGS={subscription:{mode:'free',amount:0,effectiveDate:'',locations:{}},_updatedAt:0};
+let APP_SETTINGS={subscription:{mode:'free',amount:0,currency:'UGX',effectiveDate:'',locations:{}},_updatedAt:0};
 function normalizeSettings(o){
     const sub=(o&&o.subscription)||{};
-    return {subscription:{mode:sub.mode==='paid'?'paid':'free',amount:Number(sub.amount)||0,effectiveDate:sub.effectiveDate||'',locations:sub.locations||{}},_updatedAt:(o&&o._updatedAt)||0};
+    return {subscription:{mode:sub.mode==='paid'?'paid':'free',amount:Number(sub.amount)||0,currency:(sub.currency&&CURRENCIES[sub.currency])?sub.currency:'UGX',effectiveDate:sub.effectiveDate||'',locations:sub.locations||{}},_updatedAt:(o&&o._updatedAt)||0};
 }
 function loadSettingsLocal(){try{const raw=localStorage.getItem(LS_SETTINGS);if(raw)APP_SETTINGS=normalizeSettings(JSON.parse(raw));}catch(e){}}
 async function loadSettingsRemote(){
@@ -2263,6 +2264,9 @@ function addMonthsISO(iso,n){
 }
 function daysBetweenISO(a,b){return Math.round((new Date(b+'T00:00:00Z')-new Date(a+'T00:00:00Z'))/86400000);}
 function prettyDate(iso){if(!iso)return '—';const [y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function planCurrency(){const c=APP_SETTINGS.subscription.currency;return CURRENCIES[c]?c:'UGX';}
+function formatPlan(n){const cur=CURRENCIES[planCurrency()];return cur.prefix+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function formatPlanIn(n,code){return formatMoneyIn((Number(n)||0)/CURRENCIES[planCurrency()].rate,code);}
 function subIsPaidMode(){const s=APP_SETTINGS.subscription;return s.mode==='paid'&&!!s.effectiveDate&&s.amount>0;}
 // free: no charge · upcoming: paid plan not started · paid: current period covered · due: payment due, still connected · disconnected: one month passed without payment
 function subStatusForLocation(locId){
@@ -2297,7 +2301,7 @@ function updateSubscriptionBanner(){
     el.style.display='none';el.innerHTML='';
     if(!currentUser||currentUser.role==='admin'||!currentUser.locationId||!subIsPaidMode())return;
     const st=subStatusForLocation(currentUser.locationId);
-    const amt=formatMoney(APP_SETTINGS.subscription.amount);
+    const amt=formatPlanIn(APP_SETTINGS.subscription.amount,ACTIVE_CURRENCY);
     let html='';
     if(st.state==='upcoming')html=`<div class="sub-banner info">ℹ️ Bright Mesh Rentals becomes a paid service on ${prettyDate(st.starts)} (${amt} per month). Contact the administrator to arrange payment.</div>`;
     else if(st.state==='due')html=`<div class="sub-banner warn">💳 Subscription payment of ${amt} is due. Your account will be disconnected on ${prettyDate(st.cutoff)} (${st.daysLeft} day${st.daysLeft===1?'':'s'} left) if payment is not received. Contact the administrator.</div>`;
@@ -2319,7 +2323,7 @@ function renderLandingPricing(){
         g('pricingCta').textContent='Get Started Free →';
         return;
     }
-    const amt='UGX '+Math.round(s.amount).toLocaleString('en-US');
+    const amt=formatPlan(s.amount);
     const future=isoToday()<s.effectiveDate;
     g('pricingSubtitle').textContent=future?`Bright Mesh Rentals is free until ${prettyDate(s.effectiveDate)}. From that date, it is ${amt} per location per month.`:`Simple flat pricing: ${amt} per location per month. No hidden fees.`;
     g('pricingBadge').textContent=future?`Free until ${prettyDate(s.effectiveDate)}`:'Paid Plan';
@@ -2346,22 +2350,23 @@ function renderSubscriptionAdminSection(){
     const rows=paid?LOCATIONS.map(loc=>{
         const st=subStatusForLocation(loc.id);
         const rec=s.locations[loc.id]||{monthsPaid:0,payments:[]};
-        const last=(rec.payments||[]).slice(-1)[0];
-        return `<tr><td><strong>${loc.area}, ${loc.city}</strong></td><td>${subStateChip(st)}</td><td>${rec.monthsPaid||0}</td><td>${st.due?prettyDate(st.due):'—'}</td><td>${st.cutoff&&st.state!=='paid'?prettyDate(st.cutoff):'—'}</td><td>${last?prettyDate(last.date)+' · '+formatMoney(last.amount):'—'}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="openSubPayModal('${loc.id}')">Record payment</button>${(rec.payments||[]).length?` <button class="btn btn-outline btn-sm" onclick="undoLastSubPayment('${loc.id}')">Undo last</button>`:''}</td></tr>`;
+        const last=(rec.payments||[]).slice(-1)[0];const lc=currencyOfLocation(loc.id);
+        return `<tr><td><strong>${loc.area}, ${loc.city}</strong></td><td>${subStateChip(st)}</td><td>${rec.monthsPaid||0}</td><td>${st.due?prettyDate(st.due):'—'}</td><td>${st.cutoff&&st.state!=='paid'?prettyDate(st.cutoff):'—'}</td><td>${formatPlanIn(s.amount,lc)} <span class="chip info">${lc}</span></td><td>${last?prettyDate(last.date)+' · '+formatPlanIn(last.amount,lc):'—'}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="openSubPayModal('${loc.id}')">Record payment</button>${(rec.payments||[]).length?` <button class="btn btn-outline btn-sm" onclick="undoLastSubPayment('${loc.id}')">Undo last</button>`:''}</td></tr>`;
     }).join(''):'';
     el.innerHTML=`<div class="admin-card" style="margin-bottom:1.25rem;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
             <div><div style="font-size:1rem;font-weight:800;color:#0f172a;">💳 App Plan: Free or Paid</div>
-            <div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Currently <strong>${paid?'PAID':'FREE'}</strong>${paid?` · ${formatMoney(s.amount)} per location per month · effective ${prettyDate(s.effectiveDate)}`:' · all locations have full access'}</div></div>
+            <div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Currently <strong>${paid?'PAID':'FREE'}</strong>${paid?` · ${formatPlan(s.amount)} per location per month · effective ${prettyDate(s.effectiveDate)}`:' · all locations have full access'}</div></div>
             <div style="display:flex;align-items:center;gap:.6rem;"><span style="font-size:.8rem;font-weight:700;color:#475569;">Free</span><label class="sw"><input type="checkbox" id="subToggle" ${paid?'checked':''} onchange="onSubToggle()"><span class="sl"></span></label><span style="font-size:.8rem;font-weight:700;color:#475569;">Paid</span></div>
         </div>
         <div class="adm-grid2" id="subFields" style="${paid?'':'display:none;'}">
-            <div class="form-group"><label>Monthly price per location (UGX) *</label><input type="number" id="subAmount" min="0" step="1" value="${s.amount||''}" placeholder="e.g. 50000"></div>
+            <div class="form-group"><label>Payment currency *</label><select id="subCurrency">${Object.values(CURRENCIES).map(c=>`<option value="${c.code}" ${c.code===planCurrency()?'selected':''}>${c.symbol} ${c.code} — ${c.label}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Monthly price per location *</label><input type="number" id="subAmount" min="0" step="any" value="${s.amount||''}" placeholder="e.g. 50000"></div>
             <div class="form-group"><label>Effective date *</label><input type="date" id="subEffective" value="${s.effectiveDate||''}"></div>
         </div>
-        <div style="font-size:.78rem;color:#64748b;${paid?'':'display:none;'}" id="subRule">Rule: payment is due from the effective date. A location that has not paid is <strong>auto-disconnected one month after its due date</strong>. Recording a payment reactivates it and moves its next due date forward.</div>
+        <div style="font-size:.78rem;color:#64748b;${paid?'':'display:none;'}" id="subRule">Each location sees its amount in the currency its user selected; the landing page shows the price in the payment currency above. Rule: payment is due from the effective date. A location that has not paid is <strong>auto-disconnected one month after its due date</strong>. Recording a payment reactivates it and moves its next due date forward.</div>
         <div style="margin-top:.9rem;"><button class="btn btn-primary" onclick="saveSubscriptionPlan()">Save plan settings</button></div>
-        ${paid?`<div style="overflow-x:auto;margin-top:1rem;"><table class="adm-tbl"><thead><tr><th>Location</th><th>Status</th><th>Months paid</th><th>Next due</th><th>Disconnects on</th><th>Last payment</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="color:#94a3b8;">No locations yet.</td></tr>'}</tbody></table></div>`:''}
+        ${paid?`<div style="overflow-x:auto;margin-top:1rem;"><table class="adm-tbl"><thead><tr><th>Location</th><th>Status</th><th>Months paid</th><th>Next due</th><th>Disconnects on</th><th>Amount due / month</th><th>Last payment</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="8" style="color:#94a3b8;">No locations yet.</td></tr>'}</tbody></table></div>`:''}
     </div>`;
 }
 function onSubToggle(){
@@ -2379,11 +2384,12 @@ async function saveSubscriptionPlan(){
     }else{
         const amount=parseFloat(document.getElementById('subAmount').value);
         const eff=document.getElementById('subEffective').value;
+        const cur=document.getElementById('subCurrency').value;
         if(!(amount>0)){showNotification('Enter a monthly price greater than 0','warning');return;}
         if(!eff){showNotification('Choose an effective date','warning');return;}
-        const msg=`Make the app PAID?\n\nPrice: UGX ${Math.round(amount).toLocaleString('en-US')} per location per month\nEffective: ${prettyDate(eff)}\n\nLocations that have not paid will be disconnected one month after their due date (${prettyDate(addMonthsISO(eff,1))} for the first payment).`;
+        const msg=`Make the app PAID?\n\nPrice: ${CURRENCIES[cur].prefix}${amount.toLocaleString('en-US')} per location per month\nEffective: ${prettyDate(eff)}\n\nLocations that have not paid will be disconnected one month after their due date (${prettyDate(addMonthsISO(eff,1))} for the first payment).`;
         if(!confirm(msg))return;
-        s.mode='paid';s.amount=amount;s.effectiveDate=eff;
+        s.mode='paid';s.amount=amount;s.currency=cur;s.effectiveDate=eff;
     }
     await saveSettingsNow();
     showNotification(s.mode==='paid'?'Paid plan saved':'App set to free');
@@ -2399,7 +2405,7 @@ function openSubPayModal(locId){
     updateSubPayAmount();
     openModal('subPayModal');
 }
-function updateSubPayAmount(){document.getElementById('subPayAmount').value=(APP_SETTINGS.subscription.amount||0)*parseInt(document.getElementById('subPayMonths').value||'1');}
+function updateSubPayAmount(){document.getElementById('subPayAmountLabel').textContent=`Amount received (${planCurrency()}) *`;document.getElementById('subPayAmount').value=(APP_SETTINGS.subscription.amount||0)*parseInt(document.getElementById('subPayMonths').value||'1');}
 async function saveSubPayment(e){
     e.preventDefault();
     if(!currentUser||currentUser.role!=='admin'){showNotification('Permission denied','warning');return;}
@@ -2421,7 +2427,7 @@ async function undoLastSubPayment(locId){
     const rec=APP_SETTINGS.subscription.locations[locId];
     if(!rec||!(rec.payments||[]).length)return;
     const last=rec.payments[rec.payments.length-1];
-    if(!confirm(`Undo the last payment (${last.months} month${last.months===1?'':'s'}, ${formatMoney(last.amount)} on ${prettyDate(last.date)})?`))return;
+    if(!confirm(`Undo the last payment (${last.months} month${last.months===1?'':'s'}, ${formatPlan(last.amount)} on ${prettyDate(last.date)})?`))return;
     rec.payments.pop();
     rec.monthsPaid=Math.max(0,(rec.monthsPaid||0)-last.months);
     await saveSettingsNow();
@@ -2438,7 +2444,7 @@ function setAdminView(v){
     renderAdminDashboard();
 }
 function adminViewContext(){
-    let locIds=null,code=ACTIVE_CURRENCY,label='All locations (combined)';
+    let locIds=null,code='UGX',label='All locations (combined)';
     if(ADMIN_VIEW.type==='loc'){
         const l=LOCATIONS.find(x=>x.id===ADMIN_VIEW.id);
         if(l){locIds=[l.id];code=currencyOfLocation(l.id);label=`${l.area}, ${l.city}`;}else ADMIN_VIEW={type:'all',id:''};
@@ -2479,9 +2485,9 @@ function renderAdminDashboard(){
     const s=APP_SETTINGS.subscription;
     const states=locs.map(l=>subStatusForLocation(l.id).state);
     const cnt=k=>states.filter(x=>x===k).length;
-    const subCollected=locs.reduce((a,l)=>a+((s.locations[l.id]&&s.locations[l.id].payments)||[]).reduce((b,p)=>b+(p.amount||0),0),0);
+    const fmPlan=n=>formatPlanIn(n,ctx.code);const subCollected=locs.reduce((a,l)=>a+((s.locations[l.id]&&s.locations[l.id].payments)||[]).reduce((b,p)=>b+(p.amount||0),0),0);
     const subCard=subIsPaidMode()
-        ?`<div style="font-size:.85rem;color:#334155;line-height:1.7;"><div><span class="chip ok">${cnt('paid')} paid</span> <span class="chip warn">${cnt('due')+cnt('upcoming')} ${cnt('upcoming')&&!cnt('due')?'upcoming':'due'}</span> <span class="chip bad">${cnt('disconnected')} disconnected</span></div><div style="margin-top:.5rem;">Plan: <strong>${fm(s.amount)}</strong> / location / month</div><div>Effective: <strong>${prettyDate(s.effectiveDate)}</strong></div><div>Collected so far: <strong>${fm(subCollected)}</strong></div></div>`
+        ?`<div style="font-size:.85rem;color:#334155;line-height:1.7;"><div><span class="chip ok">${cnt('paid')} paid</span> <span class="chip warn">${cnt('due')+cnt('upcoming')} ${cnt('upcoming')&&!cnt('due')?'upcoming':'due'}</span> <span class="chip bad">${cnt('disconnected')} disconnected</span></div><div style="margin-top:.5rem;">Plan: <strong>${fmPlan(s.amount)}</strong> / location / month</div><div>Effective: <strong>${prettyDate(s.effectiveDate)}</strong></div><div>Collected so far: <strong>${fmPlan(subCollected)}</strong></div></div>`
         :`<div style="font-size:.9rem;color:#334155;"><span class="chip ok">FREE</span><p style="margin-top:.6rem;color:#64748b;font-size:.82rem;">All locations have full access. Switch to a paid plan in the Admin tab.</p></div>`;
     const userOpts=USERS.filter(u=>u.role!=='admin'&&u.locationId).map(u=>`<option value="user:${u.id}" ${ADMIN_VIEW.type==='user'&&ADMIN_VIEW.id===u.id?'selected':''}>${u.fullName} (@${u.username}) · ${currencyOfUser(u)}</option>`).join('');
     const locOpts=LOCATIONS.map(l=>`<option value="loc:${l.id}" ${ADMIN_VIEW.type==='loc'&&ADMIN_VIEW.id===l.id?'selected':''}>${l.area}, ${l.city} · ${currencyOfLocation(l.id)}</option>`).join('');
@@ -2499,7 +2505,7 @@ function renderAdminDashboard(){
                 <select id="adminViewSelect" onchange="setAdminView(this.value)" style="max-width:320px;"><option value="all">All locations (combined)</option><optgroup label="Locations (location currency)">${locOpts}</optgroup><optgroup label="Users (user currency)">${userOpts}</optgroup></select>
             </div>
         </div>
-        <div style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Showing <strong>${ctx.label}</strong> in <span class="chip info">${cur.symbol} ${ctx.code}</span>${ctx.locIds?' — the currency chosen by this location\'s user.':' — your selected display currency; the table below shows each location in its own currency.'}</div>
+        <div style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Showing <strong>${ctx.label}</strong> in <span class="chip info">${cur.symbol} ${ctx.code}</span>${ctx.locIds?' — the currency chosen by this location\'s user.':' — combined totals are converted to UGX; the table below shows each location in its own currency.'}</div>
         <div class="dashboard-grid">
             <div class="dash-card income"><div class="label">Total Revenue Collected</div><div class="value">${fm(st.income)}</div><div class="sub">Rent + electricity + water</div></div>
             <div class="dash-card profit"><div class="label">Net Profit</div><div class="value">${fm(st.profit)}</div><div class="sub">Income – expenses</div></div>

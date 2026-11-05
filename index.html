@@ -563,12 +563,12 @@ input,select,textarea{font-size:16px}
         <div class="pricing-container">
             <div class="section-title">
                 <h2>Simple, Transparent Pricing</h2>
-                <p>No hidden fees. No subscriptions. Bright Mesh Rentals is completely free for everyone.</p>
+                <p id="pricingSubtitle">No hidden fees. No subscriptions. Bright Mesh Rentals is completely free for everyone.</p>
             </div>
             <div class="pricing-card">
-                <div class="pricing-badge">100% Free Forever</div>
-                <h2><span class="price">UGX 0</span> / month</h2>
-                <div class="price-sub">Unlimited access for landlords, managers, and tenants</div>
+                <div class="pricing-badge" id="pricingBadge">100% Free Forever</div>
+                <h2 id="pricingPrice"><span class="price">UGX 0</span> / month</h2>
+                <div class="price-sub" id="pricingSub">Unlimited access for landlords, managers, and tenants</div>
                 <ul class="pricing-features">
                     <li><span class="check">✓</span> Unlimited tenants and apartments</li>
                     <li><span class="check">✓</span> Automatic rent invoicing</li>
@@ -577,9 +577,9 @@ input,select,textarea{font-size:16px}
                     <li><span class="check">✓</span> Real-time dashboard & financial charts</li>
                     <li><span class="check">✓</span> Print statements & PDF reports</li>
                     <li><span class="check">✓</span> 9 display currencies (UGX, USD, KSH, ETB, SOS, TZS, SSP, RWF, BIF)</li>
-                    <li><span class="check">✓</span> No credit card required</li>
+                    <li id="pricingLastFeature"><span class="check">✓</span> No credit card required</li>
                 </ul>
-                <button class="pricing-cta" onclick="openLogin()">Get Started Free →</button>
+                <button class="pricing-cta" id="pricingCta" onclick="openLogin()">Get Started Free →</button>
             </div>
         </div>
     </section>
@@ -639,6 +639,30 @@ input,select,textarea{font-size:16px}
     </div>
 </div>
 
+<div class="modal-overlay" id="subPayModal">
+    <div class="modal" style="max-width:420px;">
+        <h3>💳 Record Subscription Payment</h3>
+        <form onsubmit="saveSubPayment(event)" novalidate>
+            <input type="hidden" id="subPayLoc">
+            <div class="form-group"><label>Location</label><input type="text" id="subPayLocName" readonly style="background:#f1f5f9;"></div>
+            <div class="form-group"><label>Months paid *</label><select id="subPayMonths" onchange="updateSubPayAmount()"><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option></select></div>
+            <div class="form-group"><label>Amount received (UGX) *</label><input type="number" id="subPayAmount" min="0" step="1"></div>
+            <div class="form-group"><label>Note / reference</label><input type="text" id="subPayNote" placeholder="e.g. MTN MoMo ref"></div>
+            <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('subPayModal')">Cancel</button><button type="submit" class="btn btn-success">Save Payment</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteUserModal">
+    <div class="modal" style="max-width:420px;">
+        <h3 style="color:#b91c1c;">⚠️ Delete User</h3>
+        <input type="hidden" id="deleteUserId">
+        <p style="margin:.5rem 0 .75rem;color:#334155;font-size:.92rem;">You are about to permanently delete this user. They will no longer be able to log in. This cannot be undone.</p>
+        <div id="deleteUserDetails" style="background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.75rem 1rem;font-size:.9rem;color:#7f1d1d;"></div>
+        <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('deleteUserModal')">Cancel</button><button type="button" class="btn btn-danger" id="confirmDeleteUserBtn" onclick="confirmDeleteUser()">Yes, Delete User</button></div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="editUserModal">
     <div class="modal">
         <h3>Edit User</h3>
@@ -655,6 +679,24 @@ input,select,textarea{font-size:16px}
     </div>
 </div>
 
+<style id="bmrAdminStyles">
+.sw{position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw .sl{position:absolute;inset:0;background:#cbd5e1;border-radius:28px;cursor:pointer;transition:.2s}
+.sw .sl:before{content:"";position:absolute;height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw input:checked+.sl{background:#16a34a}
+.sw input:checked+.sl:before{transform:translateX(24px)}
+.chip{display:inline-block;padding:.15rem .55rem;border-radius:1rem;font-size:.68rem;font-weight:700;background:#f1f5f9;color:#334155;white-space:nowrap}
+.chip.ok{background:#dcfce7;color:#166534}.chip.warn{background:#fef3c7;color:#92400e}.chip.bad{background:#fee2e2;color:#991b1b}.chip.info{background:#dbeafe;color:#1e40af}
+.sub-banner{margin:.75rem 1rem 0;padding:.7rem 1rem;border-radius:.85rem;font-size:.85rem;font-weight:600}
+.sub-banner.warn{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}.sub-banner.info{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+.adm-grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.9rem 0}
+.adm-tbl{width:100%;border-collapse:collapse;font-size:.82rem}
+.adm-tbl th{text-align:left;padding:.5rem;font-size:.68rem;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.adm-tbl td{padding:.55rem .5rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.adm-tbl tr.sel td{background:#fefce8}
+@media(max-width:640px){.adm-grid2{grid-template-columns:1fr}}
+</style>
 <div class="app-container" id="appContainer">
     <header class="app-header">
         <div class="logo-area"><div class="logo-icon">B</div><h1>Bright <span>Mesh</span> Rentals</h1></div>
@@ -665,6 +707,7 @@ input,select,textarea{font-size:16px}
             <button class="btn-logout" onclick="handleLogout()">Logout</button>
         </div>
     </header>
+    <div id="subBanner" style="display:none"></div>
 
     <nav class="main-nav" id="mainNav">
         <button class="nav-tab active" data-page="dashboard">📊 Dashboard</button>
@@ -679,6 +722,7 @@ input,select,textarea{font-size:16px}
     </nav>
 
     <section id="page-dashboard" class="page-section active">
+        <div id="adminDashboard" style="display:none"></div>
         <div class="dashboard-grid" id="dashboardCards"></div>
         <div class="alert-section" id="overdueSection"></div>
         <div class="charts-row">
@@ -910,6 +954,7 @@ input,select,textarea{font-size:16px}
                 <button class="btn btn-success" onclick="openAddUserModal()">＋ Add User</button>
             </div>
         </div>
+        <div id="subscriptionAdminSection"></div>
         <div id="currencyAdminSection"></div>
         <div class="admin-stats" id="adminStats"></div>
         <div class="admin-grid">
@@ -1316,6 +1361,7 @@ function changeCurrency(code) {
     if (!CURRENCIES[code]) return;
     if (!can('manage_currency')) { showNotification('Permission denied', 'warning'); return; }
     saveActiveCurrency(code);
+    rememberLocationCurrency(code);
     updateCurrencyPill();
     refreshAllViewsAfterCurrencyChange();
     showNotification('Currency changed to ' + code, 'success');
@@ -2070,6 +2116,9 @@ async function handleLogin(e){
             errorEl.classList.add('show');
             return;
         }
+        try{await loadSettingsRemote();}catch(e){}
+        const blockedSt=isUserBlockedBySubscription(userRecord);
+        if(blockedSt){errorEl.textContent=disconnectMessage(blockedSt);errorEl.classList.add('show');return;}
         currentUser=userRecord;
         sessionStorage.setItem('bmr_currentUser',JSON.stringify(userRecord));
         closeLogin();
@@ -2101,12 +2150,19 @@ function handleLogout(){
 
 function enterApp(){
     if(!currentUser)return;
+    const blockedNow=isUserBlockedBySubscription(currentUser);
+    if(blockedNow){forceDisconnect(blockedNow);return;}
+    if(currentUser.role!=='admin'){
+        const locCur=currentLocationCurrencyForUser();
+        if(locCur)saveActiveCurrency(locCur);else rememberLocationCurrency(ACTIVE_CURRENCY);
+    }
     document.getElementById('landingPage').classList.add('hidden');
     document.getElementById('appContainer').classList.add('active');
     document.getElementById('userNameBadge').textContent=currentUser.fullName||currentUser.username;
     document.getElementById('userRoleBadge').textContent=currentUser.role.toUpperCase();
     if(currentUser.role!=='admin'&&currentUser.locationName)document.getElementById('userNameBadge').textContent=`${currentUser.fullName} · ${currentUser.locationName}`;
     updateCurrencyPill();
+    updateSubscriptionBanner();
     applyPermissions();
     refreshFilterOptions();
     refreshAllPropertyDropdowns();
@@ -2118,6 +2174,11 @@ function enterApp(){
     updateRateNote();
 }
 
+function currentLocationCurrencyForUser(){
+    if(currentUser&&currentUser.currency&&CURRENCIES[currentUser.currency])return currentUser.currency;
+    const l=LOCATIONS.find(x=>x.id===(currentUser&&currentUser.locationId));
+    return (l&&l.currency&&CURRENCIES[l.currency])?l.currency:null;
+}
 function applyPermissions(){
     const role=currentUser.role;
     const adminTab=document.querySelector('.nav-tab.admin-only');
@@ -2150,19 +2211,350 @@ function updateRateNote(){
 // ============================================================
 // INIT
 // ============================================================
+
+// ============================================================
+// PER-LOCATION CURRENCY
+// ============================================================
+function currencyOfLocation(locId){const l=LOCATIONS.find(x=>x.id===locId);return (l&&l.currency&&CURRENCIES[l.currency])?l.currency:'UGX';}
+function currencyOfUser(u){if(!u)return 'UGX';if(u.currency&&CURRENCIES[u.currency])return u.currency;return u.locationId?currencyOfLocation(u.locationId):'UGX';}
+function formatMoneyIn(ugx,code){const cur=CURRENCIES[code]||CURRENCIES.UGX;return cur.prefix+((Number(ugx)||0)*cur.rate).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function rememberLocationCurrency(code){
+    if(!currentUser||currentUser.role==='admin'||!CURRENCIES[code])return;
+    currentUser.currency=code;
+    try{sessionStorage.setItem('bmr_currentUser',JSON.stringify(currentUser));}catch(e){}
+    const u=USERS.find(x=>x.id===currentUser.id);
+    if(u&&u.currency!==code){u.currency=code;saveUserNow(u);}
+    const loc=LOCATIONS.find(l=>l.id===currentUser.locationId);
+    if(loc&&loc.currency!==code){loc.currency=code;saveLocationNow(loc);}
+}
+
+// ============================================================
+// APP PLAN (FREE / PAID) SETTINGS
+// ============================================================
+const LS_SETTINGS='bmr_settings_v1';
+let APP_SETTINGS={subscription:{mode:'free',amount:0,effectiveDate:'',locations:{}},_updatedAt:0};
+function normalizeSettings(o){
+    const sub=(o&&o.subscription)||{};
+    return {subscription:{mode:sub.mode==='paid'?'paid':'free',amount:Number(sub.amount)||0,effectiveDate:sub.effectiveDate||'',locations:sub.locations||{}},_updatedAt:(o&&o._updatedAt)||0};
+}
+function loadSettingsLocal(){try{const raw=localStorage.getItem(LS_SETTINGS);if(raw)APP_SETTINGS=normalizeSettings(JSON.parse(raw));}catch(e){}}
+async function loadSettingsRemote(){
+    if(!firebaseReady||cloudSyncBlocked)return;
+    try{
+        const doc=await db.collection('settings').doc('app').get();
+        if(doc.exists){const remote=normalizeSettings(doc.data());if((remote._updatedAt||0)>=(APP_SETTINGS._updatedAt||0)){APP_SETTINGS=remote;try{localStorage.setItem(LS_SETTINGS,JSON.stringify(APP_SETTINGS));}catch(e){}}}
+    }catch(e){}
+}
+async function saveSettingsNow(){
+    APP_SETTINGS._updatedAt=Date.now();
+    try{localStorage.setItem(LS_SETTINGS,JSON.stringify(APP_SETTINGS));}catch(e){}
+    if(firebaseReady&&!cloudSyncBlocked){
+        try{await db.collection('settings').doc('app').set(APP_SETTINGS);showSyncBanner('✓ Synced','ok');}
+        catch(err){showSyncBanner('⚠️ Plan settings saved on this device only: '+(err.message||err)+' (allow the "settings" collection in Firestore rules)','error');}
+    }
+}
+function isoToday(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function addMonthsISO(iso,n){
+    const [y,m,d]=iso.split('-').map(Number);
+    const t=new Date(y,m-1+n,1);
+    const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();
+    t.setDate(Math.min(d,last));
+    return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+}
+function daysBetweenISO(a,b){return Math.round((new Date(b+'T00:00:00Z')-new Date(a+'T00:00:00Z'))/86400000);}
+function prettyDate(iso){if(!iso)return '—';const [y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function subIsPaidMode(){const s=APP_SETTINGS.subscription;return s.mode==='paid'&&!!s.effectiveDate&&s.amount>0;}
+// free: no charge · upcoming: paid plan not started · paid: current period covered · due: payment due, still connected · disconnected: one month passed without payment
+function subStatusForLocation(locId){
+    const s=APP_SETTINGS.subscription;
+    if(!subIsPaidMode())return {state:'free'};
+    const today=isoToday();
+    if(today<s.effectiveDate)return {state:'upcoming',starts:s.effectiveDate};
+    const rec=(s.locations&&s.locations[locId])||{};
+    const due=addMonthsISO(s.effectiveDate,rec.monthsPaid||0);
+    const cutoff=addMonthsISO(due,1);
+    if(today<due)return {state:'paid',due,cutoff};
+    if(today<cutoff)return {state:'due',due,cutoff,daysLeft:daysBetweenISO(today,cutoff)};
+    return {state:'disconnected',due,cutoff};
+}
+function isUserBlockedBySubscription(u){
+    if(!u||u.role==='admin'||!u.locationId)return null;
+    const st=subStatusForLocation(u.locationId);
+    return st.state==='disconnected'?st:null;
+}
+function disconnectMessage(st){return `Your account was disconnected because the subscription payment was not received by ${prettyDate(st.cutoff)}. Please contact the administrator to pay and reactivate.`;}
+function forceDisconnect(st){
+    currentUser=null;
+    try{sessionStorage.removeItem('bmr_currentUser');}catch(e){}
+    document.querySelectorAll('.modal-overlay.active').forEach(m=>{m.classList.remove('active');m.style.display='';});
+    document.getElementById('appContainer').classList.remove('active');
+    document.getElementById('landingPage').classList.remove('hidden');
+    showNotification(disconnectMessage(st),'warning');
+}
+function updateSubscriptionBanner(){
+    const el=document.getElementById('subBanner');
+    if(!el)return;
+    el.style.display='none';el.innerHTML='';
+    if(!currentUser||currentUser.role==='admin'||!currentUser.locationId||!subIsPaidMode())return;
+    const st=subStatusForLocation(currentUser.locationId);
+    const amt=formatMoney(APP_SETTINGS.subscription.amount);
+    let html='';
+    if(st.state==='upcoming')html=`<div class="sub-banner info">ℹ️ Bright Mesh Rentals becomes a paid service on ${prettyDate(st.starts)} (${amt} per month). Contact the administrator to arrange payment.</div>`;
+    else if(st.state==='due')html=`<div class="sub-banner warn">💳 Subscription payment of ${amt} is due. Your account will be disconnected on ${prettyDate(st.cutoff)} (${st.daysLeft} day${st.daysLeft===1?'':'s'} left) if payment is not received. Contact the administrator.</div>`;
+    if(html){el.innerHTML=html;el.style.display='';}
+}
+setInterval(()=>{if(currentUser){const b=isUserBlockedBySubscription(currentUser);if(b)forceDisconnect(b);}},600000);
+
+// ---- landing page pricing ----
+function renderLandingPricing(){
+    const g=id=>document.getElementById(id);
+    if(!g('pricingCard')&&!g('pricingPrice'))return;
+    const s=APP_SETTINGS.subscription;
+    if(!subIsPaidMode()){
+        g('pricingSubtitle').textContent='No hidden fees. No subscriptions. Bright Mesh Rentals is completely free for everyone.';
+        g('pricingBadge').textContent='100% Free Forever';
+        g('pricingPrice').innerHTML='<span class="price">UGX 0</span> / month';
+        g('pricingSub').textContent='Unlimited access for landlords, managers, and tenants';
+        g('pricingLastFeature').innerHTML='<span class="check">✓</span> No credit card required';
+        g('pricingCta').textContent='Get Started Free →';
+        return;
+    }
+    const amt='UGX '+Math.round(s.amount).toLocaleString('en-US');
+    const future=isoToday()<s.effectiveDate;
+    g('pricingSubtitle').textContent=future?`Bright Mesh Rentals is free until ${prettyDate(s.effectiveDate)}. From that date, it is ${amt} per location per month.`:`Simple flat pricing: ${amt} per location per month. No hidden fees.`;
+    g('pricingBadge').textContent=future?`Free until ${prettyDate(s.effectiveDate)}`:'Paid Plan';
+    g('pricingPrice').innerHTML=`<span class="price">${amt}</span> / month`;
+    g('pricingSub').textContent=future?`Starts ${prettyDate(s.effectiveDate)} · per location · unlimited tenants, apartments and users`:'Per location · unlimited tenants, apartments and users';
+    g('pricingLastFeature').innerHTML='<span class="check">✓</span> Pay monthly — accounts are disconnected if payment is not received within one month of the due date';
+    g('pricingCta').textContent=future?'Get Started →':'Get Started →';
+}
+
+// ---- admin: plan settings UI ----
+function subStateChip(st){
+    if(st.state==='free')return '<span class="chip">Free</span>';
+    if(st.state==='upcoming')return `<span class="chip info">Starts ${prettyDate(st.starts)}</span>`;
+    if(st.state==='paid')return '<span class="chip ok">Paid</span>';
+    if(st.state==='due')return `<span class="chip warn">Due · ${st.daysLeft}d left</span>`;
+    return '<span class="chip bad">Disconnected</span>';
+}
+function renderSubscriptionAdminSection(){
+    const el=document.getElementById('subscriptionAdminSection');
+    if(!el)return;
+    if(!currentUser||currentUser.role!=='admin'){el.innerHTML='';return;}
+    const s=APP_SETTINGS.subscription;
+    const paid=s.mode==='paid';
+    const rows=paid?LOCATIONS.map(loc=>{
+        const st=subStatusForLocation(loc.id);
+        const rec=s.locations[loc.id]||{monthsPaid:0,payments:[]};
+        const last=(rec.payments||[]).slice(-1)[0];
+        return `<tr><td><strong>${loc.area}, ${loc.city}</strong></td><td>${subStateChip(st)}</td><td>${rec.monthsPaid||0}</td><td>${st.due?prettyDate(st.due):'—'}</td><td>${st.cutoff&&st.state!=='paid'?prettyDate(st.cutoff):'—'}</td><td>${last?prettyDate(last.date)+' · '+formatMoney(last.amount):'—'}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="openSubPayModal('${loc.id}')">Record payment</button>${(rec.payments||[]).length?` <button class="btn btn-outline btn-sm" onclick="undoLastSubPayment('${loc.id}')">Undo last</button>`:''}</td></tr>`;
+    }).join(''):'';
+    el.innerHTML=`<div class="admin-card" style="margin-bottom:1.25rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+            <div><div style="font-size:1rem;font-weight:800;color:#0f172a;">💳 App Plan: Free or Paid</div>
+            <div style="font-size:.8rem;color:#64748b;margin-top:.15rem;">Currently <strong>${paid?'PAID':'FREE'}</strong>${paid?` · ${formatMoney(s.amount)} per location per month · effective ${prettyDate(s.effectiveDate)}`:' · all locations have full access'}</div></div>
+            <div style="display:flex;align-items:center;gap:.6rem;"><span style="font-size:.8rem;font-weight:700;color:#475569;">Free</span><label class="sw"><input type="checkbox" id="subToggle" ${paid?'checked':''} onchange="onSubToggle()"><span class="sl"></span></label><span style="font-size:.8rem;font-weight:700;color:#475569;">Paid</span></div>
+        </div>
+        <div class="adm-grid2" id="subFields" style="${paid?'':'display:none;'}">
+            <div class="form-group"><label>Monthly price per location (UGX) *</label><input type="number" id="subAmount" min="0" step="1" value="${s.amount||''}" placeholder="e.g. 50000"></div>
+            <div class="form-group"><label>Effective date *</label><input type="date" id="subEffective" value="${s.effectiveDate||''}"></div>
+        </div>
+        <div style="font-size:.78rem;color:#64748b;${paid?'':'display:none;'}" id="subRule">Rule: payment is due from the effective date. A location that has not paid is <strong>auto-disconnected one month after its due date</strong>. Recording a payment reactivates it and moves its next due date forward.</div>
+        <div style="margin-top:.9rem;"><button class="btn btn-primary" onclick="saveSubscriptionPlan()">Save plan settings</button></div>
+        ${paid?`<div style="overflow-x:auto;margin-top:1rem;"><table class="adm-tbl"><thead><tr><th>Location</th><th>Status</th><th>Months paid</th><th>Next due</th><th>Disconnects on</th><th>Last payment</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="color:#94a3b8;">No locations yet.</td></tr>'}</tbody></table></div>`:''}
+    </div>`;
+}
+function onSubToggle(){
+    const on=document.getElementById('subToggle').checked;
+    document.getElementById('subFields').style.display=on?'':'none';
+    document.getElementById('subRule').style.display=on?'':'none';
+}
+async function saveSubscriptionPlan(){
+    if(!currentUser||currentUser.role!=='admin'){showNotification('Permission denied','warning');return;}
+    const on=document.getElementById('subToggle').checked;
+    const s=APP_SETTINGS.subscription;
+    if(!on){
+        if(s.mode==='paid'&&!confirm('Switch the app back to FREE?\n\nAll locations will have full access again, including any that were disconnected.'))return;
+        s.mode='free';
+    }else{
+        const amount=parseFloat(document.getElementById('subAmount').value);
+        const eff=document.getElementById('subEffective').value;
+        if(!(amount>0)){showNotification('Enter a monthly price greater than 0','warning');return;}
+        if(!eff){showNotification('Choose an effective date','warning');return;}
+        const msg=`Make the app PAID?\n\nPrice: UGX ${Math.round(amount).toLocaleString('en-US')} per location per month\nEffective: ${prettyDate(eff)}\n\nLocations that have not paid will be disconnected one month after their due date (${prettyDate(addMonthsISO(eff,1))} for the first payment).`;
+        if(!confirm(msg))return;
+        s.mode='paid';s.amount=amount;s.effectiveDate=eff;
+    }
+    await saveSettingsNow();
+    showNotification(s.mode==='paid'?'Paid plan saved':'App set to free');
+    renderAdminPage();renderDashboard();renderLandingPricing();
+}
+function openSubPayModal(locId){
+    const loc=LOCATIONS.find(l=>l.id===locId);
+    if(!loc)return;
+    document.getElementById('subPayLoc').value=locId;
+    document.getElementById('subPayLocName').value=`${loc.area}, ${loc.city}`;
+    document.getElementById('subPayMonths').value='1';
+    document.getElementById('subPayNote').value='';
+    updateSubPayAmount();
+    openModal('subPayModal');
+}
+function updateSubPayAmount(){document.getElementById('subPayAmount').value=(APP_SETTINGS.subscription.amount||0)*parseInt(document.getElementById('subPayMonths').value||'1');}
+async function saveSubPayment(e){
+    e.preventDefault();
+    if(!currentUser||currentUser.role!=='admin'){showNotification('Permission denied','warning');return;}
+    const locId=document.getElementById('subPayLoc').value;
+    const months=parseInt(document.getElementById('subPayMonths').value)||1;
+    const amount=parseFloat(document.getElementById('subPayAmount').value);
+    if(!(amount>=0)){showNotification('Enter the amount received','warning');return;}
+    const s=APP_SETTINGS.subscription;
+    const rec=s.locations[locId]||(s.locations[locId]={monthsPaid:0,payments:[]});
+    rec.payments=rec.payments||[];
+    rec.payments.push({date:isoToday(),months,amount,note:document.getElementById('subPayNote').value.trim()});
+    rec.monthsPaid=(rec.monthsPaid||0)+months;
+    await saveSettingsNow();
+    closeModal('subPayModal');
+    showNotification('Payment recorded');
+    renderAdminPage();renderDashboard();
+}
+async function undoLastSubPayment(locId){
+    const rec=APP_SETTINGS.subscription.locations[locId];
+    if(!rec||!(rec.payments||[]).length)return;
+    const last=rec.payments[rec.payments.length-1];
+    if(!confirm(`Undo the last payment (${last.months} month${last.months===1?'':'s'}, ${formatMoney(last.amount)} on ${prettyDate(last.date)})?`))return;
+    rec.payments.pop();
+    rec.monthsPaid=Math.max(0,(rec.monthsPaid||0)-last.months);
+    await saveSettingsNow();
+    renderAdminPage();renderDashboard();
+}
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+let ADMIN_VIEW={type:'all',id:''};
+function setAdminView(v){
+    if(v==='all')ADMIN_VIEW={type:'all',id:''};
+    else{const i=v.indexOf(':');ADMIN_VIEW={type:v.slice(0,i),id:v.slice(i+1)};}
+    renderAdminDashboard();
+}
+function adminViewContext(){
+    let locIds=null,code=ACTIVE_CURRENCY,label='All locations (combined)';
+    if(ADMIN_VIEW.type==='loc'){
+        const l=LOCATIONS.find(x=>x.id===ADMIN_VIEW.id);
+        if(l){locIds=[l.id];code=currencyOfLocation(l.id);label=`${l.area}, ${l.city}`;}else ADMIN_VIEW={type:'all',id:''};
+    }else if(ADMIN_VIEW.type==='user'){
+        const u=USERS.find(x=>x.id===ADMIN_VIEW.id);
+        if(u&&u.locationId){locIds=[u.locationId];code=currencyOfUser(u);label=`${u.fullName} (@${u.username}) · ${u.locationName||''}`;}else ADMIN_VIEW={type:'all',id:''};
+    }
+    return {locIds,code,label};
+}
+function locStats(tenants,props){
+    const pids=props.map(p=>p.id);
+    const units=UNITS.filter(u=>pids.includes(u.propertyId));
+    const rent=totalRentReceived(tenants),elec=totalElectricReceived(tenants),water=totalWaterReceived(tenants);
+    const income=rent+elec+water,exp=totalExpensesReceived(tenants);
+    const outstanding=tenants.reduce((s,t)=>s+Math.max(0,totalBalance(t)),0);
+    const occ=units.filter(u=>u.status==='occupied').length;
+    return {tenants,props,units,rent,elec,water,income,exp,outstanding,occ,vac:units.filter(u=>u.status==='vacant').length,profit:income-exp};
+}
+function monthlyIncomeSeries(tenants,n){
+    const now=new Date(),keys=[],labels=[];
+    for(let i=n-1;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);keys.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);labels.push(d.toLocaleString('en',{month:'short'})+' '+String(d.getFullYear()).slice(2));}
+    const vals=keys.map(()=>0);
+    tenants.forEach(t=>['rent','electric','water'].forEach(k=>(t[k]||[]).forEach(r=>{if(r.credit>0&&r.date){const i=keys.indexOf(String(r.date).slice(0,7));if(i>-1)vals[i]+=r.credit;}})));
+    return {labels,vals};
+}
+function renderAdminDashboard(){
+    const host=document.getElementById('adminDashboard');
+    if(!host)return;
+    const ctx=adminViewContext();
+    const cur=CURRENCIES[ctx.code]||CURRENCIES.UGX;
+    const fm=n=>formatMoneyIn(n,ctx.code);
+    const tenants=ctx.locIds?TENANTS.filter(t=>ctx.locIds.includes(t.locationId)):TENANTS;
+    const props=ctx.locIds?PROPERTIES.filter(p=>ctx.locIds.includes(p.locationId)):PROPERTIES;
+    const st=locStats(tenants,props);
+    const occRate=st.units.length?Math.round(st.occ/st.units.length*100):0;
+    const collRate=(st.income+st.outstanding)>0?Math.round(st.income/(st.income+st.outstanding)*100):100;
+    const locs=ctx.locIds?LOCATIONS.filter(l=>ctx.locIds.includes(l.id)):LOCATIONS;
+    const s=APP_SETTINGS.subscription;
+    const states=locs.map(l=>subStatusForLocation(l.id).state);
+    const cnt=k=>states.filter(x=>x===k).length;
+    const subCollected=locs.reduce((a,l)=>a+((s.locations[l.id]&&s.locations[l.id].payments)||[]).reduce((b,p)=>b+(p.amount||0),0),0);
+    const subCard=subIsPaidMode()
+        ?`<div style="font-size:.85rem;color:#334155;line-height:1.7;"><div><span class="chip ok">${cnt('paid')} paid</span> <span class="chip warn">${cnt('due')+cnt('upcoming')} ${cnt('upcoming')&&!cnt('due')?'upcoming':'due'}</span> <span class="chip bad">${cnt('disconnected')} disconnected</span></div><div style="margin-top:.5rem;">Plan: <strong>${fm(s.amount)}</strong> / location / month</div><div>Effective: <strong>${prettyDate(s.effectiveDate)}</strong></div><div>Collected so far: <strong>${fm(subCollected)}</strong></div></div>`
+        :`<div style="font-size:.9rem;color:#334155;"><span class="chip ok">FREE</span><p style="margin-top:.6rem;color:#64748b;font-size:.82rem;">All locations have full access. Switch to a paid plan in the Admin tab.</p></div>`;
+    const userOpts=USERS.filter(u=>u.role!=='admin'&&u.locationId).map(u=>`<option value="user:${u.id}" ${ADMIN_VIEW.type==='user'&&ADMIN_VIEW.id===u.id?'selected':''}>${u.fullName} (@${u.username}) · ${currencyOfUser(u)}</option>`).join('');
+    const locOpts=LOCATIONS.map(l=>`<option value="loc:${l.id}" ${ADMIN_VIEW.type==='loc'&&ADMIN_VIEW.id===l.id?'selected':''}>${l.area}, ${l.city} · ${currencyOfLocation(l.id)}</option>`).join('');
+    const rowsHtml=LOCATIONS.map(l=>{
+        const lt=TENANTS.filter(t=>t.locationId===l.id),lp=PROPERTIES.filter(p=>p.locationId===l.id);
+        const ls=locStats(lt,lp),lc=currencyOfLocation(l.id),f=n=>formatMoneyIn(n,lc);
+        const lr=ls.units.length?Math.round(ls.occ/ls.units.length*100):0;
+        const mgrs=USERS.filter(u=>u.locationId===l.id).length;
+        return `<tr class="${ctx.locIds&&ctx.locIds.includes(l.id)?'sel':''}"><td><strong>${l.area}, ${l.city}</strong><div style="font-size:.7rem;color:#94a3b8;">${mgrs} user${mgrs===1?'':'s'}</div></td><td><span class="chip info">${lc}</span></td><td>${ls.props.length}</td><td>${ls.units.length}</td><td>${lr}%</td><td>${ls.tenants.length}</td><td><strong>${f(ls.income)}</strong></td><td>${f(ls.exp)}</td><td style="color:${ls.outstanding>0?'#dc2626':'#16a34a'};font-weight:700;">${f(ls.outstanding)}</td><td>${subStateChip(subStatusForLocation(l.id))}</td><td><button class="btn btn-outline btn-sm" onclick="setAdminView('loc:${l.id}');window.scrollTo({top:0,behavior:'smooth'})">View</button></td></tr>`;
+    }).join('');
+    host.innerHTML=`
+        <div class="section-header" style="margin-bottom:.75rem;"><h2>🛡️ Admin Overview</h2>
+            <div class="header-actions" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                <label style="font-size:.8rem;font-weight:700;color:#475569;">View:</label>
+                <select id="adminViewSelect" onchange="setAdminView(this.value)" style="max-width:320px;"><option value="all">All locations (combined)</option><optgroup label="Locations (location currency)">${locOpts}</optgroup><optgroup label="Users (user currency)">${userOpts}</optgroup></select>
+            </div>
+        </div>
+        <div style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Showing <strong>${ctx.label}</strong> in <span class="chip info">${cur.symbol} ${ctx.code}</span>${ctx.locIds?' — the currency chosen by this location\'s user.':' — your selected display currency; the table below shows each location in its own currency.'}</div>
+        <div class="dashboard-grid">
+            <div class="dash-card income"><div class="label">Total Revenue Collected</div><div class="value">${fm(st.income)}</div><div class="sub">Rent + electricity + water</div></div>
+            <div class="dash-card profit"><div class="label">Net Profit</div><div class="value">${fm(st.profit)}</div><div class="sub">Income – expenses</div></div>
+            <div class="dash-card outstanding"><div class="label">Outstanding</div><div class="value">${fm(st.outstanding)}</div><div class="sub">${collRate}% collection rate</div></div>
+            <div class="dash-card expenses"><div class="label">Expenses</div><div class="value">${fm(st.exp)}</div><div class="sub">All recorded expenses</div></div>
+            <div class="dash-card units"><div class="label">🏢 Properties · Units</div><div class="value">${st.props.length} · ${st.units.length}</div><div class="sub">${locs.length} location${locs.length===1?'':'s'}</div></div>
+            <div class="dash-card occupied"><div class="label">🔑 Occupancy</div><div class="value">${occRate}%</div><div class="sub">${st.occ} occupied · ${st.vac} vacant · ${st.tenants.length} tenants</div></div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-card"><h3>${ctx.locIds?'Income vs Expenses by Property':'Income vs Expenses by Location'} <span style="font-size:.7rem;color:#94a3b8;font-weight:600;">(${ctx.code})</span></h3><div class="chart-container"><canvas id="admLocChart"></canvas></div></div>
+            <div class="chart-card"><h3>Income Trend · last 6 months <span style="font-size:.7rem;color:#94a3b8;font-weight:600;">(${ctx.code})</span></h3><div class="chart-container"><canvas id="admTrendChart"></canvas></div></div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-card"><h3>Revenue Split</h3><div class="chart-container"><canvas id="admSplitChart"></canvas></div></div>
+            <div class="chart-card"><h3>💳 App Subscription</h3>${subCard}</div>
+        </div>
+        <div class="table-card"><h3 style="margin-bottom:.75rem;">📍 Locations — each in its own currency</h3>
+            <table class="adm-tbl"><thead><tr><th>Location</th><th>Currency</th><th>Props</th><th>Units</th><th>Occupancy</th><th>Tenants</th><th>Income</th><th>Expenses</th><th>Outstanding</th><th>Plan</th><th></th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="11" style="color:#94a3b8;">No locations yet.</td></tr>'}</tbody></table>
+        </div>`;
+    const sel=document.getElementById('adminViewSelect');
+    if(sel)sel.value=ADMIN_VIEW.type==='all'?'all':`${ADMIN_VIEW.type}:${ADMIN_VIEW.id}`;
+    const r=cur.rate;
+    let labels,inc,exp;
+    if(ctx.locIds){
+        labels=props.map(p=>p.name);
+        inc=props.map(p=>locStats(tenants.filter(t=>t.propertyId===p.id),[p]).income*r);
+        exp=props.map(p=>locStats(tenants.filter(t=>t.propertyId===p.id),[p]).exp*r);
+    }else{
+        labels=LOCATIONS.map(l=>`${l.area}`);
+        const per=LOCATIONS.map(l=>locStats(TENANTS.filter(t=>t.locationId===l.id),PROPERTIES.filter(p=>p.locationId===l.id)));
+        inc=per.map(x=>x.income*r);exp=per.map(x=>x.exp*r);
+    }
+    Object.keys(charts).filter(k=>k.startsWith('adm')).forEach(k=>{try{charts[k].destroy();}catch(e){}delete charts[k];});
+    const opt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}};
+    charts.admLoc=new Chart(document.getElementById('admLocChart').getContext('2d'),{type:'bar',data:{labels,datasets:[{label:'Income',data:inc,backgroundColor:'#16a34a'},{label:'Expenses',data:exp,backgroundColor:'#f97316'}]},options:opt});
+    const tr=monthlyIncomeSeries(tenants,6);
+    charts.admTrend=new Chart(document.getElementById('admTrendChart').getContext('2d'),{type:'line',data:{labels:tr.labels,datasets:[{label:'Income',data:tr.vals.map(v=>v*r),borderColor:'#0f172a',backgroundColor:'rgba(15,23,42,.08)',fill:true,tension:.3}]},options:opt});
+    charts.admSplit=new Chart(document.getElementById('admSplitChart').getContext('2d'),{type:'doughnut',data:{labels:['Rent','Electricity','Water'],datasets:[{data:[st.rent*r,st.elec*r,st.water*r],backgroundColor:['#0f172a','#facc15','#38bdf8'],borderWidth:2,borderColor:'#fff'}]},options:opt});
+}
+
 (async function init(){
     loadActiveCurrency();
     const splash=document.getElementById('splash');
     const syncOff=localStorage.getItem(LS_KEYS.syncOff);
     if(syncOff==='1')cloudSyncBlocked=true;
     loadLocalCache();
+    loadSettingsLocal();renderLandingPricing();
     const saved=sessionStorage.getItem('bmr_currentUser');
     if(saved){try{currentUser=JSON.parse(saved);}catch(e){sessionStorage.removeItem('bmr_currentUser');}}
     if(firebaseReady&&!cloudSyncBlocked){
         const t=new Promise(r=>setTimeout(r,4000));
-        try{await Promise.race([Promise.all([firestoreLoadLocations(),firestoreLoadUsers(),firestoreLoadTenants(),firestoreLoadProperties(),firestoreLoadUnits(),firestoreLoadMoveouts()]),t]);}catch(e){}
+        try{await Promise.race([Promise.all([firestoreLoadLocations(),firestoreLoadUsers(),firestoreLoadTenants(),firestoreLoadProperties(),firestoreLoadUnits(),firestoreLoadMoveouts(),loadSettingsRemote()]),t]);}catch(e){}
     }
     saveLocalCache();
+    renderLandingPricing();
     generateAutoInvoices();
     await reconcileRentInvoices();
     await syncUnitStatuses();
@@ -2200,6 +2592,11 @@ document.querySelectorAll('.nav-tab').forEach(tab=>{
 let charts={};
 
 function renderDashboard(){
+    const isAdminUser=!!currentUser&&currentUser.role==='admin';
+    document.querySelectorAll('#page-dashboard > *').forEach(el=>{if(el.id!=='adminDashboard')el.style.display=isAdminUser?'none':'';});
+    const adminHost=document.getElementById('adminDashboard');
+    if(adminHost)adminHost.style.display=isAdminUser?'':'none';
+    if(isAdminUser){renderAdminDashboard();return;}
     const tenants=getVisibleTenants();
     const totalRentPaid=totalRentReceived(tenants);
     const totalElectricPaid=totalElectricReceived(tenants);
@@ -3770,6 +4167,7 @@ function renderAdminPage(){
     const role=currentUser.role;
     document.getElementById('adminPanelTitle').textContent=role==='admin'?'Admin Panel':'Manage Users';
     document.getElementById('adminLocationsCard').style.display=(role==='admin')?'':'none';
+    renderSubscriptionAdminSection();
     renderCurrencyAdminSection();
     let statsTenants=TENANTS,statsUsers=USERS,statsProperties=PROPERTIES;
     if(role==='manager'){
@@ -3807,7 +4205,7 @@ function renderAdminPage(){
                             <button class="btn btn-danger btn-sm" onclick="deleteLocation('${loc.id}')">Delete</button>
                         </div>
                     </div>
-                    <div style="text-align:right;flex-shrink:0;"><div class="loc-amount">${formatMoney(locIncome)}</div><div style="font-size:.7rem;color:#94a3b8;">Expenses: ${formatMoney(locExpenses)}</div></div>
+                    <div style="text-align:right;flex-shrink:0;"><div class="loc-amount">${formatMoneyIn(locIncome,currencyOfLocation(loc.id))}</div><div style="font-size:.7rem;color:#94a3b8;">Expenses: ${formatMoneyIn(locExpenses,currencyOfLocation(loc.id))} · <span class="chip info">${currencyOfLocation(loc.id)}</span></div></div>
                 </div>`;
             }).join('');
         }
@@ -3819,7 +4217,7 @@ function renderAdminPage(){
     userList.innerHTML=visibleUsersList.map(u=>{
         const canEditThis=(role==='admin')||(role==='manager'&&u.locationId===currentUser.locationId&&u.role!=='admin'&&u.id!==currentUser.id);
         const isSelf=u.id===currentUser.id;
-        return `<div class="admin-list-item"><div class="info"><div class="primary">${u.fullName} <span style="color:#94a3b8;font-weight:400;">@${u.username}</span>${isSelf?' <span style="color:#facc15;font-size:.72rem;">(you)</span>':''}</div><div class="secondary"><span class="badge role ${u.role}">${u.role.toUpperCase()}</span> &nbsp;· ${u.locationName||'All Locations'}</div></div><div class="actions">${canEditThis?`<button class="btn btn-warning btn-sm" onclick="openEditUserModal('${u.id}')">Edit</button><button class="btn btn-outline btn-sm" onclick="openAdminResetPassword('${u.id}')">🔒</button>`:'<span style="font-size:.7rem;color:#94a3b8;">—</span>'}</div></div>`;
+        return `<div class="admin-list-item"><div class="info"><div class="primary">${u.fullName} <span style="color:#94a3b8;font-weight:400;">@${u.username}</span>${isSelf?' <span style="color:#facc15;font-size:.72rem;">(you)</span>':''}</div><div class="secondary"><span class="badge role ${u.role}">${u.role.toUpperCase()}</span> &nbsp;· ${u.locationName||'All Locations'}${u.role!=='admin'?` · <span class="chip info">${currencyOfUser(u)}</span>`:''}</div></div><div class="actions">${canEditThis?`<button class="btn btn-warning btn-sm" onclick="openEditUserModal('${u.id}')">Edit</button><button class="btn btn-outline btn-sm" onclick="openAdminResetPassword('${u.id}')">🔒</button>${canDeleteUser(u)?`<button class="btn btn-danger btn-sm" onclick="openDeleteUserModal('${u.id}')">Delete</button>`:''}`:'<span style="font-size:.7rem;color:#94a3b8;">—</span>'}</div></div>`;
     }).join('');
 }
 
@@ -3943,6 +4341,41 @@ async function saveUserEdit(e){
     closeModal('editUserModal');
     renderAdminPage();
 }
+function canDeleteUser(u){
+    if(!currentUser||!u)return false;
+    if(u.id===currentUser.id)return false;
+    if(currentUser.role==='admin')return true;
+    if(currentUser.role==='manager')return u.locationId===currentUser.locationId&&u.role!=='admin';
+    return false;
+}
+function openDeleteUserModal(userId){
+    const u=USERS.find(x=>x.id===userId);
+    if(!u){showNotification('User not found','warning');return;}
+    if(u.id===currentUser.id){showNotification('You cannot delete your own account','warning');return;}
+    if(!canDeleteUser(u)){showNotification('Permission denied','warning');return;}
+    if(u.role==='admin'&&USERS.filter(x=>x.role==='admin').length<=1){showNotification('Cannot delete the last admin account','warning');return;}
+    document.getElementById('deleteUserId').value=u.id;
+    const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    document.getElementById('deleteUserDetails').innerHTML=`<div><strong>${esc(u.fullName)}</strong> <span style="opacity:.7;">@${esc(u.username)}</span></div><div style="margin-top:.2rem;">Role: ${esc(String(u.role).toUpperCase())} · ${esc(u.locationName||'All Locations')}</div>`;
+    openModal('deleteUserModal');
+}
+async function confirmDeleteUser(){
+    const id=document.getElementById('deleteUserId').value;
+    const u=USERS.find(x=>x.id===id);
+    if(!u){closeModal('deleteUserModal');return;}
+    if(!canDeleteUser(u)){showNotification('Permission denied','warning');closeModal('deleteUserModal');return;}
+    if(u.role==='admin'&&USERS.filter(x=>x.role==='admin').length<=1){showNotification('Cannot delete the last admin account','warning');closeModal('deleteUserModal');return;}
+    const btn=document.getElementById('confirmDeleteUserBtn');
+    btn.disabled=true;
+    const idx=USERS.findIndex(x=>x.id===id);
+    if(idx>-1)USERS.splice(idx,1);
+    saveLocalCache();
+    closeModal('deleteUserModal');
+    showNotification(`User ${u.fullName} deleted`,'warning');
+    renderAdminPage();
+    btn.disabled=false;
+    try{await fsDelete('users',id);}catch(e){}
+}
 function openOwnPasswordModal(){if(!currentUser)return;document.getElementById('passwordModalTitle').textContent='Change My Password';document.getElementById('passwordTargetUserId').value=currentUser.id;document.getElementById('passwordTargetUser').value=`${currentUser.fullName} (@${currentUser.username})`;document.getElementById('newPassword').value='';document.getElementById('confirmPassword').value='';openModal('passwordModal');}
 function openAdminResetPassword(userId){
     const u=USERS.find(x=>x.id===userId);
@@ -3991,7 +4424,7 @@ window.openPrintModal=openPrintModal;window.doPrintStatement=doPrintStatement;wi
 window.renderExpensesPage=renderExpensesPage;window.renderUtilityPage=renderUtilityPage;window.onExpenseFilterChange=onExpenseFilterChange;
 window.openEditRentModal=openEditRentModal;window.saveRentEdit=saveRentEdit;window.deleteRentTransaction=deleteRentTransaction;
 window.openAddLocationModal=openAddLocationModal;window.saveLocation=saveLocation;window.openEditLocationModal=openEditLocationModal;window.deleteLocation=deleteLocation;
-window.openAddUserModal=openAddUserModal;window.saveUser=saveUser;window.openEditUserModal=openEditUserModal;window.saveUserEdit=saveUserEdit;
+window.openAddUserModal=openAddUserModal;window.saveUser=saveUser;window.openEditUserModal=openEditUserModal;window.setAdminView=setAdminView;window.onSubToggle=onSubToggle;window.saveSubscriptionPlan=saveSubscriptionPlan;window.openSubPayModal=openSubPayModal;window.updateSubPayAmount=updateSubPayAmount;window.saveSubPayment=saveSubPayment;window.undoLastSubPayment=undoLastSubPayment;window.openDeleteUserModal=openDeleteUserModal;window.confirmDeleteUser=confirmDeleteUser;window.saveUserEdit=saveUserEdit;
 window.openOwnPasswordModal=openOwnPasswordModal;window.openAdminResetPassword=openAdminResetPassword;window.savePasswordReset=savePasswordReset;
 window.openAdvanceRentModal=openAdvanceRentModal;window.openAdvanceRentForTenant=openAdvanceRentForTenant;window.loadAdvanceMonths=loadAdvanceMonths;window.toggleAdvanceMonth=toggleAdvanceMonth;window.saveAdvanceRent=saveAdvanceRent;
 window.printReceipt=printReceipt;window.renderReceiptsPage=renderReceiptsPage;

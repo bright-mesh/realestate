@@ -639,6 +639,15 @@ input,select,textarea{font-size:16px}
     </div>
 </div>
 
+<div class="modal-overlay" id="currencyModal">
+    <div class="modal" style="max-width:640px;">
+        <h3>💱 Location Currency</h3>
+        <p style="font-size:.82rem;color:#64748b;margin:.25rem 0 1rem;">Amounts for your location are shown in this currency. The administrator sees your location in the same currency.</p>
+        <div class="currency-grid" id="currencyPickGrid"></div>
+        <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('currencyModal')">Close</button></div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="subPayModal">
     <div class="modal" style="max-width:420px;">
         <h3>💳 Record Subscription Payment</h3>
@@ -1291,6 +1300,7 @@ input,select,textarea{font-size:16px}
             <input type="hidden" id="locationEditId">
             <div class="form-group"><label>Area Name *</label><input type="text" id="locationArea"></div>
             <div class="form-group"><label>City *</label><input type="text" id="locationCity"></div>
+            <div class="form-group"><label>Location Currency *</label><select id="locationCurrency"></select></div>
             <div class="modal-actions"><button type="button" class="btn btn-outline" onclick="closeModal('locationModal')">Cancel</button><button type="submit" class="btn btn-primary">Save Location</button></div>
         </form>
     </div>
@@ -1354,9 +1364,24 @@ const formatUGX = formatMoney;
 
 function updateCurrencyPill() {
     const pill = document.getElementById('headerCurrencyPill');
-    if (pill) pill.textContent = '💱 ' + ACTIVE_CURRENCY;
+    if (pill) {
+        pill.textContent = '💱 ' + ACTIVE_CURRENCY;
+        const canPick = !!currentUser && currentUser.role !== 'admin' && can('manage_currency');
+        pill.style.cursor = canPick ? 'pointer' : '';
+        pill.title = canPick ? 'Change your location currency' : '';
+        pill.onclick = canPick ? openCurrencyModal : null;
+    }
 }
 
+function openCurrencyModal() {
+    if (!currentUser || currentUser.role === 'admin' || !can('manage_currency')) return;
+    document.getElementById('currencyPickGrid').innerHTML = Object.values(CURRENCIES).map(c => `
+        <div class="currency-card ${c.code === ACTIVE_CURRENCY ? 'selected' : ''}" onclick="changeCurrency('${c.code}');closeModal('currencyModal')">
+            <div class="cc-symbol">${c.symbol}</div><div class="cc-code">${c.code}</div><div class="cc-label">${c.label}</div>
+        </div>`).join('');
+    openModal('currencyModal');
+}
+window.openCurrencyModal = openCurrencyModal;
 function changeCurrency(code) {
     if (!CURRENCIES[code]) return;
     if (!can('manage_currency')) { showNotification('Permission denied', 'warning'); return; }
@@ -1383,7 +1408,7 @@ function refreshAllViewsAfterCurrencyChange() {
 function renderCurrencyAdminSection() {
     const el = document.getElementById('currencyAdminSection');
     if (!el) return;
-    if (!can('manage_currency') || (currentUser && currentUser.role === 'admin')) { el.innerHTML = ''; return; }
+    if (true) { el.innerHTML = ''; return; }
     
     // Modern card-based selector
     const cards = Object.values(CURRENCIES).map(c => `
@@ -2176,7 +2201,6 @@ function enterApp(){
 }
 
 function currentLocationCurrencyForUser(){
-    if(currentUser&&currentUser.currency&&CURRENCIES[currentUser.currency])return currentUser.currency;
     const l=LOCATIONS.find(x=>x.id===(currentUser&&currentUser.locationId));
     return (l&&l.currency&&CURRENCIES[l.currency])?l.currency:null;
 }
@@ -2217,14 +2241,25 @@ function updateRateNote(){
 // PER-LOCATION CURRENCY
 // ============================================================
 function currencyOfLocation(locId){const l=LOCATIONS.find(x=>x.id===locId);return (l&&l.currency&&CURRENCIES[l.currency])?l.currency:'UGX';}
-function currencyOfUser(u){if(!u)return 'UGX';if(u.currency&&CURRENCIES[u.currency])return u.currency;return u.locationId?currencyOfLocation(u.locationId):'UGX';}
+function currencyOfUser(u){return (u&&u.locationId)?currencyOfLocation(u.locationId):'UGX';}
+function roundUnits(n){return Math.round((Number(n)||0)*10000)/10000;}
+function roundMoney(n){return Math.round((Number(n)||0)*100)/100;}
+// clean up meter values saved earlier with floating-point noise (e.g. 6.200000000000003)
+async function normalizeMeterDecimals(){
+    const fixed=[];
+    TENANTS.forEach(t=>{
+        let ch=false;
+        ['electric','water'].forEach(k=>(t[k]||[]).forEach(r=>{
+            if(typeof r.meter==='number'&&r.meter!==roundUnits(r.meter)){r.meter=roundUnits(r.meter);ch=true;}
+            if(typeof r.reading==='number'&&r.reading!==roundUnits(r.reading)){r.reading=roundUnits(r.reading);ch=true;}
+        }));
+        if(ch)fixed.push(t);
+    });
+    for(const t of fixed){try{await saveTenantNow(t);}catch(e){}}
+}
 function formatMoneyIn(ugx,code){const cur=CURRENCIES[code]||CURRENCIES.UGX;return cur.prefix+((Number(ugx)||0)*cur.rate).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});}
 function rememberLocationCurrency(code){
     if(!currentUser||currentUser.role==='admin'||!CURRENCIES[code])return;
-    currentUser.currency=code;
-    try{sessionStorage.setItem('bmr_currentUser',JSON.stringify(currentUser));}catch(e){}
-    const u=USERS.find(x=>x.id===currentUser.id);
-    if(u&&u.currency!==code){u.currency=code;saveUserNow(u);}
     const loc=LOCATIONS.find(l=>l.id===currentUser.locationId);
     if(loc&&loc.currency!==code){loc.currency=code;saveLocationNow(loc);}
 }
@@ -2563,6 +2598,7 @@ function renderAdminDashboard(){
     renderLandingPricing();
     generateAutoInvoices();
     await reconcileRentInvoices();
+    await normalizeMeterDecimals();
     await syncUnitStatuses();
     saveLocalCache();
     splash.classList.add('hidden');
@@ -3831,19 +3867,19 @@ async function saveUtilityEdit(e){
     let isReading = !isNaN(curr) && !isNaN(prev) && curr > 0;
     let units = null, reading = null, newDebit = debitIn, newCredit = creditIn;
     if(isReading){
-        units = Math.max(0, +(curr - prev).toFixed(4));
+        units = roundUnits(Math.max(0, curr - prev));
         reading = curr;
         if(type==='Electric'){
             const subtotal = units * rate;
             const service = BASE_CHARGES.electricServiceCharge;
             const vat = (subtotal + service) * BASE_CHARGES.electricVatPercent / 100;
-            newDebit = subtotal + service + vat;
+            newDebit = roundMoney(subtotal + service + vat);
         } else {
             const subtotal = units * rate;
             const sewer = subtotal * BASE_CHARGES.seweragePercent / 100;
             const service = BASE_CHARGES.serviceCharge;
             const vat = (subtotal + sewer + service) * BASE_CHARGES.vatPercent / 100;
-            newDebit = subtotal + sewer + service + vat;
+            newDebit = roundMoney(subtotal + sewer + service + vat);
         }
         newCredit = 0;
     } else {
@@ -3952,7 +3988,7 @@ function updateUtilityPreview(){
     const type=document.getElementById('utilityType').value;
     const prev=parseFloat(document.getElementById('utilityPrev').value)||0;
     const curr=parseFloat(document.getElementById('utilityCurr').value)||0;
-    const usage=Math.max(0,curr-prev);
+    const usage=roundUnits(Math.max(0,curr-prev));
     document.getElementById('utilityUsage').value=usage.toFixed(2);
     if(type==='electric'){
         const rate=BASE_CHARGES.electricRate;
@@ -3991,7 +4027,7 @@ async function saveUtilityReading(e){
     const curr=parseFloat(document.getElementById('utilityCurr').value)||0;
     const date=document.getElementById('utilityDate').value;
     if(!tenantId || !date){showNotification('Please fill all required fields','warning');return;}
-    const usage=Math.max(0,curr-prev);
+    const usage=roundUnits(Math.max(0,curr-prev));
     if(usage<=0){showNotification('Current reading must be greater than previous','warning');return;}
     const t=TENANTS.find(x=>x.id===tenantId);
     if(!t)return;
@@ -4000,7 +4036,7 @@ async function saveUtilityReading(e){
         const subtotal = usage * rate;
         const service = BASE_CHARGES.electricServiceCharge;
         const vat = (subtotal + service) * BASE_CHARGES.electricVatPercent / 100;
-        const total = subtotal + service + vat;
+        const total = roundMoney(subtotal + service + vat);
         t.electric.push({date,desc:`Inv- ${new Date(date).toLocaleString('en',{month:'short'})} ${new Date(date).getFullYear()}`,meter:usage,rate,debit:total,credit:0,reading:curr});
         t.electric.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
         showNotification(`⚡ Electricity reading saved – ${formatMoney(total)}`);
@@ -4010,7 +4046,7 @@ async function saveUtilityReading(e){
         const sewer=subtotal*BASE_CHARGES.seweragePercent/100;
         const service=BASE_CHARGES.serviceCharge;
         const vat=(subtotal+sewer+service)*BASE_CHARGES.vatPercent/100;
-        const total=subtotal+sewer+service+vat;
+        const total=roundMoney(subtotal+sewer+service+vat);
         t.water.push({date,desc:`Meter-${usage} @${rate}+${BASE_CHARGES.seweragePercent}%+${service}+${BASE_CHARGES.vatPercent}%`,meter:usage,rate,debit:total,credit:0,reading:curr});
         t.water.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
         showNotification(`💧 Water reading saved – ${formatMoney(total)}`);
@@ -4227,7 +4263,8 @@ function renderAdminPage(){
     }).join('');
 }
 
-function openAddLocationModal(){if(currentUser.role!=='admin'){showNotification('Only admin can add locations','warning');return;}document.getElementById('locationForm').reset();document.getElementById('locationEditId').value='';document.getElementById('locationModalTitle').textContent='Add Location';openModal('locationModal');}
+function fillLocationCurrencyOptions(sel){const el=document.getElementById('locationCurrency');el.innerHTML=Object.values(CURRENCIES).map(c=>`<option value="${c.code}">${c.symbol} ${c.code} — ${c.label}</option>`).join('');el.value=CURRENCIES[sel]?sel:'UGX';}
+function openAddLocationModal(){if(currentUser.role!=='admin'){showNotification('Only admin can add locations','warning');return;}document.getElementById('locationForm').reset();fillLocationCurrencyOptions('UGX');document.getElementById('locationEditId').value='';document.getElementById('locationModalTitle').textContent='Add Location';openModal('locationModal');}
 function openEditLocationModal(id){
     if(currentUser.role!=='admin'){showNotification('Only admin can edit locations','warning');return;}
     const loc=LOCATIONS.find(l=>l.id===id);
@@ -4236,6 +4273,7 @@ function openEditLocationModal(id){
     document.getElementById('locationEditId').value=loc.id;
     document.getElementById('locationArea').value=loc.area;
     document.getElementById('locationCity').value=loc.city;
+    fillLocationCurrencyOptions(loc.currency);
     document.getElementById('locationModalTitle').textContent='Edit Location';
     openModal('locationModal');
 }
@@ -4245,13 +4283,14 @@ async function saveLocation(e){
     const editId=document.getElementById('locationEditId').value;
     const area=document.getElementById('locationArea').value.trim();
     const city=document.getElementById('locationCity').value.trim();
+    const lcur=document.getElementById('locationCurrency').value;
     if(!area || !city) { showNotification('Please fill all required fields','warning'); return; }
     
     if(editId){
         const loc=LOCATIONS.find(l=>l.id===editId);
-        if(loc){loc.area=area;loc.city=city;await saveLocationNow(loc);showNotification(`Location "${area}, ${city}" updated`);}
+        if(loc){loc.area=area;loc.city=city;loc.currency=lcur;await saveLocationNow(loc);showNotification(`Location "${area}, ${city}" updated`);}
     }else{
-        const newLoc={id:'loc_'+Date.now(),area,city};
+        const newLoc={id:'loc_'+Date.now(),area,city,currency:lcur};
         LOCATIONS.push(newLoc);
         await saveLocationNow(newLoc);
         showNotification(`Location "${area}, ${city}" added`);

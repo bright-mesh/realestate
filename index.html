@@ -1910,6 +1910,9 @@ function runningBalanceAt(arr, i){
     return bal;
 }
 function getPreviousReading(arr, i){
+    // A saved reading row already knows its own previous meter: current reading minus units used.
+    const row = arr[i];
+    if (row && typeof row.reading === 'number' && typeof row.meter === 'number' && row.meter > 0 && row.reading >= row.meter) return roundUnits(row.reading - row.meter);
     for (let k = i - 1; k >= 0; k--) if (arr[k] && arr[k].reading !== null && arr[k].reading !== undefined && arr[k].reading !== 0) return arr[k].reading;
     for (let k = 0; k < i; k++) if (arr[k] && arr[k].reading !== null && arr[k].reading !== undefined) return arr[k].reading;
     return 0;
